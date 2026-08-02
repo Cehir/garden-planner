@@ -135,17 +135,48 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: 
       return
     }
 
-    if (tool === 'plant') {
-      if (!placedPlant) return
-      const existing = placedPlants.find((p) => {
-        const bed = beds.find((b) => b.id === p.bedId)
-        if (!bed) return false
-        return Math.hypot(point.x - (bed.x + p.x * bed.w), point.y - (bed.y + p.y * bed.h)) <= p.size / 2
-      })
-      if (existing) {
-        onSelect({ kind: 'placed', id: existing.id })
+    if (selectedPlaced) {
+      const sbed = beds.find((b) => b.id === selectedPlaced.bedId)
+      if (sbed) {
+        const cx = sbed.x + selectedPlaced.x * sbed.w
+        const cy = sbed.y + selectedPlaced.y * sbed.h
+        if (Math.hypot(point.x - (cx + selectedPlaced.size / 2), point.y - cy) <= 10) {
+          dragRef.current = {
+            kind: 'resizePlaced',
+            id: selectedPlaced.id,
+            centerX: cx,
+            centerY: cy,
+            startX: point.x,
+            startY: point.y,
+            origSize: selectedPlaced.size,
+          }
+          return
+        }
+      }
+    }
+
+    for (const p of placedPlants) {
+      const bed = beds.find((b) => b.id === p.bedId)
+      if (!bed) continue
+      const cx = bed.x + p.x * bed.w
+      const cy = bed.y + p.y * bed.h
+      if (Math.hypot(point.x - cx, point.y - cy) <= p.size / 2) {
+        onSelect({ kind: 'placed', id: p.id })
+        dragRef.current = {
+          kind: 'movePlaced',
+          id: p.id,
+          bedId: p.bedId,
+          startX: point.x,
+          startY: point.y,
+          origX: p.x,
+          origY: p.y,
+        }
         return
       }
+    }
+
+    if (tool === 'plant') {
+      if (!placedPlant) return
       const bed = beds.find((b) => hitTest(point.x, point.y, b))
       if (!bed) return
       const relX = Math.min(1, Math.max(0, (point.x - bed.x) / bed.w))

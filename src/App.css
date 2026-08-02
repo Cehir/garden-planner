@@ -112,7 +112,15 @@
 }
 
 .plant {
-  cursor: pointer;
+  cursor: grab;
+}
+
+.plant.selected {
+  cursor: grab;
+}
+
+.plant:active {
+  cursor: grabbing;
 }
 
 .sidebar {
