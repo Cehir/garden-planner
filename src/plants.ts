@@ -1,0 +1,28 @@
+import type { Plant } from './types'
+
+export const DEFAULT_PLANTS: Plant[] = [
+  { id: 'tomate', name: 'Tomate', emoji: '🍅', color: '#e0534b' },
+  { id: 'gurke', name: 'Gurke', emoji: '🥒', color: '#4c9c52' },
+  { id: 'paprika', name: 'Paprika', emoji: '🫑', color: '#d0541e' },
+  { id: 'zucchini', name: 'Zucchini', emoji: '🥒', color: '#2f7d4a' },
+  { id: 'kartoffel', name: 'Kartoffel', emoji: '🥔', color: '#a3764a' },
+  { id: 'salat', name: 'Salat', emoji: '🥬', color: '#6dab4a' },
+  { id: 'karotte', name: 'Karotte', emoji: '🥕', color: '#e8822e' },
+  { id: 'radieschen', name: 'Radieschen', emoji: '🌶️', color: '#d6445c' },
+  { id: 'zwiebel', name: 'Zwiebel', emoji: '🧅', color: '#c98d4f' },
+  { id: 'lauch', name: 'Lauch', emoji: '🥬', color: '#3f8a4a' },
+  { id: 'spinat', name: 'Spinat', emoji: '🌿', color: '#3f7d43' },
+  { id: 'rote-bete', name: 'Rote Bete', emoji: '🫐', color: '#8e2342' },
+  { id: 'kohlrabi', name: 'Kohlrabi', emoji: '🥬', color: '#7ba35a' },
+  { id: 'kuerbis', name: 'Kürbis', emoji: '🎃', color: '#e08a1e' },
+  { id: 'erdbeere', name: 'Erdbeere', emoji: '🍓', color: '#d6364c' },
+  { id: 'sonnenblume', name: 'Sonnenblume', emoji: '🌻', color: '#e8a30f' },
+  { id: 'lavendel', name: 'Lavendel', emoji: '💜', color: '#8a7bb8' },
+  { id: 'tulpe', name: 'Tulpe', emoji: '🌷', color: '#d0527a' },
+  { id: 'basilikum', name: 'Basilikum', emoji: '🌿', color: '#3f7d43' },
+  { id: 'petersilie', name: 'Petersilie', emoji: '🌿', color: '#4c9c52' },
+  { id: 'schnittlauch', name: 'Schnittlauch', emoji: '🌱', color: '#2f7d4a' },
+  { id: 'rosmarin', name: 'Rosmarin', emoji: '🌿', color: '#5a7d3f' },
+  { id: 'minze', name: 'Minze', emoji: '🌱', color: '#4a9c5a' },
+  { id: 'thymian', name: 'Thymian', emoji: '🌿', color: '#6a8f3f' },
+]
