@@ -303,6 +303,13 @@
   color: #3a362e;
 }
 
+.plant-item .name .sub {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a8172;
+}
+
 .plant-item .mini {
   border: none;
   background: none;

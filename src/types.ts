@@ -20,6 +20,7 @@ export interface Plant {
   name: string
   emoji: string
   color: string
+  spacing: number
 }
 
 export interface PlacedPlant {

@@ -18,6 +18,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('🌿')
   const [color, setColor] = useState(PLANT_COLORS[0])
+  const [spacing, setSpacing] = useState(25)
   const [editing, setEditing] = useState<string | null>(null)
 
   const filtered = state.plants.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
@@ -26,11 +27,12 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     if (!name.trim()) return
     dispatch({
       type: 'addPlant',
-      plant: { id: uid('plant'), name: name.trim(), emoji, color },
+      plant: { id: uid('plant'), name: name.trim(), emoji, color, spacing: Math.max(1, spacing || 25) },
     })
     setName('')
     setEmoji('🌿')
     setColor(PLANT_COLORS[0])
+    setSpacing(25)
     setAdding(false)
   }
 
@@ -59,7 +61,10 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
             <span className="emoji" style={{ background: p.color }}>
               {p.emoji}
             </span>
-            <span className="name">{p.name}</span>
+            <span className="name">
+              {p.name}
+              <span className="sub">{p.spacing} cm</span>
+            </span>
             <button
               type="button"
               className="mini"
@@ -69,6 +74,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 setName(p.name)
                 setEmoji(p.emoji)
                 setColor(p.color)
+                setSpacing(p.spacing)
               }}
             >
               ✏️
@@ -107,6 +113,15 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   ))}
                 </div>
               </label>
+              <label>
+                Pflanzabstand (cm)
+                <input
+                  type="number"
+                  min={1}
+                  value={spacing}
+                  onChange={(e) => setSpacing(Number(e.target.value))}
+                />
+              </label>
               <div className="row">
                 <button
                   type="button"
@@ -115,7 +130,12 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                     dispatch({
                       type: 'updatePlant',
                       id: plant.id,
-                      patch: { name: name.trim() || plant.name, emoji, color },
+                      patch: {
+                        name: name.trim() || plant.name,
+                        emoji,
+                        color,
+                        spacing: Math.max(1, spacing || plant.spacing),
+                      },
                     })
                     setEditing(null)
                   }}
@@ -166,6 +186,15 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   />
                 ))}
               </div>
+            </label>
+            <label>
+              Pflanzabstand (cm)
+              <input
+                type="number"
+                min={1}
+                value={spacing}
+                onChange={(e) => setSpacing(Number(e.target.value))}
+              />
             </label>
             <div className="row">
               <button type="button" className="primary" onClick={addPlant}>

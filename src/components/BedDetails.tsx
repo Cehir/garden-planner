@@ -24,6 +24,10 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
         <p>
           Beet: {bed?.name ?? '–'} · Größe: {placed?.size} cm
         </p>
+        <p>
+          Optimaler Pflanzabstand: {plant?.spacing ?? 25} cm
+          {placed && plant && placed.size !== plant.spacing && ' (Größe abweichend)'}
+        </p>
         <button type="button" className="danger" onClick={() => dispatch({ type: 'removePlacedPlant', id: selected.id })}>
           Pflanze entfernen
         </button>

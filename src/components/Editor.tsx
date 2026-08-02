@@ -158,7 +158,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: 
           plantId: placedPlant.id,
           x: relX,
           y: relY,
-          size: 25,
+          size: placedPlant.spacing,
         },
       })
       return

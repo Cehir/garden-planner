@@ -28,7 +28,10 @@ function loadState(): AppState {
         Array.isArray(parsed.plants) &&
         Array.isArray(parsed.placedPlants)
       ) {
-        return parsed
+        return {
+          ...parsed,
+          plants: parsed.plants.map((p) => ({ ...p, spacing: p.spacing ?? 25 })),
+        }
       }
     }
   } catch {
