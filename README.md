@@ -70,3 +70,7 @@ npm run lint       # Linting
 - `Bed` – Position, Größe, Name, Farbe, Notizen
 - `Plant` – Katalog-Eintrag mit Name, Emoji, Farbe, Pflanzabstand (`spacing`), Höhe (`height`) und Lichtbedarf (`light` in cm)
 - `PlacedPlant` – Pflanzen-Instanz in einem Beet (relative Position, aktuelle Größe)
+
+## Lizenz
+
+Lizenziert unter der [MIT-Lizenz](LICENSE).
