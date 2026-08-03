@@ -15,12 +15,22 @@ export interface Bed {
   notes: string
 }
 
+export type LightRequirement = 'full' | 'partial' | 'shade'
+
+export const LIGHT_LABELS: Record<LightRequirement, string> = {
+  full: 'Sonne',
+  partial: 'Halbschatten',
+  shade: 'Schatten',
+}
+
 export interface Plant {
   id: string
   name: string
   emoji: string
   color: string
   spacing: number
+  height: number
+  light: LightRequirement
 }
 
 export interface PlacedPlant {

@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { Plant } from '../types'
+import type { LightRequirement, Plant } from '../types'
+import { LIGHT_LABELS } from '../types'
 import { useStore } from '../store'
 import { uid } from '../utils'
 
@@ -19,6 +20,8 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   const [emoji, setEmoji] = useState('🌿')
   const [color, setColor] = useState(PLANT_COLORS[0])
   const [spacing, setSpacing] = useState(25)
+  const [height, setHeight] = useState(25)
+  const [light, setLight] = useState<LightRequirement>('full')
   const [editing, setEditing] = useState<string | null>(null)
 
   const filtered = state.plants.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
@@ -27,12 +30,14 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     if (!name.trim()) return
     dispatch({
       type: 'addPlant',
-      plant: { id: uid('plant'), name: name.trim(), emoji, color, spacing: Math.max(1, spacing || 25) },
+      plant: { id: uid('plant'), name: name.trim(), emoji, color, spacing: Math.max(1, spacing || 25), height: Math.max(1, height || 25), light },
     })
     setName('')
     setEmoji('🌿')
     setColor(PLANT_COLORS[0])
     setSpacing(25)
+    setHeight(25)
+    setLight('full')
     setAdding(false)
   }
 
@@ -75,6 +80,8 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 setEmoji(p.emoji)
                 setColor(p.color)
                 setSpacing(p.spacing)
+                setHeight(p.height)
+                setLight(p.light)
               }}
             >
               ✏️
@@ -122,6 +129,25 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   onChange={(e) => setSpacing(Number(e.target.value))}
                 />
               </label>
+              <label>
+                Höhe (cm)
+                <input
+                  type="number"
+                  min={1}
+                  value={height}
+                  onChange={(e) => setHeight(Number(e.target.value))}
+                />
+              </label>
+              <label>
+                Lichtbedarf
+                <select value={light} onChange={(e) => setLight(e.target.value as LightRequirement)}>
+                  {(Object.keys(LIGHT_LABELS) as LightRequirement[]).map((k) => (
+                    <option key={k} value={k}>
+                      {LIGHT_LABELS[k]}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="row">
                 <button
                   type="button"
@@ -135,6 +161,8 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                         emoji,
                         color,
                         spacing: Math.max(1, spacing || plant.spacing),
+                        height: Math.max(1, height || plant.height),
+                        light,
                       },
                     })
                     setEditing(null)
@@ -195,6 +223,25 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 value={spacing}
                 onChange={(e) => setSpacing(Number(e.target.value))}
               />
+            </label>
+            <label>
+              Höhe (cm)
+              <input
+                type="number"
+                min={1}
+                value={height}
+                onChange={(e) => setHeight(Number(e.target.value))}
+              />
+            </label>
+            <label>
+              Lichtbedarf
+              <select value={light} onChange={(e) => setLight(e.target.value as LightRequirement)}>
+                {(Object.keys(LIGHT_LABELS) as LightRequirement[]).map((k) => (
+                  <option key={k} value={k}>
+                    {LIGHT_LABELS[k]}
+                  </option>
+                ))}
+              </select>
             </label>
             <div className="row">
               <button type="button" className="primary" onClick={addPlant}>

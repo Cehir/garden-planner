@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Bed, PlacedPlant, Plant, Selected, Tool } from '../types'
 import { useStore } from '../store'
 import { snap, uid } from '../utils'
+import { computeConflicts, shadowPolygon } from '../shadow'
 
 const SNAP = 10
 const MIN_SIZE = 20
@@ -110,6 +111,8 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: 
   const selectedPlaced: PlacedPlant | null =
     selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
   const plantById = new Map(plants.map((p) => [p.id, p]))
+  const conflicts = useMemo(() => computeConflicts(placedPlants, plants, beds), [placedPlants, plants, beds])
+  const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
   function getPoint(e: ReactPointerEvent<SVGSVGElement> | PointerEvent): { x: number; y: number } {
     const svg = svgRef.current
@@ -448,6 +451,23 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: 
             const bed = beds.find((b) => b.id === p.bedId)
             if (!bed) return null
             const plant = plantById.get(p.plantId)
+            const shape = plant ? shadowPolygon(plant, p, bed) : null
+            if (!shape) return null
+            return (
+              <polygon
+                key={`sh-${p.id}`}
+                points={shape.polygon.map((pt) => pt.join(',')).join(' ')}
+                fill="#3a362e"
+                fillOpacity={0.12}
+                pointerEvents="none"
+              />
+            )
+          })}
+
+          {placedPlants.map((p) => {
+            const bed = beds.find((b) => b.id === p.bedId)
+            if (!bed) return null
+            const plant = plantById.get(p.plantId)
             const cx = bed.x + p.x * bed.w
             const cy = bed.y + p.y * bed.h
             const r = p.size / 2
@@ -483,6 +503,17 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: 
                     strokeWidth={2}
                     className="resize-handle"
                   />
+                )}
+                {conflictedIds.has(p.id) && (
+                  <text
+                    x={cx}
+                    y={cy - r - 6}
+                    textAnchor="middle"
+                    fontSize={r * 0.7}
+                    pointerEvents="none"
+                  >
+                    ⚠️
+                  </text>
                 )}
               </g>
             )

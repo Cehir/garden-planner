@@ -1,5 +1,7 @@
 import type { Selected } from '../types'
+import { LIGHT_LABELS } from '../types'
 import { useStore } from '../store'
+import { computeConflicts } from '../shadow'
 
 const BED_COLORS = ['#7fb069', '#6fa3a8', '#d9a441', '#b0697f', '#8a7bb8', '#d07b4f', '#7b8f4f', '#4f7bb0']
 
@@ -28,6 +30,12 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
           Optimaler Pflanzabstand: {plant?.spacing ?? 25} cm
           {placed && plant && placed.size !== plant.spacing && ' (Größe abweichend)'}
         </p>
+        {plant && (
+          <p>
+            Höhe: {plant.height ?? 25} cm · Lichtbedarf:{' '}
+            {LIGHT_LABELS[plant.light ?? 'full']}
+          </p>
+        )}
         <button type="button" className="danger" onClick={() => dispatch({ type: 'removePlacedPlant', id: selected.id })}>
           Pflanze entfernen
         </button>
@@ -82,6 +90,10 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
   const totalArea = bed.w * bed.h
   const plantArea = bedPlants.reduce((sum, p) => sum + Math.PI * (p.size / 2) ** 2, 0)
   const utilization = totalArea > 0 ? Math.round((plantArea / totalArea) * 100) : 0
+  const bedPlantIds = new Set(bedPlants.map((p) => p.id))
+  const bedConflicts = computeConflicts(placedPlants, state.plants, state.beds).filter(
+    (c) => bedPlantIds.has(c.sourceId) || bedPlantIds.has(c.targetId),
+  )
 
   return (
     <aside className="sidebar">
@@ -131,6 +143,17 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
           <strong>{utilization}%</strong> belegt
         </div>
       </div>
+
+      {bedConflicts.length > 0 && (
+        <div className="conflicts">
+          <h3>⚠️ Beschattungs-Warnungen</h3>
+          <ul>
+            {bedConflicts.map((c) => (
+              <li key={`${c.sourceId}-${c.targetId}`}>{c.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="row">
         <button type="button" className="danger" onClick={() => { dispatch({ type: 'removeBed', id: bed.id }); onClearSelection() }}>

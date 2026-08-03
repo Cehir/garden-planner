@@ -30,7 +30,12 @@ function loadState(): AppState {
       ) {
         return {
           ...parsed,
-          plants: parsed.plants.map((p) => ({ ...p, spacing: p.spacing ?? 25 })),
+          plants: parsed.plants.map((p) => ({
+            ...p,
+            spacing: p.spacing ?? 25,
+            height: p.height ?? 25,
+            light: p.light ?? 'full',
+          })),
         }
       }
     }
