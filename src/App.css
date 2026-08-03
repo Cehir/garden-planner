@@ -84,6 +84,40 @@
   justify-content: flex-start;
 }
 
+.editor-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.compass {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  pointer-events: none;
+  background: rgba(255, 253, 245, 0.85);
+  border: 1px solid #ddd3bf;
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 5;
+}
+
+.compass svg {
+  display: block;
+}
+
+.compass-note {
+  font-size: 9px;
+  white-space: nowrap;
+  color: #6b675b;
+}
+
 .editor-stage {
   flex: none;
   margin: auto;

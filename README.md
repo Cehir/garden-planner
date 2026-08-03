@@ -8,6 +8,7 @@ Ein visueller Gartenplaner für den Browser: Beete auf einer Gartenfläche einze
 - **Pflanzen-Bibliothek** – 24+ vorbelegte Pflanzen (Tomate, Chili, Salat, Kräuter …) mit Namen, Emoji, Farbe, **optimalem Pflanzabstand**, **Höhe** und **Lichtbedarf** (Sonne/Halbschatten/Schatten); eigene Pflanzen hinzufügen, bearbeiten und löschen, Suche/Filter
 - **Pflanzen platzieren** – In Beete setzen (Startgröße = optimaler Abstand), verschieben, skalieren und entfernen; Belegungsgrad des Beets in Prozent
 - **Beschattungs-Analyse** – Schattenkegel der Pflanzen fest nach Norden (Sonne aus Süden, Faktor 2.0) im Editor einblenden; automatische Warnung, wenn eine höhere Pflanze eine kürzere mit Sonnenbedarf beschattet (z. B. Tomate ▷ Chili), Liste der Konflikte im Beet-Panel
+- **Himmelsrichtungs-Indikator** – Fester Kompass (N/S/O/W) oben rechts im Editor-Viewport, unabhängig von Zoom/Scroll, mit Hinweis auf die Schattenrichtung
 - **Beet-Details** – Name, Farbe, Maße, Position und Notizen pro Beet
 - **Speichern & Laden** – Automatische Sicherung im Browser (`localStorage`, Key `gartenplaner-state-v1`), JSON-Export/-Import und Reset
 - **Editor-Komfort** – cm-Raster (10/50 cm), Lineale, Zoom, anpassbare Gartengröße, Tastaturkürzel
