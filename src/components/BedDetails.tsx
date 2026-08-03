@@ -1,5 +1,5 @@
 import type { Selected } from '../types'
-import { LIGHT_LABELS } from '../types'
+import { LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { useStore } from '../store'
 import { computeConflicts } from '../shadow'
 
@@ -33,7 +33,8 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
         {plant && (
           <p>
             Höhe: {plant.height ?? 25} cm · Lichtbedarf:{' '}
-            {LIGHT_LABELS[plant.light ?? 'full']}
+            {LIGHT_LABELS[plant.light ?? 'full']} · Boden:{' '}
+            {SOIL_LABELS[plant.soil ?? 'normal']}
           </p>
         )}
         <button type="button" className="danger" onClick={() => dispatch({ type: 'removePlacedPlant', id: selected.id })}>

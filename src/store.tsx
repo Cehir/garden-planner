@@ -35,6 +35,7 @@ function loadState(): AppState {
             spacing: p.spacing ?? 25,
             height: p.height ?? 25,
             light: p.light ?? 'full',
+            soil: p.soil ?? 'normal',
           })),
         }
       }

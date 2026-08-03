@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { LightRequirement, Plant } from '../types'
-import { LIGHT_LABELS } from '../types'
+import type { LightRequirement, Plant, SoilType } from '../types'
+import { LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { useStore } from '../store'
 import { uid } from '../utils'
 
@@ -10,6 +10,14 @@ const LIGHT_ICONS: Record<LightRequirement, string> = {
   full: '☀️',
   partial: '⛅',
   shade: '☁️',
+}
+
+const SOIL_ICONS: Record<SoilType, string> = {
+  humus: '🍂',
+  sand: '🏖️',
+  loam: '🟫',
+  clay: '🟤',
+  normal: '🌱',
 }
 
 interface PlantLibraryProps {
@@ -28,6 +36,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   const [spacing, setSpacing] = useState(25)
   const [height, setHeight] = useState(25)
   const [light, setLight] = useState<LightRequirement>('full')
+  const [soil, setSoil] = useState<SoilType>('normal')
   const [editing, setEditing] = useState<string | null>(null)
 
   const filtered = state.plants.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
@@ -36,7 +45,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     if (!name.trim()) return
     dispatch({
       type: 'addPlant',
-      plant: { id: uid('plant'), name: name.trim(), emoji, color, spacing: Math.max(1, spacing || 25), height: Math.max(1, height || 25), light },
+      plant: { id: uid('plant'), name: name.trim(), emoji, color, spacing: Math.max(1, spacing || 25), height: Math.max(1, height || 25), light, soil },
     })
     setName('')
     setEmoji('🌿')
@@ -44,6 +53,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     setSpacing(25)
     setHeight(25)
     setLight('full')
+    setSoil('normal')
     setAdding(false)
   }
 
@@ -75,7 +85,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
             <span className="name">
               {p.name}
               <span className="sub">
-                {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']}
+                {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']} · {SOIL_ICONS[p.soil ?? 'normal']} {SOIL_LABELS[p.soil ?? 'normal']}
               </span>
             </span>
             <button
@@ -90,6 +100,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 setSpacing(p.spacing)
                 setHeight(p.height)
                 setLight(p.light)
+                setSoil(p.soil)
               }}
             >
               ✏️
@@ -156,6 +167,16 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   ))}
                 </select>
               </label>
+              <label>
+                Empfohlener Bodentyp
+                <select value={soil} onChange={(e) => setSoil(e.target.value as SoilType)}>
+                  {(Object.keys(SOIL_LABELS) as SoilType[]).map((k) => (
+                    <option key={k} value={k}>
+                      {SOIL_ICONS[k]} {SOIL_LABELS[k]}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <div className="row">
                 <button
                   type="button"
@@ -171,6 +192,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                         spacing: Math.max(1, spacing || plant.spacing),
                         height: Math.max(1, height || plant.height),
                         light,
+                        soil,
                       },
                     })
                     setEditing(null)
@@ -247,6 +269,16 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 {(Object.keys(LIGHT_LABELS) as LightRequirement[]).map((k) => (
                   <option key={k} value={k}>
                     {LIGHT_LABELS[k]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Empfohlener Bodentyp
+              <select value={soil} onChange={(e) => setSoil(e.target.value as SoilType)}>
+                {(Object.keys(SOIL_LABELS) as SoilType[]).map((k) => (
+                  <option key={k} value={k}>
+                    {SOIL_ICONS[k]} {SOIL_LABELS[k]}
                   </option>
                 ))}
               </select>

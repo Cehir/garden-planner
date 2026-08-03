@@ -23,6 +23,16 @@ export const LIGHT_LABELS: Record<LightRequirement, string> = {
   shade: 'Schatten',
 }
 
+export type SoilType = 'humus' | 'sand' | 'loam' | 'clay' | 'normal'
+
+export const SOIL_LABELS: Record<SoilType, string> = {
+  humus: 'Humus',
+  sand: 'Sand',
+  loam: 'Lehm',
+  clay: 'Ton',
+  normal: 'normaler Gartenboden',
+}
+
 export interface Plant {
   id: string
   name: string
@@ -31,6 +41,7 @@ export interface Plant {
   spacing: number
   height: number
   light: LightRequirement
+  soil: SoilType
 }
 
 export interface PlacedPlant {

@@ -5,7 +5,7 @@ Ein visueller Gartenplaner für den Browser: Beete auf einer Gartenfläche einze
 ## Funktionen
 
 - **Beet-Editor** – Beete per Maus-Drag als Rechtecke einzeichnen, verschieben, an 8 Ankern skalieren und löschen
-- **Pflanzen-Bibliothek** – 24+ vorbelegte Pflanzen (Tomate, Chili, Salat, Kräuter …) mit Namen, Emoji, Farbe, **optimalem Pflanzabstand**, **Höhe** und **Lichtbedarf** (Sonne/Halbschatten/Schatten, mit Icon ☀️/⛅/☁️); eigene Pflanzen hinzufügen, bearbeiten und löschen, Suche/Filter
+- **Pflanzen-Bibliothek** – 24+ vorbelegte Pflanzen (Tomate, Chili, Salat, Kräuter …) mit Namen, Emoji, Farbe, **optimalem Pflanzabstand**, **Höhe**, **Lichtbedarf** (Sonne/Halbschatten/Schatten, mit Icon ☀️/⛅/☁️) und **empfohlenem Bodentyp** (Humus/Sand/Lehm/Ton/normal, mit Icon 🍂/🏖️/🟫/🟤/🌱); eigene Pflanzen hinzufügen, bearbeiten und löschen, Suche/Filter
 - **Pflanzen platzieren** – In Beete setzen (Startgröße = optimaler Abstand), verschieben, skalieren und entfernen; Belegungsgrad des Beets in Prozent
 - **Beschattungs-Analyse** – Schattenkegel der Pflanzen fest nach Norden (Sonne aus Süden, Faktor 2.0) im Editor einblenden; automatische Warnung, wenn eine höhere Pflanze eine kürzere mit Sonnenbedarf beschattet (z. B. Tomate ▷ Chili), Liste der Konflikte im Beet-Panel
 - **Himmelsrichtungs-Indikator** – Fester Kompass (N/S/O/W) oben rechts im Editor-Viewport, unabhängig von Zoom/Scroll, mit Hinweis auf die Schattenrichtung
@@ -68,7 +68,7 @@ npm run lint       # Linting
 
 - `Garden` – Name, Breite/Höhe in cm
 - `Bed` – Position, Größe, Name, Farbe, Notizen
-- `Plant` – Katalog-Eintrag mit Name, Emoji, Farbe, Pflanzabstand (`spacing`), Höhe (`height`) und Lichtbedarf (`light` in cm)
+- `Plant` – Katalog-Eintrag mit Name, Emoji, Farbe, Pflanzabstand (`spacing`), Höhe (`height`), Lichtbedarf (`light`) und empfohlenem Bodentyp (`soil`)
 - `PlacedPlant` – Pflanzen-Instanz in einem Beet (relative Position, aktuelle Größe)
 
 ## Lizenz
