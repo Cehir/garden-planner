@@ -6,6 +6,12 @@ import { uid } from '../utils'
 
 const PLANT_COLORS = ['#3f7d43', '#7fb069', '#d6364c', '#e8822e', '#e8a30f', '#8a7bb8', '#d0527a', '#6fa3a8']
 
+const LIGHT_ICONS: Record<LightRequirement, string> = {
+  full: '☀️',
+  partial: '⛅',
+  shade: '☁️',
+}
+
 interface PlantLibraryProps {
   placedPlant: Plant | null
   onPick: (plant: Plant | null) => void
@@ -68,7 +74,9 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
             </span>
             <span className="name">
               {p.name}
-              <span className="sub">{p.spacing} cm</span>
+              <span className="sub">
+                {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']}
+              </span>
             </span>
             <button
               type="button"
