@@ -16,6 +16,8 @@ interface ToolbarProps {
   onSeason: (s: Season) => void
   phase: Phase
   onPhase: (p: Phase) => void
+  showRotation: boolean
+  onShowRotation: (v: boolean) => void
 }
 
 export default function Toolbar({
@@ -31,6 +33,8 @@ export default function Toolbar({
   onSeason,
   phase,
   onPhase,
+  showRotation,
+  onShowRotation,
 }: ToolbarProps) {
   const { state } = useStore()
 
@@ -112,6 +116,14 @@ export default function Toolbar({
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          className={showRotation ? 'tool wide active' : 'tool wide'}
+          onClick={() => onShowRotation(!showRotation)}
+          title="Pflanzjahre im Plan einblenden (Fruchtfolge)"
+        >
+          🔁 Fruchtfolge
+        </button>
       </div>
 
       <div className="toolbar-group">

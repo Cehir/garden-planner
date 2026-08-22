@@ -51,6 +51,7 @@ interface EditorProps {
   zoom: number
   season: Season
   phase: Phase
+  showRotation: boolean
 }
 
 function hitTest(x: number, y: number, rect: { x: number; y: number; w: number; h: number }) {
@@ -101,7 +102,7 @@ function nearHandle(
   return null
 }
 
-export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase }: EditorProps) {
+export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation }: EditorProps) {
   const { state, dispatch } = useStore()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -536,6 +537,21 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
                     pointerEvents="none"
                   >
                     ⚠️
+                  </text>
+                )}
+                {showRotation && (
+                  <text
+                    x={cx}
+                    y={cy + r + 14}
+                    textAnchor="middle"
+                    fontSize={Math.max(9, r * 0.6)}
+                    fill="#3a362e"
+                    stroke="#fff"
+                    strokeWidth={2.5}
+                    paintOrder="stroke"
+                    pointerEvents="none"
+                  >
+                    {p.plantedYear}
                   </text>
                 )}
               </g>

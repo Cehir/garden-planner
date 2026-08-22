@@ -16,6 +16,7 @@ function GardenApp() {
   const [fitZoom, setFitZoom] = useState(0.6)
   const [season, setSeason] = useState<Season>('all')
   const [phase, setPhase] = useState<Phase>('plant')
+  const [showRotation, setShowRotation] = useState(false)
 
   useEffect(() => {
     const h = Math.max(
@@ -126,6 +127,8 @@ function GardenApp() {
         onSeason={setSeason}
         phase={phase}
         onPhase={setPhase}
+        showRotation={showRotation}
+        onShowRotation={setShowRotation}
       />
       <div className="main">
         <Editor
@@ -136,6 +139,7 @@ function GardenApp() {
           zoom={zoom}
           season={season}
           phase={phase}
+          showRotation={showRotation}
         />
         <PlantLibrary placedPlant={placedPlant} onPick={setPlacedPlant} tool={tool} />
         <BedDetails selected={selected} onClearSelection={() => setSelected(null)} />
