@@ -35,6 +35,27 @@ export const SOIL_LABELS: Record<SoilType, string> = {
 
 export type MonthRange = [number, number]
 
+export type PlantFamily =
+  | 'nacht-schatten'
+  | 'kuerbis'
+  | 'kreuzbluetler'
+  | 'knollengewaeche'
+  | 'lauch'
+  | 'lippenbluetler'
+  | 'malven'
+  | 'andere'
+
+export const FAMILY_LABELS: Record<PlantFamily, string> = {
+  'nacht-schatten': 'Nachtschattengewächse',
+  kuerbis: 'Kürbisgewächse',
+  kreuzbluetler: 'Kreuzblütler',
+  knollengewaeche: 'Knollengewächse',
+  lauch: 'Lauchgewächse',
+  lippenbluetler: 'Lippenblütler',
+  malven: 'Mallengewächse',
+  andere: 'Sonstige',
+}
+
 export type Phase = 'sow' | 'plant' | 'harvest'
 
 export type Season = 'all' | 'spring' | 'summer' | 'autumn' | 'winter' | 'now'
@@ -48,6 +69,7 @@ export interface Plant {
   height: number
   light: LightRequirement
   soil: SoilType
+  family: PlantFamily
   sow: MonthRange
   plant: MonthRange
   harvest: MonthRange

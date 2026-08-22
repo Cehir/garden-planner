@@ -23,6 +23,7 @@ export function normalizeState(raw: AppState): AppState {
       height: p.height ?? 25,
       light: p.light ?? 'full',
       soil: p.soil ?? 'normal',
+      family: p.family ?? 'andere',
       sow: p.sow ?? [3, 6],
       plant: p.plant ?? [3, 6],
       harvest: p.harvest ?? [6, 9],

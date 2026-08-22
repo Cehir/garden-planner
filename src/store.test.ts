@@ -80,6 +80,17 @@ describe('normalizeState', () => {
     expect(result.beds).toEqual(raw.beds)
     expect(result.placedPlants).toEqual(raw.placedPlants)
   })
+
+  it('füllt fehlende family mit "andere" auf (Legacy-Daten)', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [],
+      plants: [legacyPlant()],
+      placedPlants: [],
+    }
+    const [p] = normalizeState(raw).plants
+    expect(p.family).toBe('andere')
+  })
 })
 
 describe('createDefaultState', () => {

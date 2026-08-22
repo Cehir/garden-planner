@@ -105,6 +105,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
         height: Math.max(1, height || 25),
         light,
         soil,
+        family: 'andere',
         sow: [3, 6],
         plant: [3, 6],
         harvest: [6, 9],
