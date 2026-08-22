@@ -1,5 +1,6 @@
 import type { ChangeEvent } from 'react'
-import type { Tool } from '../types'
+import type { Phase, Season, Tool } from '../types'
+import { PHASE_LABELS, SEASON_LABELS } from '../seasons'
 import { useStore } from '../store'
 
 interface ToolbarProps {
@@ -11,6 +12,10 @@ interface ToolbarProps {
   onExport: () => void
   onImport: (file: File) => void
   onReset: () => void
+  season: Season
+  onSeason: (s: Season) => void
+  phase: Phase
+  onPhase: (p: Phase) => void
 }
 
 export default function Toolbar({
@@ -22,6 +27,10 @@ export default function Toolbar({
   onExport,
   onImport,
   onReset,
+  season,
+  onSeason,
+  phase,
+  onPhase,
 }: ToolbarProps) {
   const { state } = useStore()
 
@@ -76,6 +85,33 @@ export default function Toolbar({
         <button type="button" className="tool" onClick={() => onZoom(zoom * 1.25)} title="Vergrößern">
           +
         </button>
+      </div>
+
+      <div className="toolbar-group">
+        <select
+          className="tool select"
+          value={season}
+          onChange={(e) => onSeason(e.target.value as Season)}
+          title="Saison-Filter für den Plan"
+        >
+          {(Object.keys(SEASON_LABELS) as Season[]).map((s) => (
+            <option key={s} value={s}>
+              {SEASON_LABELS[s]}
+            </option>
+          ))}
+        </select>
+        <select
+          className="tool select"
+          value={phase}
+          onChange={(e) => onPhase(e.target.value as Phase)}
+          title="Phase: Aussaat, Pflanzung oder Ernte"
+        >
+          {(Object.keys(PHASE_LABELS) as Phase[]).map((ph) => (
+            <option key={ph} value={ph}>
+              {PHASE_LABELS[ph]}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="toolbar-group">

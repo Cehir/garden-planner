@@ -1,9 +1,10 @@
 import { useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import type { Bed, PlacedPlant, Plant, Selected, Tool } from '../types'
+import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
 import { useStore } from '../store'
 import { snap, uid } from '../utils'
 import { computeConflicts, shadowPolygon } from '../shadow'
+import { phaseMatchesSeason } from '../seasons'
 
 const SNAP = 10
 const MIN_SIZE = 20
@@ -48,6 +49,8 @@ interface EditorProps {
   onSelect: (sel: Selected | null) => void
   placedPlant: Plant | null
   zoom: number
+  season: Season
+  phase: Phase
 }
 
 function hitTest(x: number, y: number, rect: { x: number; y: number; w: number; h: number }) {
@@ -98,7 +101,7 @@ function nearHandle(
   return null
 }
 
-export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: EditorProps) {
+export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase }: EditorProps) {
   const { state, dispatch } = useStore()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -473,8 +476,26 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom }: 
             const cy = bed.y + p.y * bed.h
             const r = p.size / 2
             const isSel = selectedPlaced?.id === p.id
+            const dimmed = season !== 'all' && plant ? !phaseMatchesSeason(plant, phase, season) : false
+            const highlighted = season !== 'all' && plant ? phaseMatchesSeason(plant, phase, season) : false
             return (
-              <g key={p.id} className={isSel ? 'plant selected' : 'plant'}>
+              <g
+                key={p.id}
+                className={isSel ? 'plant selected' : 'plant'}
+                style={{ opacity: dimmed ? 0.3 : 1 }}
+              >
+                {highlighted && (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={r + 6}
+                    fill="none"
+                    stroke="#2f6f4f"
+                    strokeWidth={3}
+                    strokeDasharray="4 3"
+                    pointerEvents="none"
+                  />
+                )}
                 <circle
                   cx={cx}
                   cy={cy}

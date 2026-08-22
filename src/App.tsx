@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Plant, Selected, Tool } from './types'
+import type { Phase, Plant, Season, Selected, Tool } from './types'
 import { StoreProvider, useStore, createDefaultState } from './store'
 import Toolbar from './components/Toolbar'
 import Editor from './components/Editor'
@@ -14,6 +14,8 @@ function GardenApp() {
   const [placedPlant, setPlacedPlant] = useState<Plant | null>(null)
   const [zoom, setZoom] = useState(0.6)
   const [fitZoom, setFitZoom] = useState(0.6)
+  const [season, setSeason] = useState<Season>('all')
+  const [phase, setPhase] = useState<Phase>('plant')
 
   useEffect(() => {
     const h = Math.max(
@@ -120,6 +122,10 @@ function GardenApp() {
         onExport={handleExport}
         onImport={handleImport}
         onReset={handleReset}
+        season={season}
+        onSeason={setSeason}
+        phase={phase}
+        onPhase={setPhase}
       />
       <div className="main">
         <Editor
@@ -128,6 +134,8 @@ function GardenApp() {
           onSelect={setSelected}
           placedPlant={placedPlant}
           zoom={zoom}
+          season={season}
+          phase={phase}
         />
         <PlantLibrary placedPlant={placedPlant} onPick={setPlacedPlant} tool={tool} />
         <BedDetails selected={selected} onClearSelection={() => setSelected(null)} />
