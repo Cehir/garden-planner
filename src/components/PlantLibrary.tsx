@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { LightRequirement, MonthRange, Plant, SoilType } from '../types'
-import { LIGHT_LABELS, SOIL_LABELS } from '../types'
+import type { LightRequirement, MonthRange, Plant, PlantFamily, SoilType } from '../types'
+import { FAMILY_LABELS, LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { canDoNow, currentMonth, formatRange, MONTHS_SHORT } from '../seasons'
 import { useStore } from '../store'
 import { uid } from '../utils'
@@ -79,6 +79,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   const [height, setHeight] = useState(25)
   const [light, setLight] = useState<LightRequirement>('full')
   const [soil, setSoil] = useState<SoilType>('normal')
+  const [family, setFamily] = useState<PlantFamily>('andere')
   const [sow, setSow] = useState<MonthRange>([3, 6])
   const [plant, setPlant] = useState<MonthRange>([3, 6])
   const [harvest, setHarvest] = useState<MonthRange>([6, 9])
@@ -105,7 +106,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
         height: Math.max(1, height || 25),
         light,
         soil,
-        family: 'andere',
+        family,
         sow: [3, 6],
         plant: [3, 6],
         harvest: [6, 9],
@@ -118,6 +119,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     setHeight(25)
     setLight('full')
     setSoil('normal')
+    setFamily('andere')
     setSow([3, 6])
     setPlant([3, 6])
     setHarvest([6, 9])
@@ -179,6 +181,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 setHeight(p.height)
                 setLight(p.light)
                 setSoil(p.soil)
+                setFamily(p.family)
                 setSow(p.sow)
                 setPlant(p.plant)
                 setHarvest(p.harvest)
@@ -258,6 +261,16 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   ))}
                 </select>
               </label>
+              <label>
+                Pflanzenfamilie
+                <select value={family} onChange={(e) => setFamily(e.target.value as PlantFamily)}>
+                  {(Object.keys(FAMILY_LABELS) as PlantFamily[]).map((k) => (
+                    <option key={k} value={k}>
+                      {FAMILY_LABELS[k]}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <RangeField label="Aussaat" value={sow} onChange={setSow} />
               <RangeField label="Pflanzung" value={plant} onChange={setPlant} />
               <RangeField label="Ernte" value={harvest} onChange={setHarvest} />
@@ -277,6 +290,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                         height: Math.max(1, height || target.height),
                         light,
                         soil,
+                        family,
                         sow,
                         plant,
                         harvest,
@@ -366,6 +380,16 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 {(Object.keys(SOIL_LABELS) as SoilType[]).map((k) => (
                   <option key={k} value={k}>
                     {SOIL_ICONS[k]} {SOIL_LABELS[k]}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Pflanzenfamilie
+              <select value={family} onChange={(e) => setFamily(e.target.value as PlantFamily)}>
+                {(Object.keys(FAMILY_LABELS) as PlantFamily[]).map((k) => (
+                  <option key={k} value={k}>
+                    {FAMILY_LABELS[k]}
                   </option>
                 ))}
               </select>
