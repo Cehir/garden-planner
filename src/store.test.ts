@@ -73,7 +73,7 @@ describe('normalizeState', () => {
       garden: { name: 'G', width: 1, height: 2 },
       beds: [{ id: 'b1', name: 'Beet', x: 0, y: 0, w: 10, h: 10, color: '#fff', notes: 'n' }],
       plants: [legacyPlant()],
-      placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30 }],
+      placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2025 }],
     }
     const result = normalizeState(raw)
     expect(result.garden).toEqual(raw.garden)
@@ -90,6 +90,32 @@ describe('normalizeState', () => {
     }
     const [p] = normalizeState(raw).plants
     expect(p.family).toBe('andere')
+  })
+
+  it('füllt fehlendes plantedYear bei alten PlacedPlants mit dem aktuellen Jahr auf', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [{ id: 'b1', name: 'Beet', x: 0, y: 0, w: 10, h: 10, color: '#fff', notes: '' }],
+      plants: [legacyPlant()],
+      placedPlants: [
+        { id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30 },
+      ] as unknown,
+    } as unknown as AppState
+    const pps = normalizeState(raw).placedPlants as unknown as { plantedYear: number }[]
+    expect(pps[0].plantedYear).toBe(new Date().getFullYear())
+  })
+
+  it('erhält vorhandenes plantedYear', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [],
+      plants: [legacyPlant()],
+      placedPlants: [
+        { id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2028 },
+      ],
+    }
+    const [pp] = normalizeState(raw).placedPlants
+    expect(pp.plantedYear).toBe(2028)
   })
 })
 

@@ -196,6 +196,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           x: relX,
           y: relY,
           size: placedPlant.spacing,
+          plantedYear: new Date().getFullYear(),
         },
       })
       return

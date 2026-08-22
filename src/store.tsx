@@ -28,6 +28,10 @@ export function normalizeState(raw: AppState): AppState {
       plant: p.plant ?? [3, 6],
       harvest: p.harvest ?? [6, 9],
     })),
+    placedPlants: raw.placedPlants.map((p) => ({
+      ...p,
+      plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
+    })),
   }
 }
 

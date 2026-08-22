@@ -82,6 +82,7 @@ export interface PlacedPlant {
   x: number
   y: number
   size: number
+  plantedYear: number
 }
 
 export type Tool = 'select' | 'bed' | 'plant'
