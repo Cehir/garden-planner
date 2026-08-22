@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import type { LightRequirement, Plant, SoilType } from '../types'
+import type { LightRequirement, MonthRange, Plant, SoilType } from '../types'
 import { LIGHT_LABELS, SOIL_LABELS } from '../types'
+import { canDoNow, currentMonth, formatRange, MONTHS_SHORT } from '../seasons'
 import { useStore } from '../store'
 import { uid } from '../utils'
 
@@ -20,6 +21,47 @@ const SOIL_ICONS: Record<SoilType, string> = {
   normal: '🌱',
 }
 
+const MONTH_OPTIONS = MONTHS_SHORT.map((label, i) => ({ value: i + 1, label }))
+
+function RangeField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: MonthRange
+  onChange: (v: MonthRange) => void
+}) {
+  return (
+    <label>
+      {label}
+      <span className="range-row">
+        <select
+          value={value[0]}
+          onChange={(e) => onChange([Number(e.target.value), value[1]])}
+        >
+          {MONTH_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+        <span className="range-sep">bis</span>
+        <select
+          value={value[1]}
+          onChange={(e) => onChange([value[0], Number(e.target.value)])}
+        >
+          {MONTH_OPTIONS.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+      </span>
+    </label>
+  )
+}
+
 interface PlantLibraryProps {
   placedPlant: Plant | null
   onPick: (plant: Plant | null) => void
@@ -37,9 +79,18 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   const [height, setHeight] = useState(25)
   const [light, setLight] = useState<LightRequirement>('full')
   const [soil, setSoil] = useState<SoilType>('normal')
+  const [sow, setSow] = useState<MonthRange>([3, 6])
+  const [plant, setPlant] = useState<MonthRange>([3, 6])
+  const [harvest, setHarvest] = useState<MonthRange>([6, 9])
   const [editing, setEditing] = useState<string | null>(null)
+  const [nowOnly, setNowOnly] = useState(false)
 
-  const filtered = state.plants.filter((p) => p.name.toLowerCase().includes(filter.toLowerCase()))
+  const month = currentMonth()
+  const filtered = state.plants.filter(
+    (p) =>
+      p.name.toLowerCase().includes(filter.toLowerCase()) &&
+      (!nowOnly || canDoNow(p, month)),
+  )
 
   function addPlant() {
     if (!name.trim()) return
@@ -66,6 +117,9 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     setHeight(25)
     setLight('full')
     setSoil('normal')
+    setSow([3, 6])
+    setPlant([3, 6])
+    setHarvest([6, 9])
     setAdding(false)
   }
 
@@ -78,6 +132,14 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
       />
+      <label className="now-filter">
+        <input
+          type="checkbox"
+          checked={nowOnly}
+          onChange={(e) => setNowOnly(e.target.checked)}
+        />
+        Jetzt pflanzbar ({MONTHS_SHORT[month - 1]})
+      </label>
       <div className="plant-list">
         {filtered.map((p) => (
           <div
@@ -99,6 +161,9 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
               <span className="sub">
                 {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']} · {SOIL_ICONS[p.soil ?? 'normal']} {SOIL_LABELS[p.soil ?? 'normal']}
               </span>
+              <span className="sub seasons">
+                🌱 {formatRange(p.sow)} · 🪴 {formatRange(p.plant)} · 🧺 {formatRange(p.harvest)}
+              </span>
             </span>
             <button
               type="button"
@@ -113,6 +178,9 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 setHeight(p.height)
                 setLight(p.light)
                 setSoil(p.soil)
+                setSow(p.sow)
+                setPlant(p.plant)
+                setHarvest(p.harvest)
               }}
             >
               ✏️
@@ -124,8 +192,8 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
 
       {editing &&
         (() => {
-          const plant = state.plants.find((p) => p.id === editing)
-          if (!plant) return null
+          const target = state.plants.find((p) => p.id === editing)
+          if (!target) return null
           return (
             <div className="form">
               <h3>Pflanze bearbeiten</h3>
@@ -189,6 +257,9 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   ))}
                 </select>
               </label>
+              <RangeField label="Aussaat" value={sow} onChange={setSow} />
+              <RangeField label="Pflanzung" value={plant} onChange={setPlant} />
+              <RangeField label="Ernte" value={harvest} onChange={setHarvest} />
               <div className="row">
                 <button
                   type="button"
@@ -196,15 +267,18 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   onClick={() => {
                     dispatch({
                       type: 'updatePlant',
-                      id: plant.id,
+                      id: target.id,
                       patch: {
-                        name: name.trim() || plant.name,
+                        name: name.trim() || target.name,
                         emoji,
                         color,
-                        spacing: Math.max(1, spacing || plant.spacing),
-                        height: Math.max(1, height || plant.height),
+                        spacing: Math.max(1, spacing || target.spacing),
+                        height: Math.max(1, height || target.height),
                         light,
                         soil,
+                        sow,
+                        plant,
+                        harvest,
                       },
                     })
                     setEditing(null)
@@ -216,7 +290,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                   type="button"
                   className="danger"
                   onClick={() => {
-                    dispatch({ type: 'removePlant', id: plant.id })
+                    dispatch({ type: 'removePlant', id: target.id })
                     onPick(null)
                     setEditing(null)
                   }}
@@ -295,6 +369,9 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
                 ))}
               </select>
             </label>
+            <RangeField label="Aussaat" value={sow} onChange={setSow} />
+            <RangeField label="Pflanzung" value={plant} onChange={setPlant} />
+            <RangeField label="Ernte" value={harvest} onChange={setHarvest} />
             <div className="row">
               <button type="button" className="primary" onClick={addPlant}>
                 Hinzufügen
