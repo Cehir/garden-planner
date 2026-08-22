@@ -1,5 +1,6 @@
 import type { Selected } from '../types'
 import { LIGHT_LABELS, SOIL_LABELS } from '../types'
+import { formatRange } from '../seasons'
 import { useStore } from '../store'
 import { computeConflicts } from '../shadow'
 
@@ -35,6 +36,12 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
             Höhe: {plant.height ?? 25} cm · Lichtbedarf:{' '}
             {LIGHT_LABELS[plant.light ?? 'full']} · Boden:{' '}
             {SOIL_LABELS[plant.soil ?? 'normal']}
+          </p>
+        )}
+        {plant && (
+          <p>
+            Anbau: 🌱 Aussaat {formatRange(plant.sow)} · 🪴 Pflanzung{' '}
+            {formatRange(plant.plant)} · 🧺 Ernte {formatRange(plant.harvest)}
           </p>
         )}
         <button type="button" className="danger" onClick={() => dispatch({ type: 'removePlacedPlant', id: selected.id })}>
