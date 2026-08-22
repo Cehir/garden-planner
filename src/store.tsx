@@ -71,7 +71,7 @@ export type Action =
   | { type: 'removePlacedPlant'; id: string }
   | { type: 'load'; state: AppState }
 
-function reducer(state: AppState, action: Action): AppState {
+export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'setGarden':
       return { ...state, garden: { ...state.garden, ...action.patch } }

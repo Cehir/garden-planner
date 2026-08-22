@@ -119,6 +119,20 @@ describe('normalizeState', () => {
   })
 })
 
+describe('reducer: updatePlacedPlant plantedYear', () => {
+  it('setzt das Pflanzjahr einer platzierten Pflanze', async () => {
+    const { reducer } = await import('./store')
+    const s0: AppState = {
+      garden: { name: 'G', width: 1, height: 1 },
+      beds: [],
+      plants: [],
+      placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2026 }],
+    }
+    const s1 = reducer(s0, { type: 'updatePlacedPlant', id: 'pp1', patch: { plantedYear: 2028 } })
+    expect(s1.placedPlants[0].plantedYear).toBe(2028)
+  })
+})
+
 describe('createDefaultState', () => {
   it('liefert vollständigen Anfangszustand', () => {
     const s = createDefaultState()

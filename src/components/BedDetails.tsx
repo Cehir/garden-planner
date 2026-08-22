@@ -27,6 +27,22 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
         <p>
           Beet: {bed?.name ?? '–'} · Größe: {placed?.size} cm
         </p>
+        <label>
+          Gepflanzt (Jahr)
+          <input
+            type="number"
+            min={2000}
+            max={2100}
+            value={placed?.plantedYear ?? new Date().getFullYear()}
+            onChange={(e) =>
+              dispatch({
+                type: 'updatePlacedPlant',
+                id: selected.id,
+                patch: { plantedYear: Math.max(2000, Math.min(2100, Number(e.target.value) || 2000)) },
+              })
+            }
+          />
+        </label>
         <p>
           Optimaler Pflanzabstand: {plant?.spacing ?? 25} cm
           {placed && plant && placed.size !== plant.spacing && ' (Größe abweichend)'}
