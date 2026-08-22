@@ -20,6 +20,7 @@ Ein visueller Gartenplaner für den Browser: Beete auf einer Gartenfläche einze
 - TypeScript
 - SVG-basierter Editor (für Präzision und einfache Interaktion)
 - `localStorage` für Persistenz
+- [Vitest](https://vitest.dev/) + [React Testing Library](https://testing-library.com/docs/react-testing-library/intro) + [happy-dom](https://github.com/capricorn86/happy-dom) für Unit- & Komponententests
 
 ## Projektstruktur
 
@@ -50,6 +51,8 @@ npm run dev        # Entwicklungsserver (Hot Reload)
 npm run build      # TypeScript-Check + Produktions-Build nach dist/
 npm run preview    # Build lokal ansehen
 npm run lint       # Linting
+npm test           # Test-Suite (Vitest)
+npm run test:watch # Test-Suite im Watch-Modus
 ```
 
 ## Bedienung
