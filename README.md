@@ -9,6 +9,7 @@ Ein visueller Gartenplaner für den Browser: Beete auf einer Gartenfläche einze
 - **Pflanzen platzieren** – In Beete setzen (Startgröße = optimaler Abstand), verschieben, skalieren und entfernen; Belegungsgrad des Beets in Prozent
 - **Beschattungs-Analyse** – Schattenkegel der Pflanzen fest nach Norden (Sonne aus Süden, Faktor 2.0) im Editor einblenden; automatische Warnung, wenn eine höhere Pflanze eine kürzere mit Sonnenbedarf beschattet (z. B. Tomate ▷ Chili), Liste der Konflikte im Beet-Panel
 - **Saison-Ansicht** – Im Editor per Toolbar nach **Saison** (Frühling/Sommer/Herbst/Winter/Dieser Monat) und **Phase** (Aussaat/Pflanzung/Ernte) filtern; passende Pflanzen werden hervorgehoben (grüner Ring), andere gedimmt
+- **Fruchtfolge (mehrere Jahre)** – Jede platzierte Pflanze trägt ihr **Pflanzjahr** (beim Setzen = aktuelles Jahr, im Pflanze-Panel per Zahleneingabe änderbar); jede Pflanze hat eine **Pflanzenfamilie** (Nachtschattengewächse, Kreuzblütler, Lauchgewächse, …). Pro Beet zeigt das Beet-Panel den Zyklus (z. B. „2025 → 2027 · 3 Jahre“) und **Warnungen**, wenn dieselbe Pflanze oder dieselbe Familie kürzlich (unter 3 Jahre) im Beet stand (z. B. Tomate nach Paprika). Mit „🔁 Fruchtfolge“ in der Toolbar werden die Pflanzjahre direkt im Plan eingeblendet
 - **Himmelsrichtungs-Indikator** – Fester Kompass (N/S/O/W) oben rechts im Editor-Viewport, unabhängig von Zoom/Scroll, mit Hinweis auf die Schattenrichtung
 - **Beet-Details** – Name, Farbe, Maße, Position und Notizen pro Beet
 - **Speichern & Laden** – Automatische Sicherung im Browser (`localStorage`, Key `gartenplaner-state-v1`), JSON-Export/-Import und Reset
@@ -32,6 +33,7 @@ src/
 ├── plants.ts                # Standard-Katalog mit Pflanzabständen, Höhe, Lichtbedarf, Boden & Anbauzeiten
 ├── shadow.ts                # Schatten-Geometrie + Konflikt-Erkennung
 ├── seasons.ts               # Monats-/Saison-Helfer (Format, jetzt-pflanzbar, Matching)
+├── rotation.ts              # Fruchtfolge: Beet-Zyklus (min..max Jahr) + Wiederholungs-Warnungen
 ├── store.tsx                # Reducer + localStorage-Persistenz
 ├── utils.ts                 # id-Generator, Grid-Snap
 └── components/
