@@ -45,7 +45,19 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
     if (!name.trim()) return
     dispatch({
       type: 'addPlant',
-      plant: { id: uid('plant'), name: name.trim(), emoji, color, spacing: Math.max(1, spacing || 25), height: Math.max(1, height || 25), light, soil },
+      plant: {
+        id: uid('plant'),
+        name: name.trim(),
+        emoji,
+        color,
+        spacing: Math.max(1, spacing || 25),
+        height: Math.max(1, height || 25),
+        light,
+        soil,
+        sow: [3, 6],
+        plant: [3, 6],
+        harvest: [6, 9],
+      },
     })
     setName('')
     setEmoji('🌿')

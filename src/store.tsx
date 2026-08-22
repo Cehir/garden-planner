@@ -14,6 +14,22 @@ export function createDefaultState(): AppState {
   }
 }
 
+export function normalizeState(raw: AppState): AppState {
+  return {
+    ...raw,
+    plants: raw.plants.map((p) => ({
+      ...p,
+      spacing: p.spacing ?? 25,
+      height: p.height ?? 25,
+      light: p.light ?? 'full',
+      soil: p.soil ?? 'normal',
+      sow: p.sow ?? [3, 6],
+      plant: p.plant ?? [3, 6],
+      harvest: p.harvest ?? [6, 9],
+    })),
+  }
+}
+
 function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -28,16 +44,7 @@ function loadState(): AppState {
         Array.isArray(parsed.plants) &&
         Array.isArray(parsed.placedPlants)
       ) {
-        return {
-          ...parsed,
-          plants: parsed.plants.map((p) => ({
-            ...p,
-            spacing: p.spacing ?? 25,
-            height: p.height ?? 25,
-            light: p.light ?? 'full',
-            soil: p.soil ?? 'normal',
-          })),
-        }
+        return normalizeState(parsed)
       }
     }
   } catch {
@@ -97,7 +104,7 @@ function reducer(state: AppState, action: Action): AppState {
     case 'removePlacedPlant':
       return { ...state, placedPlants: state.placedPlants.filter((p) => p.id !== action.id) }
     case 'load':
-      return action.state
+      return normalizeState(action.state)
   }
 }
 

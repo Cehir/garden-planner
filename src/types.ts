@@ -33,6 +33,12 @@ export const SOIL_LABELS: Record<SoilType, string> = {
   normal: 'normaler Gartenboden',
 }
 
+export type MonthRange = [number, number]
+
+export type Phase = 'sow' | 'plant' | 'harvest'
+
+export type Season = 'all' | 'spring' | 'summer' | 'autumn' | 'winter' | 'now'
+
 export interface Plant {
   id: string
   name: string
@@ -42,6 +48,9 @@ export interface Plant {
   height: number
   light: LightRequirement
   soil: SoilType
+  sow: MonthRange
+  plant: MonthRange
+  harvest: MonthRange
 }
 
 export interface PlacedPlant {
