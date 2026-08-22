@@ -1,6 +1,7 @@
 import type { Selected } from '../types'
 import { LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { formatRange } from '../seasons'
+import { bedCycle, repeatWarnings } from '../rotation'
 import { useStore } from '../store'
 import { computeConflicts } from '../shadow'
 
@@ -118,6 +119,8 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
   const bedConflicts = computeConflicts(placedPlants, state.plants, state.beds).filter(
     (c) => bedPlantIds.has(c.sourceId) || bedPlantIds.has(c.targetId),
   )
+  const cycle = bedCycle(state.placedPlants, bed.id)
+  const rotationWarnings = repeatWarnings(state.placedPlants, state.plants, bed)
 
   return (
     <aside className="sidebar">
@@ -167,6 +170,23 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
           <strong>{utilization}%</strong> belegt
         </div>
       </div>
+
+      {cycle && (
+        <p className="hint">
+          🔁 Fruchtfolge: {cycle.min} → {cycle.max} · {cycle.max - cycle.min + 1} Jahr(e)
+        </p>
+      )}
+
+      {rotationWarnings.length > 0 && (
+        <div className="conflicts">
+          <h3>🔁 Fruchtfolge-Warnungen</h3>
+          <ul>
+            {rotationWarnings.map((w, i) => (
+              <li key={i}>{w.text}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {bedConflicts.length > 0 && (
         <div className="conflicts">
