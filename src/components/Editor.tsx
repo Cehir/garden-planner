@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
 import { useStore } from '../store'
-import { snap, uid } from '../utils'
+import { snap, uid, placedInYear } from '../utils'
 import { computeConflicts, shadowPolygon } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
 
@@ -52,6 +52,7 @@ interface EditorProps {
   season: Season
   phase: Phase
   showRotation: boolean
+  year: number
 }
 
 function hitTest(x: number, y: number, rect: { x: number; y: number; w: number; h: number }) {
@@ -102,7 +103,7 @@ function nearHandle(
   return null
 }
 
-export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation }: EditorProps) {
+export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
   const { state, dispatch } = useStore()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<DragState | null>(null)
@@ -110,12 +111,14 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
 
   const { garden, beds, plants, placedPlants } = state
 
+  const visiblePlaced = useMemo(() => placedInYear(placedPlants, year), [placedPlants, year])
+
   const selectedBed: Bed | null =
     selected?.kind === 'bed' ? beds.find((b) => b.id === selected.id) ?? null : null
   const selectedPlaced: PlacedPlant | null =
     selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
   const plantById = new Map(plants.map((p) => [p.id, p]))
-  const conflicts = useMemo(() => computeConflicts(placedPlants, plants, beds), [placedPlants, plants, beds])
+  const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
   function getPoint(e: ReactPointerEvent<SVGSVGElement> | PointerEvent): { x: number; y: number } {
@@ -162,7 +165,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
       }
     }
 
-    for (const p of placedPlants) {
+    for (const p of visiblePlaced) {
       const bed = beds.find((b) => b.id === p.bedId)
       if (!bed) continue
       const cx = bed.x + p.x * bed.w
@@ -197,7 +200,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           x: relX,
           y: relY,
           size: placedPlant.spacing,
-          plantedYear: new Date().getFullYear(),
+          plantedYear: year,
         },
       })
       return
@@ -219,7 +222,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
       }
     }
 
-    for (const p of placedPlants) {
+    for (const p of visiblePlaced) {
       const bed = beds.find((b) => b.id === p.bedId)
       if (!bed) continue
       const cx = bed.x + p.x * bed.w
@@ -453,7 +456,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
             />
           ))}
 
-          {placedPlants.map((p) => {
+          {visiblePlaced.map((p) => {
             const bed = beds.find((b) => b.id === p.bedId)
             if (!bed) return null
             const plant = plantById.get(p.plantId)
@@ -470,7 +473,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
             )
           })}
 
-          {placedPlants.map((p) => {
+          {visiblePlaced.map((p) => {
             const bed = beds.find((b) => b.id === p.bedId)
             if (!bed) return null
             const plant = plantById.get(p.plantId)

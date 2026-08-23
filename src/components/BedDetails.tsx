@@ -4,15 +4,17 @@ import { formatRange } from '../seasons'
 import { bedCycle, repeatWarnings } from '../rotation'
 import { useStore } from '../store'
 import { computeConflicts } from '../shadow'
+import { placedInYear } from '../utils'
 
 const BED_COLORS = ['#7fb069', '#6fa3a8', '#d9a441', '#b0697f', '#8a7bb8', '#d07b4f', '#7b8f4f', '#4f7bb0']
 
 interface BedDetailsProps {
   selected: Selected | null
   onClearSelection: () => void
+  year: number
 }
 
-export default function BedDetails({ selected, onClearSelection }: BedDetailsProps) {
+export default function BedDetails({ selected, onClearSelection, year }: BedDetailsProps) {
   const { state, dispatch } = useStore()
 
   if (selected?.kind === 'placed') {
@@ -111,12 +113,13 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
   }
 
   const { placedPlants } = state
-  const bedPlants = placedPlants.filter((p) => p.bedId === bed.id)
+  const yearPlants = placedInYear(placedPlants, year)
+  const bedPlants = yearPlants.filter((p) => p.bedId === bed.id)
   const totalArea = bed.w * bed.h
   const plantArea = bedPlants.reduce((sum, p) => sum + Math.PI * (p.size / 2) ** 2, 0)
   const utilization = totalArea > 0 ? Math.round((plantArea / totalArea) * 100) : 0
   const bedPlantIds = new Set(bedPlants.map((p) => p.id))
-  const bedConflicts = computeConflicts(placedPlants, state.plants, state.beds).filter(
+  const bedConflicts = computeConflicts(yearPlants, state.plants, state.beds).filter(
     (c) => bedPlantIds.has(c.sourceId) || bedPlantIds.has(c.targetId),
   )
   const cycle = bedCycle(state.placedPlants, bed.id)
@@ -164,7 +167,7 @@ export default function BedDetails({ selected, onClearSelection }: BedDetailsPro
 
       <div className="stats">
         <div>
-          <strong>{bedPlants.length}</strong> Pflanzen
+          <strong>{bedPlants.length}</strong> Pflanzen · Jahr {year}
         </div>
         <div>
           <strong>{utilization}%</strong> belegt

@@ -16,6 +16,7 @@ function GardenApp() {
   const [season, setSeason] = useState<Season>('all')
   const [phase, setPhase] = useState<Phase>('plant')
   const [showRotation, setShowRotation] = useState(false)
+  const [year, setYear] = useState(new Date().getFullYear())
 
   // "Fit to screen" is derived from the (external) window size + garden
   // dimensions, so it is computed during render instead of stored in state.
@@ -75,6 +76,12 @@ function GardenApp() {
     }
   }
 
+  // Beim Jahreswechsel Auswahl platziertener Pflanzen verwerfen – Beete-Auswahl bleibt gültig.
+  function handleYear(y: number) {
+    setYear(y)
+    setSelected((sel) => (sel?.kind === 'placed' ? null : sel))
+  }
+
   function handleExport() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -132,6 +139,8 @@ function GardenApp() {
         onPhase={setPhase}
         showRotation={showRotation}
         onShowRotation={setShowRotation}
+        year={year}
+        onYear={handleYear}
       />
       <div className="main">
         <Editor
@@ -143,9 +152,10 @@ function GardenApp() {
           season={season}
           phase={phase}
           showRotation={showRotation}
+          year={year}
         />
         <PlantLibrary placedPlant={placedPlant} onPick={setPlacedPlant} tool={tool} />
-        <BedDetails selected={selected} onClearSelection={() => setSelected(null)} />
+        <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
       </div>
       <footer className="statusbar">
         {tool === 'bed' && <span>Ziehe mit der Maus, um ein Beet aufzuzeichnen.</span>}

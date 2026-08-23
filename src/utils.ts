@@ -1,3 +1,5 @@
+import type { PlacedPlant } from './types'
+
 let counter = 0
 
 export function uid(prefix = 'id'): string {
@@ -6,3 +8,8 @@ export function uid(prefix = 'id'): string {
 }
 
 export const snap = (v: number, grid = 10): number => Math.round(v / grid) * grid
+
+/** Platzierte Pflanzen eines bestimmten Pflanzjahres (Jahresfilter für Plan und Beet-Panel). */
+export function placedInYear(placedPlants: PlacedPlant[], year: number): PlacedPlant[] {
+  return placedPlants.filter((p) => p.plantedYear === year)
+}

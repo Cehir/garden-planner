@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import type { ChangeEvent } from 'react'
 import type { Phase, Season, Tool } from '../types'
 import { PHASE_LABELS, SEASON_LABELS } from '../seasons'
@@ -18,6 +19,8 @@ interface ToolbarProps {
   onPhase: (p: Phase) => void
   showRotation: boolean
   onShowRotation: (v: boolean) => void
+  year: number
+  onYear: (y: number) => void
 }
 
 export default function Toolbar({
@@ -35,8 +38,16 @@ export default function Toolbar({
   onPhase,
   showRotation,
   onShowRotation,
+  year,
+  onYear,
 }: ToolbarProps) {
   const { state } = useStore()
+
+  const years = useMemo(() => {
+    const set = new Set(state.placedPlants.map((p) => p.plantedYear))
+    set.add(new Date().getFullYear())
+    return [...set].sort((a, b) => b - a)
+  }, [state.placedPlants])
 
   function handleImportFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -92,6 +103,18 @@ export default function Toolbar({
       </div>
 
       <div className="toolbar-group">
+        <select
+          className="tool select"
+          value={year}
+          onChange={(e) => onYear(Number(e.target.value))}
+          title="Planungsjahr: Beete zeigen nur Pflanzen dieses Jahres"
+        >
+          {years.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </select>
         <select
           className="tool select"
           value={season}
