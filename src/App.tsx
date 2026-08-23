@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Phase, Plant, Season, Selected, Tool } from './types'
 import { StoreProvider, useStore, createDefaultState } from './store'
 import Toolbar from './components/Toolbar'
@@ -12,24 +12,25 @@ function GardenApp() {
   const [tool, setTool] = useState<Tool>('select')
   const [selected, setSelected] = useState<Selected | null>(null)
   const [placedPlant, setPlacedPlant] = useState<Plant | null>(null)
-  const [zoom, setZoom] = useState(0.6)
-  const [fitZoom, setFitZoom] = useState(0.6)
+  const [userZoom, setUserZoom] = useState<number | null>(null)
   const [season, setSeason] = useState<Season>('all')
   const [phase, setPhase] = useState<Phase>('plant')
   const [showRotation, setShowRotation] = useState(false)
 
-  useEffect(() => {
+  // "Fit to screen" is derived from the (external) window size + garden
+  // dimensions, so it is computed during render instead of stored in state.
+  const fitZoom = useMemo(() => {
     const h = Math.max(
       0.15,
       Math.min(3, (window.innerHeight - 190) / state.garden.height),
     )
     const w = Math.max(0.15, Math.min(3, (window.innerWidth - 460) / state.garden.width))
-    const f = Math.min(h, w)
-    setZoom(f)
-    setFitZoom(f)
+    return Math.min(h, w)
   }, [state.garden.width, state.garden.height])
 
-  const fit = useCallback(() => setZoom(fitZoom), [fitZoom])
+  const zoom = userZoom ?? fitZoom
+
+  const fit = useCallback(() => setUserZoom(null), [])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -95,6 +96,7 @@ function GardenApp() {
         dispatch({ type: 'load', state: { ...createDefaultState(), ...parsed } })
         setSelected(null)
         setPlacedPlant(null)
+        setUserZoom(null)
         setTool('select')
       } catch {
         alert('Import fehlgeschlagen: Die Datei ist kein gültiger Gartenplan.')
@@ -108,6 +110,7 @@ function GardenApp() {
       dispatch({ type: 'load', state: createDefaultState() })
       setSelected(null)
       setPlacedPlant(null)
+      setUserZoom(null)
       setTool('select')
     }
   }
@@ -118,7 +121,7 @@ function GardenApp() {
         tool={tool}
         onTool={setToolSafe}
         zoom={zoom}
-        onZoom={(z) => setZoom(Math.max(0.1, Math.min(5, z)))}
+        onZoom={(z) => setUserZoom(Math.max(0.1, Math.min(5, z)))}
         onFit={fit}
         onExport={handleExport}
         onImport={handleImport}
