@@ -28,6 +28,7 @@ function makeState(): AppState {
       { id: 'p2', bedId: 'b2', plantId: 'lettuce', x: 0.5, y: 0.5, size: 24, plantedYear: 2026 },
       { id: 'p3', bedId: 'b2', plantId: 'tomato', x: 0.8, y: 0.2, size: 20, plantedYear: 2025 },
     ],
+    seeds: [],
   }
 }
 

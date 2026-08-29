@@ -85,6 +85,15 @@ export interface PlacedPlant {
   plantedYear: number
 }
 
+export interface Seed {
+  id: string
+  plantId: string
+  name: string
+  producer: string
+  filled: string
+  expires: string
+}
+
 export type Tool = 'select' | 'bed' | 'plant'
 
 export type Selected = { kind: 'bed'; id: string } | { kind: 'placed'; id: string }
@@ -94,4 +103,5 @@ export interface AppState {
   beds: Bed[]
   plants: Plant[]
   placedPlants: PlacedPlant[]
+  seeds: Seed[]
 }

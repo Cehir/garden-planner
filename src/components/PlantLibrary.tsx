@@ -4,6 +4,7 @@ import { FAMILY_LABELS, LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { canDoNow, currentMonth, formatRange, MONTHS_SHORT } from '../seasons'
 import { useStore } from '../store'
 import { uid } from '../utils'
+import SeedBank from './SeedBank'
 
 const PLANT_COLORS = ['#3f7d43', '#7fb069', '#d6364c', '#e8822e', '#e8a30f', '#8a7bb8', '#d0527a', '#6fa3a8']
 
@@ -62,13 +63,13 @@ function RangeField({
   )
 }
 
-interface PlantLibraryProps {
+interface PlantsPanelProps {
   placedPlant: Plant | null
   onPick: (plant: Plant | null) => void
   tool: 'select' | 'bed' | 'plant'
 }
 
-export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibraryProps) {
+function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
   const { state, dispatch } = useStore()
   const [filter, setFilter] = useState('')
   const [adding, setAdding] = useState(false)
@@ -87,6 +88,11 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   const [nowOnly, setNowOnly] = useState(false)
 
   const month = currentMonth()
+  const seedCounts = new Map<string, number>()
+  for (const s of state.seeds) {
+    seedCounts.set(s.plantId, (seedCounts.get(s.plantId) ?? 0) + 1)
+  }
+
   const filtered = state.plants.filter(
     (p) =>
       p.name.toLowerCase().includes(filter.toLowerCase()) &&
@@ -127,7 +133,7 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
   }
 
   return (
-    <aside className="sidebar library">
+    <>
       <h2>Pflanzen-Bibliothek</h2>
       <input
         type="search"
@@ -144,53 +150,57 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
         Jetzt pflanzbar ({MONTHS_SHORT[month - 1]})
       </label>
       <div className="plant-list">
-        {filtered.map((p) => (
-          <div
-            key={p.id}
-            className={
-              'plant-item' +
-              (placedPlant?.id === p.id ? ' active' : '') +
-              (editing === p.id ? ' editing' : '')
-            }
-            onClick={() => onPick(placedPlant?.id === p.id ? null : p)}
-            role="button"
-            title={tool === 'plant' ? 'Klicken, um zu platzieren' : 'Wählen, dann oben „Pflanze platzieren“ aktivieren'}
-          >
-            <span className="emoji" style={{ background: p.color }}>
-              {p.emoji}
-            </span>
-            <span className="name">
-              {p.name}
-              <span className="sub">
-                {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']} · {SOIL_ICONS[p.soil ?? 'normal']} {SOIL_LABELS[p.soil ?? 'normal']}
-              </span>
-              <span className="sub seasons">
-                🌱 {formatRange(p.sow)} · 🪴 {formatRange(p.plant)} · 🧺 {formatRange(p.harvest)}
-              </span>
-            </span>
-            <button
-              type="button"
-              className="mini"
-              onClick={(e) => {
-                e.stopPropagation()
-                setEditing(p.id)
-                setName(p.name)
-                setEmoji(p.emoji)
-                setColor(p.color)
-                setSpacing(p.spacing)
-                setHeight(p.height)
-                setLight(p.light)
-                setSoil(p.soil)
-                setFamily(p.family)
-                setSow(p.sow)
-                setPlant(p.plant)
-                setHarvest(p.harvest)
-              }}
+        {filtered.map((p) => {
+          const seedCount = seedCounts.get(p.id) ?? 0
+          return (
+            <div
+              key={p.id}
+              className={
+                'plant-item' +
+                (placedPlant?.id === p.id ? ' active' : '') +
+                (editing === p.id ? ' editing' : '')
+              }
+              onClick={() => onPick(placedPlant?.id === p.id ? null : p)}
+              role="button"
+              title={tool === 'plant' ? 'Klicken, um zu platzieren' : 'Wählen, dann oben „Pflanze platzieren“ aktivieren'}
             >
-              ✏️
-            </button>
-          </div>
-        ))}
+              <span className="emoji" style={{ background: p.color }}>
+                {p.emoji}
+              </span>
+              <span className="name">
+                {p.name}
+                <span className="sub">
+                  {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']} · {SOIL_ICONS[p.soil ?? 'normal']} {SOIL_LABELS[p.soil ?? 'normal']}
+                </span>
+                <span className="sub seasons">
+                  🌱 {formatRange(p.sow)} · 🪴 {formatRange(p.plant)} · 🧺 {formatRange(p.harvest)}
+                </span>
+                {seedCount > 0 && <span className="sub seeds">🌰 {seedCount}× Saatgut</span>}
+              </span>
+              <button
+                type="button"
+                className="mini"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditing(p.id)
+                  setName(p.name)
+                  setEmoji(p.emoji)
+                  setColor(p.color)
+                  setSpacing(p.spacing)
+                  setHeight(p.height)
+                  setLight(p.light)
+                  setSoil(p.soil)
+                  setFamily(p.family)
+                  setSow(p.sow)
+                  setPlant(p.plant)
+                  setHarvest(p.harvest)
+                }}
+              >
+                ✏️
+              </button>
+            </div>
+          )
+        })}
         {filtered.length === 0 && <p className="hint">Keine Pflanzen gefunden.</p>}
       </div>
 
@@ -417,6 +427,39 @@ export default function PlantLibrary({ placedPlant, onPick, tool }: PlantLibrary
           „{placedPlant.name}“ ausgewählt – klicke in den Plan, um sie in ein Beet zu setzen.
         </p>
       )}
+    </>
+  )
+}
+
+type Tab = 'plants' | 'seeds'
+
+interface PlantLibraryProps {
+  placedPlant: Plant | null
+  onPick: (plant: Plant | null) => void
+  tool: 'select' | 'bed' | 'plant'
+}
+
+export default function PlantLibrary(props: PlantLibraryProps) {
+  const [tab, setTab] = useState<Tab>('plants')
+  return (
+    <aside className="sidebar library">
+      <div className="tabs">
+        <button
+          type="button"
+          className={tab === 'plants' ? 'tab active' : 'tab'}
+          onClick={() => setTab('plants')}
+        >
+          Pflanzen
+        </button>
+        <button
+          type="button"
+          className={tab === 'seeds' ? 'tab active' : 'tab'}
+          onClick={() => setTab('seeds')}
+        >
+          Samenbank
+        </button>
+      </div>
+      {tab === 'plants' ? <PlantsPanel {...props} /> : <SeedBank />}
     </aside>
   )
 }

@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode, Dispatch } from 'react'
-import type { AppState, Bed, Garden, PlacedPlant, Plant } from './types'
+import type { AppState, Bed, Garden, PlacedPlant, Plant, Seed } from './types'
 import { DEFAULT_PLANTS } from './plants'
 
 const STORAGE_KEY = 'gartenplaner-state-v1'
@@ -11,13 +11,17 @@ export function createDefaultState(): AppState {
     beds: [],
     plants: DEFAULT_PLANTS,
     placedPlants: [],
+    seeds: [],
   }
 }
 
-export function normalizeState(raw: AppState): AppState {
+export function normalizeState(raw: Partial<AppState>): AppState {
   return {
     ...raw,
-    plants: raw.plants.map((p) => ({
+    garden: raw.garden ?? { name: 'Mein Garten', width: 800, height: 600 },
+    beds: raw.beds ?? [],
+    seeds: raw.seeds ?? [],
+    plants: (raw.plants ?? []).map((p) => ({
       ...p,
       spacing: p.spacing ?? 25,
       height: p.height ?? 25,
@@ -28,7 +32,7 @@ export function normalizeState(raw: AppState): AppState {
       plant: p.plant ?? [3, 6],
       harvest: p.harvest ?? [6, 9],
     })),
-    placedPlants: raw.placedPlants.map((p) => ({
+    placedPlants: (raw.placedPlants ?? []).map((p) => ({
       ...p,
       plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
     })),
@@ -69,6 +73,9 @@ export type Action =
   | { type: 'addPlacedPlant'; plant: PlacedPlant }
   | { type: 'updatePlacedPlant'; id: string; patch: Partial<PlacedPlant> }
   | { type: 'removePlacedPlant'; id: string }
+  | { type: 'addSeed'; seed: Seed }
+  | { type: 'updateSeed'; id: string; patch: Partial<Seed> }
+  | { type: 'removeSeed'; id: string }
   | { type: 'load'; state: AppState }
 
 export function reducer(state: AppState, action: Action): AppState {
@@ -96,7 +103,11 @@ export function reducer(state: AppState, action: Action): AppState {
         plants: state.plants.map((p) => (p.id === action.id ? { ...p, ...action.patch } : p)),
       }
     case 'removePlant':
-      return { ...state, plants: state.plants.filter((p) => p.id !== action.id) }
+      return {
+        ...state,
+        plants: state.plants.filter((p) => p.id !== action.id),
+        seeds: state.seeds.filter((s) => s.plantId !== action.id),
+      }
     case 'addPlacedPlant':
       return { ...state, placedPlants: [...state.placedPlants, action.plant] }
     case 'updatePlacedPlant':
@@ -108,6 +119,15 @@ export function reducer(state: AppState, action: Action): AppState {
       }
     case 'removePlacedPlant':
       return { ...state, placedPlants: state.placedPlants.filter((p) => p.id !== action.id) }
+    case 'addSeed':
+      return { ...state, seeds: [...state.seeds, action.seed] }
+    case 'updateSeed':
+      return {
+        ...state,
+        seeds: state.seeds.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)),
+      }
+    case 'removeSeed':
+      return { ...state, seeds: state.seeds.filter((s) => s.id !== action.id) }
     case 'load':
       return normalizeState(action.state)
   }

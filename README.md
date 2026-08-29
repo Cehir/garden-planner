@@ -5,7 +5,8 @@ Ein visueller Gartenplaner für den Browser: Beete auf einer Gartenfläche einze
 ## Funktionen
 
 - **Beet-Editor** – Beete per Maus-Drag als Rechtecke einzeichnen, verschieben, an 8 Ankern skalieren und löschen
-- **Pflanzen-Bibliothek** – 25+ vorbelegte Pflanzen (Tomate, Chili, Salat, Kräuter …) mit Namen, Emoji, Farbe, **optimalem Pflanzabstand**, **Höhe**, **Lichtbedarf** (Sonne/Halbschatten/Schatten, mit Icon ☀️/⛅/☁️) und **empfohlenem Bodentyp** (Humus/Sand/Lehm/Ton/normal, mit Icon 🍂/🏖️/🟫/🟤/🌱) sowie **Anbauzeiten** (Aussaat / Pflanzung / Ernte als Monatsbereiche); eigene Pflanzen hinzufügen, bearbeiten und löschen, Suche/Filter, Filter **„Jetzt pflanzbar"** (aktueller Monat)
+- **Pflanzen-Bibliothek** – 25+ vorbelegte Pflanzen (Tomate, Chili, Salat, Kräuter …) mit Namen, Emoji, Farbe, **optimalem Pflanzabstand**, **Höhe**, **Lichtbedarf** (Sonne/Halbschatten/Schatten, mit Icon ☀️/⛅/☁️) und **empfohlenem Bodentyp** (Humus/Sand/Lehm/Ton/normal, mit Icon 🍂/🏖️/🟫/🟤/🌱) sowie **Anbauzeiten** (Aussaat / Pflanzung / Ernte als Monatsbereiche); eigene Pflanzen hinzufügen, bearbeiten und löschen, Suche/Filter, Filter **„Jetzt pflanzbar"** (aktueller Monat). Tabs **„Pflanzen | Samenbank"** in der Bibliotheks-Sidebar
+- **Samenbank** – Saatgut je Pflanze verwalten (Sorte/Name, Hersteller, Abfülldatum, Haltbarkeitsdatum), Suche und Pflanzen-Filter, Haltbarkeits-Bewertung (⚠️ abgelaufen / ⏳ läuft bald ab, abgelaufene zuerst), Hinzufügen/Bearbeiten/Löschen; Löschen einer Pflanze entfernt zugehöriges Saatgut automatisch
 - **Pflanzen platzieren** – In Beete setzen (Startgröße = optimaler Abstand), verschieben, skalieren und entfernen; Belegungsgrad des Beets in Prozent
 - **Beschattungs-Analyse** – Schattenkegel der Pflanzen fest nach Norden (Sonne aus Süden, Faktor 2.0) im Editor einblenden; automatische Warnung, wenn eine höhere Pflanze eine kürzere mit Sonnenbedarf beschattet (z. B. Tomate ▷ Chili), Liste der Konflikte im Beet-Panel
 - **Saison-Ansicht** – Im Editor per Toolbar nach **Saison** (Frühling/Sommer/Herbst/Winter/Dieser Monat) und **Phase** (Aussaat/Pflanzung/Ernte) filtern; passende Pflanzen werden hervorgehoben (grüner Ring), andere gedimmt
@@ -33,13 +34,15 @@ src/
 ├── plants.ts                # Standard-Katalog mit Pflanzabständen, Höhe, Lichtbedarf, Boden & Anbauzeiten
 ├── shadow.ts                # Schatten-Geometrie + Konflikt-Erkennung
 ├── seasons.ts               # Monats-/Saison-Helfer (Format, jetzt-pflanzbar, Matching)
+├── seeds.ts                 # Haltbarkeits-Bewertung für Saatgut (expired/soon/ok)
 ├── rotation.ts              # Fruchtfolge: Beet-Zyklus (min..max Jahr) + Wiederholungs-Warnungen
 ├── store.tsx                # Reducer + localStorage-Persistenz
 ├── utils.ts                 # id-Generator, Grid-Snap
 └── components/
     ├── Editor.tsx           # SVG-Fläche mit Zeichnen, Auswahl, Drag & Drop
     ├── Toolbar.tsx          # Werkzeuge, Zoom, Export/Import, Reset
-    ├── PlantLibrary.tsx     # Pflanzen-Katalog mit Formularen
+    ├── PlantLibrary.tsx     # Pflanzen-Katalog mit Tabs (Pflanzen | Samenbank)
+    ├── SeedBank.tsx         # Saatgut-Verwaltung im Samenbank-Tab
     └── BedDetails.tsx       # Panel für Garten- und Beet-Einstellungen
 ```
 
@@ -77,6 +80,7 @@ npm run test:watch # Test-Suite im Watch-Modus
 - `Bed` – Position, Größe, Name, Farbe, Notizen
 - `Plant` – Katalog-Eintrag mit Name, Emoji, Farbe, Pflanzabstand (`spacing`), Höhe (`height`), Lichtbedarf (`light`), empfohlenem Bodentyp (`soil`) und Anbauzeiten `sow`/`plant`/`harvest` (je `MonthRange` = `[start, end]`, Monate 1–12)
 - `PlacedPlant` – Pflanzen-Instanz in einem Beet (relative Position, aktuelle Größe)
+- `Seed` – Saatgut-Eintrag mit Bezug auf eine Pflanze (`plantId`), Sorte/Name, Hersteller (`producer`), Abfülldatum (`filled`) und Haltbarkeitsdatum (`expires`, je ISO-Datum `yyyy-mm-dd`); Haltbarkeit wird relativ zum aktuellen Datum bewertet (abgelaufen / bald / haltbar)
 
 ## Lizenz
 

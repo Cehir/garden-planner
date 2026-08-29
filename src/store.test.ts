@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createDefaultState, normalizeState } from './store'
+import { createDefaultState, normalizeState, reducer } from './store'
 import type { AppState, Plant } from './types'
 
 function legacyPlant(overrides: Partial<Plant> = {}): Plant {
@@ -74,6 +74,7 @@ describe('normalizeState', () => {
       beds: [{ id: 'b1', name: 'Beet', x: 0, y: 0, w: 10, h: 10, color: '#fff', notes: 'n' }],
       plants: [legacyPlant()],
       placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2025 }],
+      seeds: [],
     }
     const result = normalizeState(raw)
     expect(result.garden).toEqual(raw.garden)
@@ -117,6 +118,36 @@ describe('normalizeState', () => {
     const [pp] = normalizeState(raw).placedPlants
     expect(pp.plantedYear).toBe(2028)
   })
+
+  it('füllt fehlende seeds mit leerem Array auf (Legacy-Daten)', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [],
+      plants: [legacyPlant()],
+      placedPlants: [],
+    }
+    expect(normalizeState(raw).seeds).toEqual([])
+  })
+
+  it('erhält vorhandene seeds', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [],
+      plants: [legacyPlant()],
+      placedPlants: [],
+      seeds: [
+        {
+          id: 's1',
+          plantId: 'alt',
+          name: 'San Marzano',
+          producer: 'Testfirma',
+          filled: '2026-01-01',
+          expires: '2028-12-31',
+        },
+      ],
+    }
+    expect(normalizeState(raw as AppState).seeds).toEqual(raw.seeds)
+  })
 })
 
 describe('reducer: updatePlacedPlant plantedYear', () => {
@@ -127,6 +158,7 @@ describe('reducer: updatePlacedPlant plantedYear', () => {
       beds: [],
       plants: [],
       placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2026 }],
+      seeds: [],
     }
     const s1 = reducer(s0, { type: 'updatePlacedPlant', id: 'pp1', patch: { plantedYear: 2028 } })
     expect(s1.placedPlants[0].plantedYear).toBe(2028)
@@ -139,6 +171,7 @@ describe('createDefaultState', () => {
     expect(s.garden).toEqual({ name: 'Mein Garten', width: 800, height: 600 })
     expect(s.beds).toEqual([])
     expect(s.placedPlants).toEqual([])
+    expect(s.seeds).toEqual([])
     expect(s.plants.length).toBeGreaterThanOrEqual(25)
     for (const p of s.plants) {
       expect(p.sow).toEqual([p.sow[0], p.sow[1]])
@@ -147,5 +180,59 @@ describe('createDefaultState', () => {
       expect(p.sow[1]).toBeGreaterThanOrEqual(1)
       expect(p.sow[1]).toBeLessThanOrEqual(12)
     }
+  })
+})
+
+describe('reducer: seeds', () => {
+  const base: AppState = {
+    garden: { name: 'G', width: 1, height: 1 },
+    beds: [],
+    plants: [{ id: 'p1', name: 'Tomate', emoji: '🍅', color: '#e0534b' } as Plant],
+    placedPlants: [],
+    seeds: [],
+  }
+
+  it('fügt Saatgut hinzu', () => {
+    const s1 = reducer(base, {
+      type: 'addSeed',
+      seed: {
+        id: 's1',
+        plantId: 'p1',
+        name: 'San Marzano',
+        producer: 'Testfirma',
+        filled: '2026-01-01',
+        expires: '2028-12-31',
+      },
+    })
+    expect(s1.seeds).toHaveLength(1)
+    expect(s1.seeds[0].plantId).toBe('p1')
+  })
+
+  it('aktualisiert Saatgut', () => {
+    const withSeed = reducer(base, {
+      type: 'addSeed',
+      seed: { id: 's1', plantId: 'p1', name: 'A', producer: '', filled: '', expires: '' },
+    })
+    const s1 = reducer(withSeed, { type: 'updateSeed', id: 's1', patch: { producer: 'Neu' } })
+    expect(s1.seeds[0].producer).toBe('Neu')
+  })
+
+  it('entfernt Saatgut', () => {
+    const withSeed = reducer(base, {
+      type: 'addSeed',
+      seed: { id: 's1', plantId: 'p1', name: 'A', producer: '', filled: '', expires: '' },
+    })
+    const s1 = reducer(withSeed, { type: 'removeSeed', id: 's1' })
+    expect(s1.seeds).toEqual([])
+  })
+
+  it('löscht Saatgut mit, wenn die zugehörige Pflanze entfernt wird', () => {
+    const withSeed = reducer(base, {
+      type: 'addSeed',
+      seed: { id: 's1', plantId: 'p1', name: 'A', producer: '', filled: '', expires: '' },
+    })
+    const s1 = reducer(withSeed, { type: 'removePlant', id: 'p1' })
+    expect(s1.seeds).toEqual([])
+    expect(s1.plants).toEqual([])
   })
 })
