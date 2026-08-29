@@ -104,7 +104,7 @@ function nearHandle(
 }
 
 export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
-  const { state, dispatch } = useStore()
+  const { state, dispatch, beginTransaction, commitTransaction } = useStore()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const [draft, setDraft] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
@@ -142,6 +142,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
 
     if (tool === 'bed') {
       dragRef.current = { kind: 'draw', startX: point.x, startY: point.y }
+      beginTransaction()
       return
     }
 
@@ -160,6 +161,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
             startY: point.y,
             origSize: selectedPlaced.size,
           }
+          beginTransaction()
           return
         }
       }
@@ -181,6 +183,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           origX: p.x,
           origY: p.y,
         }
+        beginTransaction()
         return
       }
     }
@@ -218,6 +221,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           startY: point.y,
           orig: { x: selectedBed.x, y: selectedBed.y, w: selectedBed.w, h: selectedBed.h },
         }
+        beginTransaction()
         return
       }
     }
@@ -238,6 +242,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           startY: point.y,
           origSize: p.size,
         }
+        beginTransaction()
         return
       }
       if (Math.hypot(point.x - cx, point.y - cy) <= r) {
@@ -251,6 +256,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           origX: p.x,
           origY: p.y,
         }
+        beginTransaction()
         return
       }
     }
@@ -266,6 +272,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           origX: bed.x,
           origY: bed.y,
         }
+        beginTransaction()
         return
       }
     }
@@ -345,6 +352,12 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
       onSelect({ kind: 'bed', id })
       setDraft(null)
     }
+    commitTransaction()
+  }
+
+  function handlePointerCancel() {
+    dragRef.current = null
+    commitTransaction()
   }
 
   const gridLines: { x1: number; y1: number; x2: number; y2: number; major: boolean }[] = []
@@ -397,6 +410,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
           style={{ cursor: tool === 'bed' ? 'crosshair' : tool === 'plant' ? 'pointer' : 'default' }}
         >
           <rect

@@ -14,6 +14,10 @@ interface ToolbarProps {
   onExport: () => void
   onImport: (file: File) => void
   onReset: () => void
+  onUndo: () => void
+  onRedo: () => void
+  canUndo: boolean
+  canRedo: boolean
   season: Season
   onSeason: (s: Season) => void
   phase: Phase
@@ -34,6 +38,10 @@ export default function Toolbar({
   onExport,
   onImport,
   onReset,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   season,
   onSeason,
   phase,
@@ -148,6 +156,27 @@ export default function Toolbar({
           title="Pflanzjahre im Plan einblenden (Fruchtfolge)"
         >
           🔁 Fruchtfolge
+        </button>
+      </div>
+
+      <div className="toolbar-group">
+        <button
+          type="button"
+          className="tool"
+          onClick={onUndo}
+          disabled={!canUndo}
+          title="Rückgängig (⌘Z)"
+        >
+          ↩
+        </button>
+        <button
+          type="button"
+          className="tool"
+          onClick={onRedo}
+          disabled={!canRedo}
+          title="Wiederholen (⇧⌘Z)"
+        >
+          ↪
         </button>
       </div>
 

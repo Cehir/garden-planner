@@ -14,7 +14,7 @@ const PRINT_PAGE_H = 1123
 const PRINT_MARGIN = 48
 
 function GardenApp() {
-  const { state, dispatch } = useStore()
+  const { state, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tool, setTool] = useState<Tool>('select')
   const [selected, setSelected] = useState<Selected | null>(null)
   const [placedPlant, setPlacedPlant] = useState<Plant | null>(null)
@@ -49,6 +49,21 @@ function GardenApp() {
           target.tagName === 'SELECT' ||
           target.isContentEditable)
       if (typing && (e.key === 'Delete' || e.key === 'Backspace')) return
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+        if (!typing) {
+          e.preventDefault()
+          if (e.shiftKey) redo()
+          else undo()
+        }
+        return
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
+        if (!typing) {
+          e.preventDefault()
+          redo()
+        }
+        return
+      }
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (selected?.kind === 'bed') {
           dispatch({ type: 'removeBed', id: selected.id })
@@ -73,7 +88,7 @@ function GardenApp() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [selected, dispatch, fit])
+  }, [selected, dispatch, fit, undo, redo])
 
   function setToolSafe(t: Tool) {
     setTool(t)
@@ -210,6 +225,10 @@ ${svg}
         onExport={handleExport}
         onImport={handleImport}
         onReset={handleReset}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
         season={season}
         onSeason={setSeason}
         phase={phase}
@@ -241,7 +260,7 @@ ${svg}
             ? <span>Klicke in ein Beet, um „{placedPlant.name}“ zu platzieren.</span>
             : <span>Wähle links in der Bibliothek eine Pflanze aus.</span>)}
         {tool === 'select' && <span>Auswählen &amp; Verschieben · Beete an den Ecken skalieren · Entf zum Löschen.</span>}
-        <span className="keys">Tasten: V · B · P · F · Esc</span>
+        <span className="keys">Tasten: V · B · P · F · Esc · ⌘Z · ⇧⌘Z</span>
       </footer>
     </div>
   )

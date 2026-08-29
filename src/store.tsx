@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode, Dispatch } from 'react'
 import type { AppState, Bed, Garden, PlacedPlant, Plant } from './types'
 import { DEFAULT_PLANTS } from './plants'
@@ -116,18 +116,124 @@ export function reducer(state: AppState, action: Action): AppState {
 interface StoreContextValue {
   state: AppState
   dispatch: Dispatch<Action>
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
+  beginTransaction: () => void
+  commitTransaction: () => void
 }
 
 const StoreContext = createContext<StoreContextValue | null>(null)
 
+export const MAX_HISTORY = 10
+
+export interface HistoryState {
+  present: AppState
+  past: AppState[]
+  future: AppState[]
+  txnOpen: boolean
+  txnBase: AppState | null
+}
+
+export type HistoryAction =
+  | { type: 'mutate'; action: Action }
+  | { type: 'begin' }
+  | { type: 'commit' }
+  | { type: 'undo' }
+  | { type: 'redo' }
+
+function createHistoryState(state: AppState): HistoryState {
+  return { present: state, past: [], future: [], txnOpen: false, txnBase: null }
+}
+
+function sameState(a: AppState, b: AppState): boolean {
+  return a === b || JSON.stringify(a) === JSON.stringify(b)
+}
+
+export function historyReducer(hs: HistoryState, sa: HistoryAction): HistoryState {
+  switch (sa.type) {
+    case 'begin':
+      return { ...hs, txnOpen: true, txnBase: hs.present }
+    case 'commit': {
+      if (!hs.txnOpen || !hs.txnBase) return hs
+      const changed = !sameState(hs.txnBase, hs.present)
+      return {
+        present: hs.present,
+        past: changed ? [...hs.past, hs.txnBase].slice(-MAX_HISTORY) : hs.past,
+        future: changed ? [] : hs.future,
+        txnOpen: false,
+        txnBase: null,
+      }
+    }
+    case 'undo':
+      if (hs.past.length === 0) return hs
+      return {
+        present: hs.past[hs.past.length - 1],
+        past: hs.past.slice(0, -1),
+        future: [...hs.future, hs.present].slice(-MAX_HISTORY),
+        txnOpen: false,
+        txnBase: null,
+      }
+    case 'redo':
+      if (hs.future.length === 0) return hs
+      return {
+        present: hs.future[hs.future.length - 1],
+        past: [...hs.past, hs.present].slice(-MAX_HISTORY),
+        future: hs.future.slice(0, -1),
+        txnOpen: false,
+        txnBase: null,
+      }
+    case 'mutate':
+      if (sa.action.type === 'load') {
+        return createHistoryState(normalizeState(sa.action.state))
+      }
+      if (hs.txnOpen) {
+        return { ...hs, present: reducer(hs.present, sa.action) }
+      }
+      return {
+        present: reducer(hs.present, sa.action),
+        past: [...hs.past, hs.present].slice(-MAX_HISTORY),
+        future: [],
+        txnOpen: false,
+        txnBase: null,
+      }
+  }
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, loadState)
+  const [history, historyDispatch] = useReducer(
+    historyReducer,
+    undefined,
+    (): HistoryState => createHistoryState(loadState()),
+  )
+
+  const dispatch = useCallback(
+    (action: Action) => historyDispatch({ type: 'mutate', action }),
+    [],
+  )
+  const undo = useCallback(() => historyDispatch({ type: 'undo' }), [])
+  const redo = useCallback(() => historyDispatch({ type: 'redo' }), [])
+  const beginTransaction = useCallback(() => historyDispatch({ type: 'begin' }), [])
+  const commitTransaction = useCallback(() => historyDispatch({ type: 'commit' }), [])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  }, [state])
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(history.present))
+  }, [history.present])
 
-  const value = useMemo(() => ({ state, dispatch }), [state])
+  const value = useMemo<StoreContextValue>(
+    () => ({
+      state: history.present,
+      dispatch,
+      undo,
+      redo,
+      canUndo: history.past.length > 0,
+      canRedo: history.future.length > 0,
+      beginTransaction,
+      commitTransaction,
+    }),
+    [history, dispatch, undo, redo, beginTransaction, commitTransaction],
+  )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
 }
