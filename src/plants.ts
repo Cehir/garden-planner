@@ -12,6 +12,7 @@ export const DEFAULT_PLANTS: Plant[] = [
   { id: 'radieschen', name: 'Radieschen', emoji: '🌶️', color: '#d6445c', spacing: 5, height: 12, light: 'partial', soil: 'sand', family: 'kreuzbluetler', sow: [3, 8], plant: [3, 8], harvest: [4, 9] },
   { id: 'zwiebel', name: 'Zwiebel', emoji: '🧅', color: '#c98d4f', spacing: 10, height: 30, light: 'full', soil: 'loam', family: 'lauch', sow: [2, 3], plant: [3, 5], harvest: [7, 9] },
   { id: 'lauch', name: 'Lauch', emoji: '🥬', color: '#3f8a4a', spacing: 12, height: 40, light: 'full', soil: 'humus', family: 'lauch', sow: [3, 4], plant: [6, 6], harvest: [9, 11] },
+  { id: 'knoblauch', name: 'Knoblauch', emoji: '🧄', color: '#cdb9a0', spacing: 12, height: 50, light: 'full', soil: 'sand', family: 'lauch', sow: [9, 10], plant: [9, 11], harvest: [6, 8] },
   { id: 'spinat', name: 'Spinat', emoji: '🌿', color: '#3f7d43', spacing: 20, height: 25, light: 'shade', soil: 'humus', family: 'kreuzbluetler', sow: [3, 7], plant: [3, 7], harvest: [4, 6] },
   { id: 'rote-bete', name: 'Rote Bete', emoji: '🫐', color: '#8e2342', spacing: 15, height: 25, light: 'partial', soil: 'loam', family: 'kreuzbluetler', sow: [4, 7], plant: [4, 7], harvest: [7, 9] },
   { id: 'kohlrabi', name: 'Kohlrabi', emoji: '🥬', color: '#7ba35a', spacing: 25, height: 35, light: 'full', soil: 'humus', family: 'kreuzbluetler', sow: [2, 5], plant: [4, 6], harvest: [6, 8] },
