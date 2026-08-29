@@ -10,6 +10,7 @@ interface ToolbarProps {
   zoom: number
   onZoom: (z: number) => void
   onFit: () => void
+  onPrint: () => void
   onExport: () => void
   onImport: (file: File) => void
   onReset: () => void
@@ -29,6 +30,7 @@ export default function Toolbar({
   zoom,
   onZoom,
   onFit,
+  onPrint,
   onExport,
   onImport,
   onReset,
@@ -150,6 +152,9 @@ export default function Toolbar({
       </div>
 
       <div className="toolbar-group">
+        <button type="button" className="tool wide" onClick={onPrint} title="Garten, Beete und Pflanzen drucken">
+          🖨 Drucken
+        </button>
         <button type="button" className="tool wide" onClick={onExport} title="Plan als JSON-Datei speichern">
           💾 Export
         </button>

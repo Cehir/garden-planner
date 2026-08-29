@@ -5,7 +5,13 @@ import Toolbar from './components/Toolbar'
 import Editor from './components/Editor'
 import BedDetails from './components/BedDetails'
 import PlantLibrary from './components/PlantLibrary'
+import { buildPrintSvg, buildPrintLegend, escapeXml } from './printPlan'
+import { SEASON_LABELS } from './seasons'
 import './App.css'
+
+const PRINT_PAGE_W = 794
+const PRINT_PAGE_H = 1123
+const PRINT_MARGIN = 48
 
 function GardenApp() {
   const { state, dispatch } = useStore()
@@ -82,6 +88,76 @@ function GardenApp() {
     setSelected((sel) => (sel?.kind === 'placed' ? null : sel))
   }
 
+  function handlePrint() {
+    const garden = state.garden
+    const { width, height } = garden
+    const scale = Math.min(
+      (PRINT_PAGE_W - 2 * PRINT_MARGIN) / width,
+      (PRINT_PAGE_H - 2 * PRINT_MARGIN) / height,
+    )
+    const svgW = Math.round(width * scale * 100) / 100
+    const svgH = Math.round(height * scale * 100) / 100
+    const svg = buildPrintSvg(state, { year, season, phase }, { width: svgW, height: svgH })
+    const legend = buildPrintLegend(state, year)
+
+    const legendHtml = legend.length
+      ? legend
+          .map(
+            (l) =>
+              `<li><span class="lg-emoji">${escapeXml(l.emoji)}</span><span class="lg-name">${escapeXml(l.name)}</span><span class="lg-spacing">${l.spacing} cm</span></li>`,
+          )
+          .join('')
+      : '<li class="muted">Keine Pflanzen im gewählten Jahr.</li>'
+
+    const seasonNote = season !== 'all' ? ` · ${SEASON_LABELS[season]}` : ''
+    const title = `${garden.name} – Gartenplan ${year}`
+    const html = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<title>${escapeXml(title)}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 24px; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: #3a362e; }
+  header { margin-bottom: 16px; }
+  h1 { margin: 0 0 4px; font-size: 20px; color: #2f6f4f; }
+  .meta { margin: 0; color: #6b6357; font-size: 13px; }
+  svg { display: block; max-width: 100%; border: 1px solid #e2dccc; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  h2 { margin: 18px 0 8px; font-size: 15px; color: #2f6f4f; }
+  ul.legend { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 20px; }
+  ul.legend li { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+  .lg-emoji { font-size: 18px; }
+  .lg-spacing { color: #8a8172; }
+  .muted { color: #8a8172; font-style: italic; }
+  @media print { @page { margin: 12mm; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>${escapeXml(garden.name)}</h1>
+  <p class="meta">Maße: ${width} × ${height} cm · Jahr ${year}${seasonNote}</p>
+</header>
+${svg}
+<h2>Legende</h2>
+<ul class="legend">${legendHtml}</ul>
+</body>
+</html>`
+
+    const w = window.open('', '_blank', 'width=920,height=760')
+    if (!w) {
+      alert('Drucken fehlgeschlagen: Der Browser hat das Fenster blockiert.')
+      return
+    }
+    w.document.open()
+    w.document.write(html)
+    w.document.close()
+    setTimeout(() => {
+      w.focus()
+      w.print()
+    }, 80)
+    w.onafterprint = () => w.close()
+  }
+
   function handleExport() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -130,6 +206,7 @@ function GardenApp() {
         zoom={zoom}
         onZoom={(z) => setUserZoom(Math.max(0.1, Math.min(5, z)))}
         onFit={fit}
+        onPrint={handlePrint}
         onExport={handleExport}
         onImport={handleImport}
         onReset={handleReset}
