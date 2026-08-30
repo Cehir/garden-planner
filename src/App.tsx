@@ -5,13 +5,14 @@ import Toolbar from './components/Toolbar'
 import Editor from './components/Editor'
 import BedDetails from './components/BedDetails'
 import PlantLibrary from './components/PlantLibrary'
-import { buildPrintSvg, buildPrintLegend, escapeXml } from './printPlan'
+import { buildPrintSvg, buildPrintLegend, buildPrintSeedBankHtml, escapeXml } from './printPlan'
 import { SEASON_LABELS } from './seasons'
 import './App.css'
 
 const PRINT_PAGE_W = 794
 const PRINT_PAGE_H = 1123
 const PRINT_MARGIN = 48
+const PRINT_HEADER_LEGEND_RESERVE = 240
 
 function GardenApp() {
   const { state, dispatch, undo, redo, canUndo, canRedo } = useStore()
@@ -108,7 +109,7 @@ function GardenApp() {
     const { width, height } = garden
     const scale = Math.min(
       (PRINT_PAGE_W - 2 * PRINT_MARGIN) / width,
-      (PRINT_PAGE_H - 2 * PRINT_MARGIN) / height,
+      (PRINT_PAGE_H - 2 * PRINT_MARGIN - PRINT_HEADER_LEGEND_RESERVE) / height,
     )
     const svgW = Math.round(width * scale * 100) / 100
     const svgH = Math.round(height * scale * 100) / 100
@@ -126,6 +127,7 @@ function GardenApp() {
 
     const seasonNote = season !== 'all' ? ` · ${SEASON_LABELS[season]}` : ''
     const title = `${garden.name} – Gartenplan ${year}`
+    const seedBankHtml = buildPrintSeedBankHtml(state)
     const html = `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -139,11 +141,19 @@ function GardenApp() {
   .meta { margin: 0; color: #6b6357; font-size: 13px; }
   svg { display: block; max-width: 100%; border: 1px solid #e2dccc; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   h2 { margin: 18px 0 8px; font-size: 15px; color: #2f6f4f; }
-  ul.legend { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 20px; }
-  ul.legend li { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+  .plan-legend { page-break-inside: avoid; break-inside: avoid; }
+  ul.legend { list-style: none; padding: 0; margin: 0; column-width: 120px; column-gap: 16px; }
+  ul.legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; page-break-inside: avoid; break-inside: avoid; }
   .lg-emoji { font-size: 18px; }
   .lg-spacing { color: #8a8172; }
   .muted { color: #8a8172; font-style: italic; }
+  .seedbank { margin-top: 24px; page-break-before: always; break-before: page; }
+  .seed-group { margin: 0 0 14px; }
+  .seed-group h3 { margin: 0 0 6px; font-size: 14px; color: #3a362e; }
+  .seed-emoji { font-size: 18px; margin-right: 8px; }
+  table.seed-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  table.seed-table th, table.seed-table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #e2dccc; }
+  table.seed-table th { color: #6b6357; font-weight: 600; background: #f6f2e9; }
   @media print { @page { margin: 12mm; } }
 </style>
 </head>
@@ -153,8 +163,11 @@ function GardenApp() {
   <p class="meta">Maße: ${width} × ${height} cm · Jahr ${year}${seasonNote}</p>
 </header>
 ${svg}
+<div class="plan-legend">
 <h2>Legende</h2>
 <ul class="legend">${legendHtml}</ul>
+</div>
+${seedBankHtml}
 </body>
 </html>`
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AppState } from './types'
-import { buildPrintLegend, buildPrintSvg, escapeXml } from './printPlan'
+import { buildPrintLegend, buildPrintSeedBank, buildPrintSeedBankHtml, buildPrintSvg, escapeXml } from './printPlan'
 
 function makeState(): AppState {
   return {
@@ -117,5 +117,69 @@ describe('buildPrintLegend', () => {
   it('liefert eine leere Liste ohne Pflanzen', () => {
     const legend = buildPrintLegend(makeState(), 2030)
     expect(legend).toEqual([])
+  })
+})
+
+describe('buildPrintSeedBank', () => {
+  function makeStateWithSeeds(): AppState {
+    const state = makeState()
+    state.seeds = [
+      { id: 's1', plantId: 'tomato', name: 'Cuore di Bue', producer: 'Samenhaus', filled: '2025-02-01', expires: '2027-02-01' },
+      { id: 's2', plantId: 'tomato', name: 'Roma', producer: 'Gartenland', filled: '2024-02-01', expires: '2020-02-01' },
+      { id: 's3', plantId: 'carrot', name: 'Lange rotes & gelbes', producer: 'Bioland', filled: '2026-03-15', expires: '2028-03-15' },
+    ]
+    return state
+  }
+
+  it('gruppiert Einträge nach Pflanze, alphabetisch sortiert', () => {
+    const groups = buildPrintSeedBank(makeStateWithSeeds())
+    expect(groups.map((g) => g.name)).toEqual(['Karotte', 'Tomate'])
+  })
+
+  it('enthält alle Saatgut-Einträge je Gruppe', () => {
+    const groups = buildPrintSeedBank(makeStateWithSeeds())
+    const tomato = groups.find((g) => g.name === 'Tomate')!
+    expect(tomato.seeds.map((s) => s.name)).toEqual(['Cuore di Bue', 'Roma'])
+    const carrot = groups.find((g) => g.name === 'Karotte')!
+    expect(carrot.seeds.map((s) => s.name)).toEqual(['Lange rotes & gelbes'])
+  })
+
+  it('berechnet den Haltbarkeits-Status', () => {
+    const groups = buildPrintSeedBank(makeStateWithSeeds())
+    const tomato = groups.find((g) => g.name === 'Tomate')!
+    const cuore = tomato.seeds[0]
+    const roma = tomato.seeds[1]
+    expect(cuore.badge).toContain('haltbar')
+    expect(roma.badge).toContain('abgelaufen')
+  })
+
+  it('ignoriert Samen von gelöschten Pflanzen', () => {
+    const state = makeStateWithSeeds()
+    state.seeds.push({ id: 's9', plantId: 'missing', name: 'X', producer: '', filled: '', expires: '' })
+    const groups = buildPrintSeedBank(state)
+    expect(groups.flatMap((g) => g.seeds)).toHaveLength(3)
+  })
+
+  it('liefert eine leere Liste ohne Samen', () => {
+    expect(buildPrintSeedBank(makeState())).toEqual([])
+  })
+})
+
+describe('buildPrintSeedBankHtml', () => {
+  it('enthält eine Sektion mit gruppierten Einträgen', () => {
+    const state = makeState()
+    state.seeds = [
+      { id: 's1', plantId: 'tomato', name: 'Cuore de Bue & Co', producer: 'Samenhaus', filled: '2025-02-01', expires: '2027-02-01' },
+    ]
+    const html = buildPrintSeedBankHtml(state)
+    expect(html).toContain('Saatgut-Samenbank')
+    expect(html).toContain('Tomate')
+    expect(html).toContain('Cuore de Bue &amp; Co')
+    expect(html).toContain('Hersteller')
+  })
+
+  it('zeigt Hinweis bei leerer Samenbank', () => {
+    const html = buildPrintSeedBankHtml(makeState())
+    expect(html).toContain('Keine Saatgut-Einträge in der Samenbank.')
   })
 })

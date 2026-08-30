@@ -1,6 +1,7 @@
 import type { AppState, Phase, Season } from './types'
 import { placedInYear } from './utils'
 import { phaseMatchesSeason } from './seasons'
+import { expiryStatus, EXPIRY_BADGES, formatSeedDate } from './seeds'
 
 const SNAP = 10
 
@@ -115,4 +116,89 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
 
   lines.push('</svg>')
   return lines.join('\n')
+}
+
+export interface PrintSeedGroup {
+  plantId: string
+  emoji: string
+  name: string
+  seeds: PrintSeedItem[]
+}
+
+export interface PrintSeedItem {
+  name: string
+  producer: string
+  filled: string
+  expires: string
+  badge: string
+}
+
+/** Samenbank-Einträge, gruppiert nach Pflanze (alphabetisch nach Pflanzenname sortiert). */
+export function buildPrintSeedBank(state: AppState): PrintSeedGroup[] {
+  const plantById = new Map(state.plants.map((p) => [p.id, p]))
+  const groups = new Map<string, PrintSeedGroup>()
+
+  for (const seed of state.seeds) {
+    const plant = plantById.get(seed.plantId)
+    if (!plant) continue
+    let group = groups.get(seed.plantId)
+    if (!group) {
+      group = { plantId: plant.id, emoji: plant.emoji, name: plant.name, seeds: [] }
+      groups.set(seed.plantId, group)
+    }
+    group.seeds.push({
+      name: seed.name,
+      producer: seed.producer,
+      filled: seed.filled,
+      expires: seed.expires,
+      badge: EXPIRY_BADGES[expiryStatus(seed)],
+    })
+  }
+
+  return [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, 'de'))
+}
+
+/** HTML-Abschnitt für die Samenbank, gruppiert nach Pflanze. */
+export function buildPrintSeedBankHtml(state: AppState): string {
+  const groups = buildPrintSeedBank(state)
+
+  if (groups.length === 0) {
+    return `<section class="seedbank">
+<h2>Saatgut</h2>
+<p class="muted">Keine Saatgut-Einträge in der Samenbank.</p>
+</section>`
+  }
+
+  const sections = groups
+    .map((group) => {
+      const seedRows = group.seeds
+        .map(
+          (s) =>
+            `<tr>
+  <td>${escapeXml(s.name)}</td>
+  <td>${escapeXml(s.producer)}</td>
+  <td>${escapeXml(formatSeedDate(s.filled))}</td>
+  <td>${escapeXml(formatSeedDate(s.expires))}</td>
+  <td>${escapeXml(s.badge)}</td>
+</tr>`,
+        )
+        .join('\n')
+      return `<section class="seed-group">
+<h3><span class="seed-emoji">${escapeXml(group.emoji)}</span>${escapeXml(group.name)}</h3>
+<table class="seed-table">
+<thead>
+  <tr><th>Sorte</th><th>Hersteller</th><th>Abfülldatum</th><th>Haltbarkeit</th><th>Status</th></tr>
+</thead>
+<tbody>
+${seedRows}
+</tbody>
+</table>
+</section>`
+    })
+    .join('\n')
+
+  return `<section class="seedbank" id="seedbank">
+<h2>Saatgut-Samenbank</h2>
+${sections}
+</section>`
 }
