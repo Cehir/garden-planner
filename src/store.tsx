@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode, Dispatch } from 'react'
-import type { AppState, Bed, Garden, PlacedPlant, Plant, Seed } from './types'
+import type { AppState, Bed, Garden, MonthRange, PlacedPlant, Plant, Seed } from './types'
 import { DEFAULT_PLANTS } from './plants'
 
 const STORAGE_KEY = 'gartenplaner-state-v1'
@@ -13,6 +13,12 @@ export function createDefaultState(): AppState {
     placedPlants: [],
     seeds: [],
   }
+}
+
+function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | undefined {
+  if (value == null) return undefined
+  if (Array.isArray(value[0])) return value as MonthRange[]
+  return [value as MonthRange]
 }
 
 export function normalizeState(raw: Partial<AppState>): AppState {
@@ -28,9 +34,9 @@ export function normalizeState(raw: Partial<AppState>): AppState {
       light: p.light ?? 'full',
       soil: p.soil ?? 'normal',
       family: p.family ?? 'andere',
-      sow: p.sow ?? [3, 6],
-      plant: p.plant ?? [3, 6],
-      harvest: p.harvest ?? [6, 9],
+      sow: toRanges(p.sow) ?? [[3, 6]],
+      plant: toRanges(p.plant) ?? [[3, 6]],
+      harvest: toRanges(p.harvest) ?? [[6, 9]],
     })),
     placedPlants: (raw.placedPlants ?? []).map((p) => ({
       ...p,

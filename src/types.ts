@@ -70,9 +70,9 @@ export interface Plant {
   light: LightRequirement
   soil: SoilType
   family: PlantFamily
-  sow: MonthRange
-  plant: MonthRange
-  harvest: MonthRange
+  sow: MonthRange[]
+  plant: MonthRange[]
+  harvest: MonthRange[]
 }
 
 export interface PlacedPlant {

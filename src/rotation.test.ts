@@ -6,11 +6,11 @@ const bed: Bed = { id: 'b1', name: 'Beet 1', x: 0, y: 0, w: 100, h: 100, color: 
 
 const tomate: Plant = {
   id: 'tomate', name: 'Tomate', emoji: '🍅', color: '#e0534b', spacing: 60, height: 70,
-  light: 'full', soil: 'humus', family: 'nacht-schatten', sow: [2, 4], plant: [5, 6], harvest: [7, 9],
+  light: 'full', soil: 'humus', family: 'nacht-schatten', sow: [[2, 4]], plant: [[5, 6]], harvest: [[7, 9]],
 }
 const salat: Plant = {
   id: 'salat', name: 'Salat', emoji: '🥬', color: '#6dab4a', spacing: 30, height: 20,
-  light: 'partial', soil: 'humus', family: 'kreuzbluetler', sow: [3, 8], plant: [4, 8], harvest: [6, 10],
+  light: 'partial', soil: 'humus', family: 'kreuzbluetler', sow: [[3, 8]], plant: [[4, 8]], harvest: [[6, 10]],
 }
 
 function pp(id: string, plantId: string, year: number, bedId = 'b1'): PlacedPlant {

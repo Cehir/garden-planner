@@ -43,14 +43,24 @@ export function formatRange(range: MonthRange): string {
   return `${MONTHS_SHORT[a - 1]}–${MONTHS_SHORT[b - 1]}`
 }
 
+/** True if `month` falls within at least one of the given windows. */
+export function inAnyRange(month: number, ranges: MonthRange[]): boolean {
+  return ranges.some((r) => inRange(month, r))
+}
+
+export function formatRanges(ranges: MonthRange[]): string {
+  if (!ranges || ranges.length === 0) return '–'
+  return ranges.map(formatRange).join(', ')
+}
+
 /** Can the crop be sown or planted in `month`? Used for the "jetzt pflanzbar" filter. */
 export function canDoNow(plant: Plant, month: number): boolean {
-  return inRange(month, plant.sow) || inRange(month, plant.plant)
+  return inAnyRange(month, plant.sow) || inAnyRange(month, plant.plant)
 }
 
 /** Does the plant's `phase` window fall in `season`? */
 export function phaseMatchesSeason(plant: Plant, phase: Phase, season: Season): boolean {
   if (season === 'all') return true
   const months = season === 'now' ? [currentMonth()] : SEASON_MONTHS[season]
-  return months.some((m) => inRange(m, plant[phase]))
+  return months.some((m) => inAnyRange(m, plant[phase]))
 }

@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { canDoNow, formatRange, inRange, phaseMatchesSeason } from './seasons'
+import {
+  canDoNow,
+  formatRange,
+  formatRanges,
+  inAnyRange,
+  inRange,
+  phaseMatchesSeason,
+} from './seasons'
 import type { Plant } from './types'
 
 const currentMonth = new Date().getMonth() + 1
@@ -15,9 +22,9 @@ const spinat: Plant = {
   light: 'shade',
   soil: 'humus',
   family: 'kreuzbluetler',
-  sow: [3, 7],
-  plant: [3, 7],
-  harvest: [4, 6],
+  sow: [[3, 7]],
+  plant: [[3, 7]],
+  harvest: [[4, 6]],
 }
 
 const tomate: Plant = {
@@ -30,9 +37,25 @@ const tomate: Plant = {
   light: 'full',
   soil: 'humus',
   family: 'nacht-schatten',
-  sow: [2, 4],
-  plant: [5, 6],
-  harvest: [7, 9],
+  sow: [[2, 4]],
+  plant: [[5, 6]],
+  harvest: [[7, 9]],
+}
+
+// Mehrere Erntefenster, z.B. Salat
+const salat: Plant = {
+  id: 'salat',
+  name: 'Salat',
+  emoji: '🥬',
+  color: '#6dab4a',
+  spacing: 30,
+  height: 20,
+  light: 'partial',
+  soil: 'humus',
+  family: 'kreuzbluetler',
+  sow: [[2, 4], [6, 8]],
+  plant: [[3, 5], [7, 8]],
+  harvest: [[5, 7], [9, 11]],
 }
 
 // Jahreswechsel: Nov–Feb
@@ -46,9 +69,9 @@ const tulpe: Plant = {
   light: 'full',
   soil: 'sand',
   family: 'andere',
-  sow: [11, 2],
-  plant: [11, 2],
-  harvest: [12, 3],
+  sow: [[11, 2]],
+  plant: [[11, 2]],
+  harvest: [[12, 3]],
 }
 
 describe('inRange', () => {
@@ -132,28 +155,72 @@ describe('phaseMatchesSeason', () => {
   })
 
   it('Saison "now" = aktueller Monat', () => {
-    expect(phaseMatchesSeason({ ...spinat, sow: [currentMonth, currentMonth] }, 'sow', 'now')).toBe(true)
-    expect(phaseMatchesSeason({ ...spinat, sow: [otherMonth, otherMonth] }, 'sow', 'now')).toBe(false)
+    expect(phaseMatchesSeason({ ...spinat, sow: [[currentMonth, currentMonth]] }, 'sow', 'now')).toBe(true)
+    expect(phaseMatchesSeason({ ...spinat, sow: [[otherMonth, otherMonth]] }, 'sow', 'now')).toBe(false)
+  })
+
+  it('berücksichtigt mehrere Fenster pro Phase', () => {
+    expect(phaseMatchesSeason(salat, 'harvest', 'autumn')).toBe(true)
+    expect(phaseMatchesSeason(salat, 'harvest', 'winter')).toBe(false)
+  })
+})
+
+describe('inAnyRange', () => {
+  it('true, wenn der Monat in irgendeinem Fenster liegt', () => {
+    expect(inAnyRange(3, [[2, 4], [6, 8]])).toBe(true)
+    expect(inAnyRange(7, [[2, 4], [6, 8]])).toBe(true)
+  })
+
+  it('false, wenn der Monat in keinem Fenster liegt', () => {
+    expect(inAnyRange(5, [[2, 4], [6, 8]])).toBe(false)
+  })
+
+  it('handhabt Jahreswechsel-Fenster innerhalb der Liste', () => {
+    expect(inAnyRange(12, [[2, 4], [11, 2]])).toBe(true)
+    expect(inAnyRange(6, [[2, 4], [11, 2]])).toBe(false)
+  })
+
+  it('leere Liste ergibt immer false', () => {
+    expect(inAnyRange(3, [])).toBe(false)
+  })
+})
+
+describe('formatRanges', () => {
+  it('verbindet mehrere Fenster', () => {
+    expect(formatRanges([[3, 6], [8, 9]])).toBe('Mär–Jun, Aug–Sep')
+  })
+
+  it('formatiert ein einzelnes Fenster', () => {
+    expect(formatRanges([[5, 5]])).toBe('Mai')
+  })
+
+  it('leere Liste ergibt –', () => {
+    expect(formatRanges([])).toBe('–')
   })
 })
 
 describe('canDoNow', () => {
   it('true, wenn Aussaat im Monat liegt', () => {
-    const p: Plant = { ...tomate, sow: [currentMonth, currentMonth] }
+    const p: Plant = { ...tomate, sow: [[currentMonth, currentMonth]] }
     expect(canDoNow(p, currentMonth)).toBe(true)
   })
 
   it('true, wenn Pflanzung im Monat liegt', () => {
-    const p: Plant = { ...tomate, plant: [currentMonth, currentMonth] }
+    const p: Plant = { ...tomate, plant: [[currentMonth, currentMonth]] }
+    expect(canDoNow(p, currentMonth)).toBe(true)
+  })
+
+  it('true, wenn Aussaat in einem von mehreren Fenstern liegt', () => {
+    const p: Plant = { ...tomate, sow: [[currentMonth, currentMonth], [otherMonth, otherMonth]] }
     expect(canDoNow(p, currentMonth)).toBe(true)
   })
 
   it('false, wenn nur Ernte im Monat liegt (kein Aussaat/Pflanz)', () => {
     const p: Plant = {
       ...tomate,
-      sow: [otherMonth, otherMonth],
-      plant: [otherMonth, otherMonth],
-      harvest: [currentMonth, currentMonth],
+      sow: [[otherMonth, otherMonth]],
+      plant: [[otherMonth, otherMonth]],
+      harvest: [[currentMonth, currentMonth]],
     }
     expect(canDoNow(p, currentMonth)).toBe(false)
   })

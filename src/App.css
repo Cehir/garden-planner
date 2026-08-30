@@ -284,6 +284,30 @@
   font-weight: 400;
 }
 
+.sidebar .range-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar .range-list-label {
+  font-weight: 600;
+}
+
+.sidebar .range-list-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.sidebar .range-list-row > label {
+  flex: 1;
+}
+
+.sidebar .range-list-row .mini {
+  margin-bottom: 2px;
+}
+
 .swatches {
   display: flex;
   gap: 6px;

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { LightRequirement, MonthRange, Plant, PlantFamily, SoilType } from '../types'
 import { FAMILY_LABELS, LIGHT_LABELS, SOIL_LABELS } from '../types'
-import { canDoNow, currentMonth, formatRange, MONTHS_SHORT } from '../seasons'
+import { canDoNow, currentMonth, formatRanges, MONTHS_SHORT } from '../seasons'
 import { useStore } from '../store'
 import { uid } from '../utils'
 import SeedBank from './SeedBank'
@@ -63,6 +63,49 @@ function RangeField({
   )
 }
 
+function RangeListField({
+  label,
+  values,
+  onChange,
+}: {
+  label: string
+  values: MonthRange[]
+  onChange: (v: MonthRange[]) => void
+}) {
+  return (
+    <div className="range-list">
+      <span className="range-list-label">{label}</span>
+      {values.map((range, i) => (
+        <div key={i} className="range-list-row">
+          <RangeField
+            label={i === 0 ? '' : `${label} #${i + 1}`}
+            value={range}
+            onChange={(next) => {
+              const copy = values.slice()
+              copy[i] = next
+              onChange(copy)
+            }}
+          />
+          <button
+            type="button"
+            className="mini"
+            title="Fenster entfernen"
+            onClick={() => {
+              if (values.length <= 1) return
+              onChange(values.filter((_, idx) => idx !== i))
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      ))}
+      <button type="button" className="tool" onClick={() => onChange([...values, [3, 6]])}>
+        ＋ {label} hinzufügen
+      </button>
+    </div>
+  )
+}
+
 interface PlantsPanelProps {
   placedPlant: Plant | null
   onPick: (plant: Plant | null) => void
@@ -81,9 +124,9 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
   const [light, setLight] = useState<LightRequirement>('full')
   const [soil, setSoil] = useState<SoilType>('normal')
   const [family, setFamily] = useState<PlantFamily>('andere')
-  const [sow, setSow] = useState<MonthRange>([3, 6])
-  const [plant, setPlant] = useState<MonthRange>([3, 6])
-  const [harvest, setHarvest] = useState<MonthRange>([6, 9])
+  const [sow, setSow] = useState<MonthRange[]>([[3, 6]])
+  const [plant, setPlant] = useState<MonthRange[]>([[3, 6]])
+  const [harvest, setHarvest] = useState<MonthRange[]>([[6, 9]])
   const [editing, setEditing] = useState<string | null>(null)
   const [nowOnly, setNowOnly] = useState(false)
 
@@ -113,9 +156,9 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
         light,
         soil,
         family,
-        sow: [3, 6],
-        plant: [3, 6],
-        harvest: [6, 9],
+        sow,
+        plant,
+        harvest,
       },
     })
     setName('')
@@ -126,9 +169,9 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
     setLight('full')
     setSoil('normal')
     setFamily('andere')
-    setSow([3, 6])
-    setPlant([3, 6])
-    setHarvest([6, 9])
+    setSow([[3, 6]])
+    setPlant([[3, 6]])
+    setHarvest([[6, 9]])
     setAdding(false)
   }
 
@@ -173,7 +216,7 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
                   {p.spacing} cm · {LIGHT_ICONS[p.light ?? 'full']} {LIGHT_LABELS[p.light ?? 'full']} · {SOIL_ICONS[p.soil ?? 'normal']} {SOIL_LABELS[p.soil ?? 'normal']}
                 </span>
                 <span className="sub seasons">
-                  🌱 {formatRange(p.sow)} · 🪴 {formatRange(p.plant)} · 🧺 {formatRange(p.harvest)}
+                  🌱 {formatRanges(p.sow)} · 🪴 {formatRanges(p.plant)} · 🧺 {formatRanges(p.harvest)}
                 </span>
                 {seedCount > 0 && <span className="sub seeds">🌰 {seedCount}× Saatgut</span>}
               </span>
@@ -191,9 +234,9 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
                   setLight(p.light)
                   setSoil(p.soil)
                   setFamily(p.family)
-                  setSow(p.sow)
-                  setPlant(p.plant)
-                  setHarvest(p.harvest)
+                  setSow(p.sow.slice())
+                  setPlant(p.plant.slice())
+                  setHarvest(p.harvest.slice())
                 }}
               >
                 ✏️
@@ -281,9 +324,9 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
                   ))}
                 </select>
               </label>
-              <RangeField label="Aussaat" value={sow} onChange={setSow} />
-              <RangeField label="Pflanzung" value={plant} onChange={setPlant} />
-              <RangeField label="Ernte" value={harvest} onChange={setHarvest} />
+              <RangeListField label="Aussaat" values={sow} onChange={setSow} />
+              <RangeListField label="Pflanzung" values={plant} onChange={setPlant} />
+              <RangeListField label="Ernte" values={harvest} onChange={setHarvest} />
               <div className="row">
                 <button
                   type="button"
@@ -404,9 +447,9 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
                 ))}
               </select>
             </label>
-            <RangeField label="Aussaat" value={sow} onChange={setSow} />
-            <RangeField label="Pflanzung" value={plant} onChange={setPlant} />
-            <RangeField label="Ernte" value={harvest} onChange={setHarvest} />
+            <RangeListField label="Aussaat" values={sow} onChange={setSow} />
+            <RangeListField label="Pflanzung" values={plant} onChange={setPlant} />
+            <RangeListField label="Ernte" values={harvest} onChange={setHarvest} />
             <div className="row">
               <button type="button" className="primary" onClick={addPlant}>
                 Hinzufügen

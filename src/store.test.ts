@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultState, normalizeState, reducer } from './store'
-import type { AppState, Plant } from './types'
+import type { AppState, MonthRange, Plant } from './types'
 
 function legacyPlant(overrides: Partial<Plant> = {}): Plant {
   // So sah ein Plant-Objekt aus, VOR der Saison-Erweiterung (keine sow/plant/harvest).
@@ -27,23 +27,29 @@ describe('normalizeState', () => {
     }
     const result = normalizeState(raw)
     const [p] = result.plants
-    expect(p.sow).toEqual([3, 6])
-    expect(p.plant).toEqual([3, 6])
-    expect(p.harvest).toEqual([6, 9])
+    expect(p.sow).toEqual([[3, 6]])
+    expect(p.plant).toEqual([[3, 6]])
+    expect(p.harvest).toEqual([[6, 9]])
   })
 
-  it('erhält vorhandene Saison-Werte', () => {
+  it('migriert vorhandene einzelne Fenster zu Arrays', () => {
     const raw = {
       garden: { name: 'Alt', width: 100, height: 50 },
       beds: [],
-      plants: [legacyPlant({ sow: [11, 2], plant: [11, 2], harvest: [12, 3] })],
+      plants: [
+        legacyPlant({
+          sow: [11, 2] as unknown as MonthRange[],
+          plant: [11, 2] as unknown as MonthRange[],
+          harvest: [12, 3] as unknown as MonthRange[],
+        }),
+      ],
       placedPlants: [],
     }
     const result = normalizeState(raw)
     const [p] = result.plants
-    expect(p.sow).toEqual([11, 2])
-    expect(p.plant).toEqual([11, 2])
-    expect(p.harvest).toEqual([12, 3])
+    expect(p.sow).toEqual([[11, 2]])
+    expect(p.plant).toEqual([[11, 2]])
+    expect(p.harvest).toEqual([[12, 3]])
   })
 
   it('füllt auch fehlende ältere Felder (spacing/height/light/soil) auf', () => {
@@ -65,7 +71,7 @@ describe('normalizeState', () => {
     expect(p.height).toBe(25)
     expect(p.light).toBe('full')
     expect(p.soil).toBe('normal')
-    expect(p.sow).toEqual([3, 6])
+    expect(p.sow).toEqual([[3, 6]])
   })
 
   it('ändert garden/beds/placedPlants nicht', () => {
@@ -174,11 +180,15 @@ describe('createDefaultState', () => {
     expect(s.seeds).toEqual([])
     expect(s.plants.length).toBeGreaterThanOrEqual(25)
     for (const p of s.plants) {
-      expect(p.sow).toEqual([p.sow[0], p.sow[1]])
-      expect(p.sow[0]).toBeGreaterThanOrEqual(1)
-      expect(p.sow[0]).toBeLessThanOrEqual(12)
-      expect(p.sow[1]).toBeGreaterThanOrEqual(1)
-      expect(p.sow[1]).toBeLessThanOrEqual(12)
+      expect(p.sow.length).toBeGreaterThanOrEqual(1)
+      expect(p.plant.length).toBeGreaterThanOrEqual(1)
+      expect(p.harvest.length).toBeGreaterThanOrEqual(1)
+      for (const r of p.sow) {
+        expect(r[0]).toBeGreaterThanOrEqual(1)
+        expect(r[0]).toBeLessThanOrEqual(12)
+        expect(r[1]).toBeGreaterThanOrEqual(1)
+        expect(r[1]).toBeLessThanOrEqual(12)
+      }
     }
   })
 })

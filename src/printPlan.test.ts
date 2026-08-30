@@ -12,15 +12,15 @@ function makeState(): AppState {
     plants: [
       {
         id: 'carrot', name: 'Karotte', emoji: '🥕', color: '#d6364c', spacing: 25, height: 20,
-        light: 'full', soil: 'normal', family: 'andere', sow: [3, 4], plant: [3, 4], harvest: [6, 8],
+        light: 'full', soil: 'normal', family: 'andere', sow: [[3, 4]], plant: [[3, 4]], harvest: [[6, 8]],
       },
       {
         id: 'lettuce', name: 'Salat', emoji: '🥬', color: '#7fb069', spacing: 30, height: 25,
-        light: 'partial', soil: 'normal', family: 'andere', sow: [5, 7], plant: [5, 7], harvest: [6, 8],
+        light: 'partial', soil: 'normal', family: 'andere', sow: [[5, 7]], plant: [[5, 7]], harvest: [[6, 8]],
       },
       {
         id: 'tomato', name: 'Tomate', emoji: '🍅', color: '#d6364c', spacing: 40, height: 40,
-        light: 'full', soil: 'normal', family: 'andere', sow: [3, 5], plant: [3, 5], harvest: [7, 9],
+        light: 'full', soil: 'normal', family: 'andere', sow: [[3, 5]], plant: [[3, 5]], harvest: [[7, 9]],
       },
     ],
     placedPlants: [

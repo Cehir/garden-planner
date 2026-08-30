@@ -1,6 +1,6 @@
 import type { Selected } from '../types'
 import { LIGHT_LABELS, SOIL_LABELS } from '../types'
-import { formatRange } from '../seasons'
+import { formatRanges } from '../seasons'
 import { bedCycle, repeatWarnings } from '../rotation'
 import { useStore } from '../store'
 import { computeConflicts } from '../shadow'
@@ -59,8 +59,8 @@ export default function BedDetails({ selected, onClearSelection, year }: BedDeta
         )}
         {plant && (
           <p>
-            Anbau: 🌱 Aussaat {formatRange(plant.sow)} · 🪴 Pflanzung{' '}
-            {formatRange(plant.plant)} · 🧺 Ernte {formatRange(plant.harvest)}
+            Anbau: 🌱 Aussaat {formatRanges(plant.sow)} · 🪴 Pflanzung{' '}
+            {formatRanges(plant.plant)} · 🧺 Ernte {formatRanges(plant.harvest)}
           </p>
         )}
         <button type="button" className="danger" onClick={() => dispatch({ type: 'removePlacedPlant', id: selected.id })}>
