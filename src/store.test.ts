@@ -81,6 +81,7 @@ describe('normalizeState', () => {
       plants: [legacyPlant()],
       placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2025 }],
       seeds: [],
+      diary: [],
     }
     const result = normalizeState(raw)
     expect(result.garden).toEqual(raw.garden)
@@ -135,12 +136,39 @@ describe('normalizeState', () => {
     expect(normalizeState(raw).seeds).toEqual([])
   })
 
+  it('füllt fehlende diary mit leerem Array auf (Legacy-Daten)', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [],
+      plants: [legacyPlant()],
+      placedPlants: [],
+    }
+    expect(normalizeState(raw).diary).toEqual([])
+  })
+
+  it('erhält vorhandene diary-Einträge', () => {
+    const raw = {
+      garden: { name: 'Alt', width: 100, height: 50 },
+      beds: [],
+      plants: [legacyPlant()],
+      placedPlants: [],
+      seeds: [],
+      diary: [
+        { id: 'd1', date: '2026-09-02', timestamp: 1000, note: 'x', targets: [{ kind: 'bed' as const, bedId: 'b1', action: 'water' as const }] },
+      ],
+    }
+    const result = normalizeState(raw as AppState)
+    expect(result.diary).toHaveLength(1)
+    expect(result.diary[0].id).toBe('d1')
+  })
+
   it('erhält vorhandene seeds', () => {
     const raw = {
       garden: { name: 'Alt', width: 100, height: 50 },
       beds: [],
       plants: [legacyPlant()],
       placedPlants: [],
+      diary: [],
       seeds: [
         {
           id: 's1',
@@ -165,6 +193,7 @@ describe('reducer: updatePlacedPlant plantedYear', () => {
       plants: [],
       placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'alt', x: 0.5, y: 0.5, size: 30, plantedYear: 2026 }],
       seeds: [],
+      diary: [],
     }
     const s1 = reducer(s0, { type: 'updatePlacedPlant', id: 'pp1', patch: { plantedYear: 2028 } })
     expect(s1.placedPlants[0].plantedYear).toBe(2028)
@@ -178,6 +207,7 @@ describe('createDefaultState', () => {
     expect(s.beds).toEqual([])
     expect(s.placedPlants).toEqual([])
     expect(s.seeds).toEqual([])
+    expect(s.diary).toEqual([])
     expect(s.plants.length).toBeGreaterThanOrEqual(25)
     for (const p of s.plants) {
       expect(p.sow.length).toBeGreaterThanOrEqual(1)
@@ -200,6 +230,7 @@ describe('reducer: seeds', () => {
     plants: [{ id: 'p1', name: 'Tomate', emoji: '🍅', color: '#e0534b' } as Plant],
     placedPlants: [],
     seeds: [],
+    diary: [],
   }
 
   it('fügt Saatgut hinzu', () => {
@@ -244,5 +275,63 @@ describe('reducer: seeds', () => {
     const s1 = reducer(withSeed, { type: 'removePlant', id: 'p1' })
     expect(s1.seeds).toEqual([])
     expect(s1.plants).toEqual([])
+  })
+})
+
+describe('reducer: diary', () => {
+  const base: AppState = {
+    garden: { name: 'G', width: 1, height: 1 },
+    beds: [{ id: 'b1', name: 'Beet', x: 0, y: 0, w: 10, h: 10, color: '#fff', notes: '' }],
+    plants: [{ id: 'p1', name: 'Tomate', emoji: '🍅', color: '#e0534b' } as Plant],
+    placedPlants: [{ id: 'pp1', bedId: 'b1', plantId: 'p1', x: 0.5, y: 0.5, size: 30, plantedYear: 2026 }],
+    seeds: [],
+    diary: [],
+  }
+
+  it('fügt einen Tagebuch-Eintrag hinzu', () => {
+    const s1 = reducer(base, {
+      type: 'addDiaryEntry',
+      entry: {
+        id: 'd1',
+        date: '2026-09-02',
+        timestamp: 1000,
+        note: 'Beet gegossen',
+        targets: [{ kind: 'bed', bedId: 'b1', action: 'water' }],
+      },
+    })
+    expect(s1.diary).toHaveLength(1)
+    expect(s1.diary[0].targets[0]).toEqual({ kind: 'bed', bedId: 'b1', action: 'water' })
+  })
+
+  it('aktualisiert einen Tagebuch-Eintrag', () => {
+    const withEntry = reducer(base, {
+      type: 'addDiaryEntry',
+      entry: { id: 'd1', date: '2026-09-02', timestamp: 1000, note: 'alt', targets: [] },
+    })
+    const s1 = reducer(withEntry, { type: 'updateDiaryEntry', id: 'd1', patch: { note: 'neu' } })
+    expect(s1.diary[0].note).toBe('neu')
+  })
+
+  it('entfernt einen Tagebuch-Eintrag', () => {
+    const withEntry = reducer(base, {
+      type: 'addDiaryEntry',
+      entry: { id: 'd1', date: '2026-09-02', timestamp: 1000, note: '', targets: [] },
+    })
+    const s1 = reducer(withEntry, { type: 'removeDiaryEntry', id: 'd1' })
+    expect(s1.diary).toEqual([])
+  })
+
+  it('unterstützt Pflanzen-Ziele', () => {
+    const s1 = reducer(base, {
+      type: 'addDiaryEntry',
+      entry: {
+        id: 'd1',
+        date: '2026-09-02',
+        timestamp: 1000,
+        note: '',
+        targets: [{ kind: 'plant', placedPlantId: 'pp1', action: 'harvest' }],
+      },
+    })
+    expect(s1.diary[0].targets[0]).toEqual({ kind: 'plant', placedPlantId: 'pp1', action: 'harvest' })
   })
 })

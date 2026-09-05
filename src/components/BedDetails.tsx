@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Selected } from '../types'
 import { LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { formatRanges } from '../seasons'
@@ -5,6 +6,7 @@ import { bedCycle, repeatWarnings } from '../rotation'
 import { useStore } from '../store'
 import { computeConflicts } from '../shadow'
 import { placedInYear } from '../utils'
+import Diary from './Diary'
 
 const BED_COLORS = ['#7fb069', '#6fa3a8', '#d9a441', '#b0697f', '#8a7bb8', '#d07b4f', '#7b8f4f', '#4f7bb0']
 
@@ -16,6 +18,7 @@ interface BedDetailsProps {
 
 export default function BedDetails({ selected, onClearSelection, year }: BedDetailsProps) {
   const { state, dispatch } = useStore()
+  const [activeTab, setActiveTab] = useState<'garden' | 'diary'>('garden')
 
   if (selected?.kind === 'placed') {
     const placed = state.placedPlants.find((p) => p.id === selected.id)
@@ -75,39 +78,61 @@ export default function BedDetails({ selected, onClearSelection, year }: BedDeta
   if (!bed) {
     return (
       <aside className="sidebar">
-        <h2>Garten</h2>
-        <label>
-          Name
-          <input
-            value={state.garden.name}
-            onChange={(e) => dispatch({ type: 'setGarden', patch: { name: e.target.value } })}
-          />
-        </label>
-        <label>
-          Breite (cm)
-          <input
-            type="number"
-            min={100}
-            value={state.garden.width}
-            onChange={(e) => dispatch({ type: 'setGarden', patch: { width: Math.max(100, Number(e.target.value) || 100) } })}
-          />
-        </label>
-        <label>
-          Höhe (cm)
-          <input
-            type="number"
-            min={100}
-            value={state.garden.height}
-            onChange={(e) => dispatch({ type: 'setGarden', patch: { height: Math.max(100, Number(e.target.value) || 100) } })}
-          />
-        </label>
-        <p className="hint">
-          Wähle oben „▭ Beet zeichnen“ und ziehe mit der Maus ein Rechteck auf.
-        </p>
-        <p className="hint">
-          Mit „🌱 Pflanze platzieren“ klickst du zuerst in der Bibliothek eine Pflanze an und setzt
-          sie danach in ein Beet.
-        </p>
+        <div className="sidebar-tabs">
+          <button
+            type="button"
+            className={activeTab === 'garden' ? 'sidebar-tab active' : 'sidebar-tab'}
+            onClick={() => setActiveTab('garden')}
+          >
+            🏡 Garten
+          </button>
+          <button
+            type="button"
+            className={activeTab === 'diary' ? 'sidebar-tab active' : 'sidebar-tab'}
+            onClick={() => setActiveTab('diary')}
+          >
+            📅 Tagebuch
+          </button>
+        </div>
+        {activeTab === 'garden' ? (
+          <>
+            <h2>Garten</h2>
+            <label>
+              Name
+              <input
+                value={state.garden.name}
+                onChange={(e) => dispatch({ type: 'setGarden', patch: { name: e.target.value } })}
+              />
+            </label>
+            <label>
+              Breite (cm)
+              <input
+                type="number"
+                min={100}
+                value={state.garden.width}
+                onChange={(e) => dispatch({ type: 'setGarden', patch: { width: Math.max(100, Number(e.target.value) || 100) } })}
+              />
+            </label>
+            <label>
+              Höhe (cm)
+              <input
+                type="number"
+                min={100}
+                value={state.garden.height}
+                onChange={(e) => dispatch({ type: 'setGarden', patch: { height: Math.max(100, Number(e.target.value) || 100) } })}
+              />
+            </label>
+            <p className="hint">
+              Wähle oben „▭ Beet zeichnen" und ziehe mit der Maus ein Rechteck auf.
+            </p>
+            <p className="hint">
+              Mit „🌱 Pflanze platzieren" klickst du zuerst in der Bibliothek eine Pflanze an und setzt
+              sie danach in ein Beet.
+            </p>
+          </>
+        ) : (
+          <Diary />
+        )}
       </aside>
     )
   }

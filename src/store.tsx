@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode, Dispatch } from 'react'
-import type { AppState, Bed, Garden, MonthRange, PlacedPlant, Plant, Seed } from './types'
+import type { AppState, Bed, DiaryEntry, Garden, MonthRange, PlacedPlant, Plant, Seed } from './types'
 import { DEFAULT_PLANTS } from './plants'
 
 const STORAGE_KEY = 'gartenplaner-state-v1'
@@ -12,6 +12,7 @@ export function createDefaultState(): AppState {
     plants: DEFAULT_PLANTS,
     placedPlants: [],
     seeds: [],
+    diary: [],
   }
 }
 
@@ -41,6 +42,10 @@ export function normalizeState(raw: Partial<AppState>): AppState {
     placedPlants: (raw.placedPlants ?? []).map((p) => ({
       ...p,
       plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
+    })),
+    diary: (raw.diary ?? []).map((e) => ({
+      ...e,
+      targets: e.targets ?? [],
     })),
   }
 }
@@ -82,6 +87,9 @@ export type Action =
   | { type: 'addSeed'; seed: Seed }
   | { type: 'updateSeed'; id: string; patch: Partial<Seed> }
   | { type: 'removeSeed'; id: string }
+  | { type: 'addDiaryEntry'; entry: DiaryEntry }
+  | { type: 'updateDiaryEntry'; id: string; patch: Partial<DiaryEntry> }
+  | { type: 'removeDiaryEntry'; id: string }
   | { type: 'load'; state: AppState }
 
 export function reducer(state: AppState, action: Action): AppState {
@@ -134,6 +142,15 @@ export function reducer(state: AppState, action: Action): AppState {
       }
     case 'removeSeed':
       return { ...state, seeds: state.seeds.filter((s) => s.id !== action.id) }
+    case 'addDiaryEntry':
+      return { ...state, diary: [...state.diary, action.entry] }
+    case 'updateDiaryEntry':
+      return {
+        ...state,
+        diary: state.diary.map((e) => (e.id === action.id ? { ...e, ...action.patch } : e)),
+      }
+    case 'removeDiaryEntry':
+      return { ...state, diary: state.diary.filter((e) => e.id !== action.id) }
     case 'load':
       return normalizeState(action.state)
   }

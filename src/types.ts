@@ -58,6 +58,46 @@ export const FAMILY_LABELS: Record<PlantFamily, string> = {
 
 export type Phase = 'sow' | 'plant' | 'harvest'
 
+export type BedAction = 'water' | 'mulch' | 'fertilize'
+
+export const BED_ACTION_LABELS: Record<BedAction, string> = {
+  water: 'Gießen',
+  mulch: 'Mulchen',
+  fertilize: 'Düngen',
+}
+
+export const BED_ACTION_EMOJI: Record<BedAction, string> = {
+  water: '💧',
+  mulch: '🍂',
+  fertilize: '🧪',
+}
+
+export type PlantAction = 'harvest' | 'pest' | 'remove'
+
+export const PLANT_ACTION_LABELS: Record<PlantAction, string> = {
+  harvest: 'Ernten',
+  pest: 'Schädlinge',
+  remove: 'Entfernen',
+}
+
+export const PLANT_ACTION_EMOJI: Record<PlantAction, string> = {
+  harvest: '🧺',
+  pest: '🐛',
+  remove: '❌',
+}
+
+export type DiaryTarget =
+  | { kind: 'bed'; bedId: string; action: BedAction }
+  | { kind: 'plant'; placedPlantId: string; action: PlantAction }
+
+export interface DiaryEntry {
+  id: string
+  date: string
+  timestamp: number
+  note: string
+  targets: DiaryTarget[]
+}
+
 export type Season = 'all' | 'spring' | 'summer' | 'autumn' | 'winter' | 'now'
 
 export interface Plant {
@@ -104,4 +144,5 @@ export interface AppState {
   plants: Plant[]
   placedPlants: PlacedPlant[]
   seeds: Seed[]
+  diary: DiaryEntry[]
 }
