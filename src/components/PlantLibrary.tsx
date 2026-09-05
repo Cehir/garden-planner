@@ -112,7 +112,7 @@ interface PlantsPanelProps {
   tool: 'select' | 'bed' | 'plant'
 }
 
-function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
+function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
   const { state, dispatch } = useStore()
   const [filter, setFilter] = useState('')
   const [adding, setAdding] = useState(false)
@@ -205,7 +205,7 @@ function PlantsPanel({ placedPlant, onPick, tool }: PlantsPanelProps) {
               }
               onClick={() => onPick(placedPlant?.id === p.id ? null : p)}
               role="button"
-              title={tool === 'plant' ? 'Klicken, um zu platzieren' : 'Wählen, dann oben „Pflanze platzieren“ aktivieren'}
+              title={placedPlant?.id === p.id ? 'Auswahl aufheben' : 'Klicken, um zu platzieren'}
             >
               <span className="emoji" style={{ background: p.color }}>
                 {p.emoji}

@@ -98,6 +98,15 @@ function GardenApp() {
     }
   }
 
+  // Issue #1: picking a plant in the library should immediately arm the plant
+  // tool, so the "click to place" hint is truthful from the first click.
+  function handlePick(plant: Plant | null) {
+    setPlacedPlant(plant)
+    if (plant) {
+      setTool('plant')
+    }
+  }
+
   // Beim Jahreswechsel Auswahl platziertener Pflanzen verwerfen – Beete-Auswahl bleibt gültig.
   function handleYear(y: number) {
     setYear(y)
@@ -263,7 +272,7 @@ ${seedBankHtml}
           showRotation={showRotation}
           year={year}
         />
-        <PlantLibrary placedPlant={placedPlant} onPick={setPlacedPlant} tool={tool} />
+        <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
         <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
       </div>
       <footer className="statusbar">
