@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { LightRequirement, MonthRange, Plant, PlantFamily, SoilType } from '../types'
 import { FAMILY_LABELS, LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { canDoNow, currentMonth, formatRanges, MONTHS_SHORT } from '../seasons'
@@ -137,10 +137,13 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
   const [nowOnly, setNowOnly] = useState(false)
 
   const month = currentMonth()
-  const seedCounts = new Map<string, number>()
-  for (const s of state.seeds) {
-    seedCounts.set(s.plantId, (seedCounts.get(s.plantId) ?? 0) + 1)
-  }
+  const seedCounts = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const s of state.seeds) {
+      map.set(s.plantId, (map.get(s.plantId) ?? 0) + 1)
+    }
+    return map
+  }, [state.seeds])
 
   const filtered = state.plants.filter(
     (p) =>
