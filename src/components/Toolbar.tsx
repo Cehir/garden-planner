@@ -3,6 +3,7 @@ import type { ChangeEvent } from 'react'
 import type { Phase, Season, Tool } from '../types'
 import { PHASE_LABELS, SEASON_LABELS } from '../seasons'
 import { useStore } from '../store'
+import { isMac } from '../utils/platform'
 
 interface ToolbarProps {
   tool: Tool
@@ -66,6 +67,9 @@ export default function Toolbar({
       e.target.value = ''
     }
   }
+
+  const undoLabel = isMac ? '⌘Z' : 'Ctrl+Z'
+  const redoLabel = isMac ? '⇧⌘Z' : 'Shift+Ctrl+Z'
 
   return (
     <header className="toolbar">
@@ -168,7 +172,7 @@ export default function Toolbar({
           className="tool"
           onClick={onUndo}
           disabled={!canUndo}
-          title="Rückgängig (⌘Z)"
+          title={`Rückgängig (${undoLabel})`}
         >
           ↩
         </button>
@@ -177,7 +181,7 @@ export default function Toolbar({
           className="tool"
           onClick={onRedo}
           disabled={!canRedo}
-          title="Wiederholen (⇧⌘Z)"
+          title={`Wiederholen (${redoLabel})`}
         >
           ↪
         </button>
@@ -194,6 +198,7 @@ export default function Toolbar({
           📂 Import
           <input type="file" accept="application/json,.json" onChange={handleImportFile} hidden />
         </label>
+        <span className="toolbar-divider" />
         <button
           type="button"
           className="tool wide danger"
