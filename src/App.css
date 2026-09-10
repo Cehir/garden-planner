@@ -69,6 +69,14 @@
   color: #a33;
 }
 
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
 .tool.wide {
   flex: 1;
   justify-content: center;
