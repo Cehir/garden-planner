@@ -7,6 +7,7 @@ import BedDetails from './components/BedDetails'
 import PlantLibrary from './components/PlantLibrary'
 import { buildPrintSvg, buildPrintLegend, buildPrintSeedBankHtml, escapeXml } from './printPlan'
 import { SEASON_LABELS } from './seasons'
+import { isMac } from './utils/platform'
 import './App.css'
 
 const PRINT_PAGE_W = 794
@@ -24,6 +25,7 @@ function GardenApp() {
   const [phase, setPhase] = useState<Phase>('plant')
   const [showRotation, setShowRotation] = useState(false)
   const [year, setYear] = useState(new Date().getFullYear())
+  const [mobileSidebar, setMobileSidebar] = useState<'library' | 'details' | null>(null)
 
   // "Fit to screen" is derived from the (external) window size + garden
   // dimensions, so it is computed during render instead of stored in state.
@@ -260,6 +262,24 @@ ${seedBankHtml}
         year={year}
         onYear={handleYear}
       />
+      <div className="mobile-toggle-bar">
+        <button
+          className={`tool mobile-toggle ${mobileSidebar === 'library' ? 'active' : ''}`}
+          onClick={() => setMobileSidebar(mobileSidebar === 'library' ? null : 'library')}
+        >
+          🌿 Pflanzen
+        </button>
+        <button
+          className={`tool mobile-toggle ${mobileSidebar === 'details' ? 'active' : ''}`}
+          onClick={() => setMobileSidebar(mobileSidebar === 'details' ? null : 'details')}
+        >
+          📋 Details
+        </button>
+      </div>
+      <div className="mobile-hint">Für die beste Erfahrung öffne diese App auf einem größeren Bildschirm.</div>
+      {mobileSidebar && (
+        <div className="sidebar-backdrop" onClick={() => setMobileSidebar(null)} />
+      )}
       <div className="main">
         <Editor
           tool={tool}
@@ -272,6 +292,24 @@ ${seedBankHtml}
           showRotation={showRotation}
           year={year}
         />
+        {mobileSidebar === 'library' && (
+          <div
+            className="sidebar mobile-open"
+            onClick={(e) => { if (e.target === e.currentTarget) setMobileSidebar(null); }}
+          >
+            <button className="close-btn" onClick={() => setMobileSidebar(null)}>✕</button>
+            <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
+          </div>
+        )}
+        {mobileSidebar === 'details' && (
+          <div
+            className="sidebar mobile-open"
+            onClick={(e) => { if (e.target === e.currentTarget) setMobileSidebar(null); }}
+          >
+            <button className="close-btn" onClick={() => setMobileSidebar(null)}>✕</button>
+            <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
+          </div>
+        )}
         <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
         <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
       </div>
@@ -282,7 +320,7 @@ ${seedBankHtml}
             ? <span>Klicke in ein Beet, um „{placedPlant.name}“ zu platzieren.</span>
             : <span>Wähle links in der Bibliothek eine Pflanze aus.</span>)}
         {tool === 'select' && <span>Auswählen &amp; Verschieben · Beete an den Ecken skalieren · Entf zum Löschen.</span>}
-        <span className="keys">Tasten: V · B · P · F · Esc · ⌘Z · ⇧⌘Z</span>
+        <span className="keys">Tasten: V · B · P · F · Esc · {isMac ? '⌘Z' : 'Ctrl+Z'} · {isMac ? '⇧⌘Z' : 'Shift+Ctrl+Z'}</span>
       </footer>
     </div>
   )

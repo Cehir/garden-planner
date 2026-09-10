@@ -807,3 +807,155 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Responsive layout ─────────────────────────────────────────── */
+
+/* Mobile toggle bar & hint — hidden on desktop */
+.mobile-toggle-bar {
+  display: none;
+}
+
+.mobile-hint {
+  display: none;
+}
+
+/* Default: sidebars visible, main is row */
+.sidebar {
+  display: flex;
+}
+
+/* Narrow viewport: hide sidebars, show mobile bar */
+@media (max-width: 768px) {
+  .mobile-toggle-bar {
+    display: flex;
+    gap: 8px;
+    padding: 6px 12px;
+    background: #2f6f4f;
+    justify-content: center;
+  }
+
+  .mobile-toggle-bar .tool.mobile-toggle {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  .mobile-toggle-bar .tool.mobile-toggle.active {
+    background: #fff;
+    color: #2f6f4f;
+    border-color: #fff;
+  }
+
+  /* Backdrop behind mobile sidebar */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 99;
+  }
+
+  /* Mobile hint bar */
+  .mobile-hint {
+    display: block;
+    text-align: center;
+    padding: 6px 12px;
+    background: #fdf0d7;
+    color: #8a6d1f;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Hide sidebars by default on mobile */
+  .sidebar {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    z-index: 100;
+    background: #fbf9f2;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+    padding: 16px;
+    overflow-y: auto;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Overlay sidebar when open */
+  .sidebar.mobile-open {
+    display: flex;
+  }
+
+  /* Close button for mobile overlays */
+  .sidebar .close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b6357;
+    padding: 4px 8px;
+    z-index: 1;
+  }
+
+  /* Editor fills full width on mobile */
+  .main {
+    flex-direction: column;
+    overflow: auto;
+    flex: 1;
+  }
+
+  .editor-scroll {
+    padding: 12px;
+  }
+
+  /* Shrink toolbar on mobile */
+  .toolbar {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .tool {
+    padding: 5px 8px;
+    font-size: 13px;
+  }
+
+  /* Statusbar: wrap keys */
+  .statusbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 6px 12px;
+  }
+
+  .statusbar .keys {
+    font-size: 11px;
+  }
+}
+
+/* Extra-small screens */
+@media (max-width: 400px) {
+  .toolbar {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .toolbar-group {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .editor-scroll {
+    padding: 8px;
+  }
+
+  .mobile-toggle-bar .tool.mobile-toggle {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}
