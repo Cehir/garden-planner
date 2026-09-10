@@ -292,6 +292,13 @@
   font-weight: 400;
 }
 
+.sidebar .year-span-indicator {
+  font-size: 14px;
+  color: #d6364c;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
 .sidebar .range-list {
   display: flex;
   flex-direction: column;

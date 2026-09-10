@@ -33,6 +33,7 @@ function RangeField({
   value: MonthRange
   onChange: (v: MonthRange) => void
 }) {
+  const isYearSpanning = value[0] > value[1]
   return (
     <label>
       {label}
@@ -58,6 +59,11 @@ function RangeField({
             </option>
           ))}
         </select>
+        {isYearSpanning && (
+          <span className="year-span-indicator" title="Jahresübergreifend">
+            ↕
+          </span>
+        )}
       </span>
     </label>
   )
