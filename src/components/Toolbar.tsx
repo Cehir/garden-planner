@@ -104,8 +104,11 @@ export default function Toolbar({
         <button type="button" className="tool" onClick={() => onZoom(zoom / 1.25)} title="Verkleinern">
           −
         </button>
-        <button type="button" className="tool" onClick={onFit} title="Passend (F)">
+        <span className="zoom-level" title="Aktueller Zoom">
           {Math.round(zoom * 100)}%
+        </span>
+        <button type="button" className="tool" onClick={onFit} title="Ansicht anpassen (F)">
+          ≡
         </button>
         <button type="button" className="tool" onClick={() => onZoom(zoom * 1.25)} title="Vergrößern">
           +

@@ -157,14 +157,58 @@ export default function BedDetails({ selected, onClearSelection, year }: BedDeta
         Name
         <input value={bed.name} onChange={(e) => dispatch({ type: 'updateBed', id: bed.id, patch: { name: e.target.value } })} />
       </label>
-      <label>
-        Maße
-        <input value={`${bed.w} × ${bed.h} cm (${(bed.w * bed.h / 10000).toFixed(2)} m²)`} readOnly />
-      </label>
-      <label>
-        Position
-        <input value={`${bed.x}, ${bed.y} cm`} readOnly />
-      </label>
+      <div className="row">
+        <label>
+          Breite (cm)
+          <input
+            type="number"
+            min={20}
+            value={bed.w}
+            onChange={(e) => {
+              const w = Math.max(20, Number(e.target.value) || 20)
+              dispatch({ type: 'updateBed', id: bed.id, patch: { w } })
+            }}
+          />
+        </label>
+        <label>
+          Höhe (cm)
+          <input
+            type="number"
+            min={20}
+            value={bed.h}
+            onChange={(e) => {
+              const h = Math.max(20, Number(e.target.value) || 20)
+              dispatch({ type: 'updateBed', id: bed.id, patch: { h } })
+            }}
+          />
+        </label>
+      </div>
+      <div className="row">
+        <label>
+          X (cm)
+          <input
+            type="number"
+            min={0}
+            value={bed.x}
+            onChange={(e) => {
+              const x = Math.max(0, Number(e.target.value) || 0)
+              dispatch({ type: 'updateBed', id: bed.id, patch: { x } })
+            }}
+          />
+        </label>
+        <label>
+          Y (cm)
+          <input
+            type="number"
+            min={0}
+            value={bed.y}
+            onChange={(e) => {
+              const y = Math.max(0, Number(e.target.value) || 0)
+              dispatch({ type: 'updateBed', id: bed.id, patch: { y } })
+            }}
+          />
+        </label>
+      </div>
       <label>
         Farbe
         <div className="swatches">

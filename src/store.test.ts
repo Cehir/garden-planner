@@ -303,15 +303,6 @@ describe('reducer: diary', () => {
     expect(s1.diary[0].targets[0]).toEqual({ kind: 'bed', bedId: 'b1', action: 'water' })
   })
 
-  it('aktualisiert einen Tagebuch-Eintrag', () => {
-    const withEntry = reducer(base, {
-      type: 'addDiaryEntry',
-      entry: { id: 'd1', date: '2026-09-02', timestamp: 1000, note: 'alt', targets: [] },
-    })
-    const s1 = reducer(withEntry, { type: 'updateDiaryEntry', id: 'd1', patch: { note: 'neu' } })
-    expect(s1.diary[0].note).toBe('neu')
-  })
-
   it('entfernt einen Tagebuch-Eintrag', () => {
     const withEntry = reducer(base, {
       type: 'addDiaryEntry',

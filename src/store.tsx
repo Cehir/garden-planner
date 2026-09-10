@@ -88,7 +88,6 @@ export type Action =
   | { type: 'updateSeed'; id: string; patch: Partial<Seed> }
   | { type: 'removeSeed'; id: string }
   | { type: 'addDiaryEntry'; entry: DiaryEntry }
-  | { type: 'updateDiaryEntry'; id: string; patch: Partial<DiaryEntry> }
   | { type: 'removeDiaryEntry'; id: string }
   | { type: 'load'; state: AppState }
 
@@ -144,11 +143,6 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, seeds: state.seeds.filter((s) => s.id !== action.id) }
     case 'addDiaryEntry':
       return { ...state, diary: [...state.diary, action.entry] }
-    case 'updateDiaryEntry':
-      return {
-        ...state,
-        diary: state.diary.map((e) => (e.id === action.id ? { ...e, ...action.patch } : e)),
-      }
     case 'removeDiaryEntry':
       return { ...state, diary: state.diary.filter((e) => e.id !== action.id) }
     case 'load':

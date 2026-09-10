@@ -196,15 +196,16 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
         {filtered.map((p) => {
           const seedCount = seedCounts.get(p.id) ?? 0
           return (
-            <div
+            <button
               key={p.id}
+              type="button"
               className={
                 'plant-item' +
                 (placedPlant?.id === p.id ? ' active' : '') +
                 (editing === p.id ? ' editing' : '')
               }
               onClick={() => onPick(placedPlant?.id === p.id ? null : p)}
-              role="button"
+              aria-label={placedPlant?.id === p.id ? `${p.name} — Auswahl aufheben` : `${p.name} — Platzieren`}
               title={placedPlant?.id === p.id ? 'Auswahl aufheben' : 'Klicken, um zu platzieren'}
             >
               <span className="emoji" style={{ background: p.color }}>
@@ -241,7 +242,7 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
               >
                 ✏️
               </button>
-            </div>
+            </button>
           )
         })}
         {filtered.length === 0 && <p className="hint">Keine Pflanzen gefunden.</p>}
