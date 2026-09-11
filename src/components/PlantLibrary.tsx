@@ -84,7 +84,7 @@ function RangeListField({
       {values.map((range, i) => (
         <div key={i} className="range-list-row">
           <RangeField
-            label={i === 0 ? '' : `${label} #${i + 1}`}
+            label={i === 0 ? '' : `${label}#${i + 1}`}
             value={range}
             onChange={(next) => {
               const copy = values.slice()
@@ -112,6 +112,179 @@ function RangeListField({
   )
 }
 
+// ─── PlantForm ───────────────────────────────────────────────────────────
+
+interface PlantFormData {
+  name: string
+  emoji: string
+  color: string
+  spacing: number
+  height: number
+  light: LightRequirement
+  soil: SoilType
+  family: PlantFamily
+  sow: MonthRange[]
+  plant: MonthRange[]
+  harvest: MonthRange[]
+}
+
+const DEFAULT_FORM: PlantFormData = {
+  name: '',
+  emoji: '🌿',
+  color: PLANT_COLORS[0],
+  spacing: 25,
+  height: 25,
+  light: 'full',
+  soil: 'normal',
+  family: 'andere',
+  sow: [[3, 6]],
+  plant: [[3, 6]],
+  harvest: [[6, 9]],
+}
+
+function initForm(plant?: Plant): PlantFormData {
+  if (plant) {
+    return {
+      name: plant.name,
+      emoji: plant.emoji,
+      color: plant.color,
+      spacing: plant.spacing,
+      height: plant.height,
+      light: plant.light,
+      soil: plant.soil,
+      family: plant.family,
+      sow: plant.sow.slice(),
+      plant: plant.plant.slice(),
+      harvest: plant.harvest.slice(),
+    }
+  }
+  return { ...DEFAULT_FORM }
+}
+
+interface PlantFormProps {
+  plant?: Plant
+  onSave: (data: PlantFormData) => void
+  onCancel: () => void
+  onDelete?: () => void
+  mode: 'add' | 'edit'
+}
+
+function PlantForm({ plant, onSave, onCancel, onDelete, mode }: PlantFormProps) {
+  const [form, setForm] = useState<PlantFormData>(() => initForm(plant))
+  const isAdd = mode === 'add'
+
+  const set = <K extends keyof PlantFormData>(k: K, v: PlantFormData[K]) =>
+    setForm((prev) => ({ ...prev, [k]: v }))
+
+  return (
+    <div className="form">
+      <h3>{isAdd ? 'Neue Pflanze' : 'Pflanze bearbeiten'}</h3>
+
+      <label>
+        Name
+        <input
+          value={form.name}
+          onChange={(e) => set('name', e.target.value)}
+          placeholder={isAdd ? 'z.B. Mangold' : undefined}
+        />
+      </label>
+
+      <label>
+        Emoji
+        <input value={form.emoji} onChange={(e) => set('emoji', e.target.value)} />
+      </label>
+
+      <label>
+        Farbe
+        <div className="swatches">
+          {PLANT_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              className={form.color === c ? 'swatch active' : 'swatch'}
+              style={{ background: c }}
+              onClick={() => set('color', c)}
+            />
+          ))}
+        </div>
+      </label>
+
+      <label>
+        Pflanzabstand (cm)
+        <input
+          type="number"
+          min={1}
+          value={form.spacing}
+          onChange={(e) => set('spacing', Number(e.target.value))}
+        />
+      </label>
+
+      <label>
+        Höhe (cm)
+        <input
+          type="number"
+          min={1}
+          value={form.height}
+          onChange={(e) => set('height', Number(e.target.value))}
+        />
+      </label>
+
+      <label>
+        Lichtbedarf
+        <select value={form.light} onChange={(e) => set('light', e.target.value as LightRequirement)}>
+          {(Object.keys(LIGHT_LABELS) as LightRequirement[]).map((k) => (
+            <option key={k} value={k}>
+              {LIGHT_LABELS[k]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        Empfohlener Bodentyp
+        <select value={form.soil} onChange={(e) => set('soil', e.target.value as SoilType)}>
+          {(Object.keys(SOIL_LABELS) as SoilType[]).map((k) => (
+            <option key={k} value={k}>
+              {SOIL_ICONS[k]} {SOIL_LABELS[k]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label>
+        Pflanzenfamilie
+        <select value={form.family} onChange={(e) => set('family', e.target.value as PlantFamily)}>
+          {(Object.keys(FAMILY_LABELS) as PlantFamily[]).map((k) => (
+            <option key={k} value={k}>
+              {FAMILY_LABELS[k]}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <RangeListField label="Aussaat" values={form.sow} onChange={(v) => set('sow', v)} />
+      <RangeListField label="Pflanzung" values={form.plant} onChange={(v) => set('plant', v)} />
+      <RangeListField label="Ernte" values={form.harvest} onChange={(v) => set('harvest', v)} />
+
+      <div className="row">
+        <button type="button" className="primary" onClick={() => onSave(form)}>
+          {isAdd ? 'Hinzufügen' : 'Speichern'}
+        </button>
+        {onDelete && (
+          <button type="button" className="danger" onClick={onDelete}>
+            Löschen
+          </button>
+        )}
+        <button type="button" className="tool" onClick={onCancel}>
+          Abbrechen
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// ─── PlantsPanel ────────────────────────────────────────────────────────
+
 interface PlantsPanelProps {
   placedPlant: Plant | null
   onPick: (plant: Plant | null) => void
@@ -122,17 +295,6 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
   const { state, dispatch } = useStore()
   const [filter, setFilter] = useState('')
   const [adding, setAdding] = useState(false)
-  const [name, setName] = useState('')
-  const [emoji, setEmoji] = useState('🌿')
-  const [color, setColor] = useState(PLANT_COLORS[0])
-  const [spacing, setSpacing] = useState(25)
-  const [height, setHeight] = useState(25)
-  const [light, setLight] = useState<LightRequirement>('full')
-  const [soil, setSoil] = useState<SoilType>('normal')
-  const [family, setFamily] = useState<PlantFamily>('andere')
-  const [sow, setSow] = useState<MonthRange[]>([[3, 6]])
-  const [plant, setPlant] = useState<MonthRange[]>([[3, 6]])
-  const [harvest, setHarvest] = useState<MonthRange[]>([[6, 9]])
   const [editing, setEditing] = useState<string | null>(null)
   const [nowOnly, setNowOnly] = useState(false)
 
@@ -150,39 +312,6 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
       p.name.toLowerCase().includes(filter.toLowerCase()) &&
       (!nowOnly || canDoNow(p, month)),
   )
-
-  function addPlant() {
-    if (!name.trim()) return
-    dispatch({
-      type: 'addPlant',
-      plant: {
-        id: uid('plant'),
-        name: name.trim(),
-        emoji,
-        color,
-        spacing: Math.max(1, spacing || 25),
-        height: Math.max(1, height || 25),
-        light,
-        soil,
-        family,
-        sow,
-        plant,
-        harvest,
-      },
-    })
-    setName('')
-    setEmoji('🌿')
-    setColor(PLANT_COLORS[0])
-    setSpacing(25)
-    setHeight(25)
-    setLight('full')
-    setSoil('normal')
-    setFamily('andere')
-    setSow([[3, 6]])
-    setPlant([[3, 6]])
-    setHarvest([[6, 9]])
-    setAdding(false)
-  }
 
   return (
     <>
@@ -236,17 +365,6 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
                 onClick={(e) => {
                   e.stopPropagation()
                   setEditing(p.id)
-                  setName(p.name)
-                  setEmoji(p.emoji)
-                  setColor(p.color)
-                  setSpacing(p.spacing)
-                  setHeight(p.height)
-                  setLight(p.light)
-                  setSoil(p.soil)
-                  setFamily(p.family)
-                  setSow(p.sow.slice())
-                  setPlant(p.plant.slice())
-                  setHarvest(p.harvest.slice())
                 }}
               >
                 ✏️
@@ -257,232 +375,78 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
         {filtered.length === 0 && <p className="hint">Keine Pflanzen gefunden.</p>}
       </div>
 
-      {editing &&
-        (() => {
-          const target = state.plants.find((p) => p.id === editing)
-          if (!target) return null
-          return (
-            <div className="form">
-              <h3>Pflanze bearbeiten</h3>
-              <label>
-                Name
-                <input value={name} onChange={(e) => setName(e.target.value)} />
-              </label>
-              <label>
-                Emoji
-                <input value={emoji} onChange={(e) => setEmoji(e.target.value)} />
-              </label>
-              <label>
-                Farbe
-                <div className="swatches">
-                  {PLANT_COLORS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      className={color === c ? 'swatch active' : 'swatch'}
-                      style={{ background: c }}
-                      onClick={() => setColor(c)}
-                    />
-                  ))}
-                </div>
-              </label>
-              <label>
-                Pflanzabstand (cm)
-                <input
-                  type="number"
-                  min={1}
-                  value={spacing}
-                  onChange={(e) => setSpacing(Number(e.target.value))}
-                />
-              </label>
-              <label>
-                Höhe (cm)
-                <input
-                  type="number"
-                  min={1}
-                  value={height}
-                  onChange={(e) => setHeight(Number(e.target.value))}
-                />
-              </label>
-              <label>
-                Lichtbedarf
-                <select value={light} onChange={(e) => setLight(e.target.value as LightRequirement)}>
-                  {(Object.keys(LIGHT_LABELS) as LightRequirement[]).map((k) => (
-                    <option key={k} value={k}>
-                      {LIGHT_LABELS[k]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Empfohlener Bodentyp
-                <select value={soil} onChange={(e) => setSoil(e.target.value as SoilType)}>
-                  {(Object.keys(SOIL_LABELS) as SoilType[]).map((k) => (
-                    <option key={k} value={k}>
-                      {SOIL_ICONS[k]} {SOIL_LABELS[k]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Pflanzenfamilie
-                <select value={family} onChange={(e) => setFamily(e.target.value as PlantFamily)}>
-                  {(Object.keys(FAMILY_LABELS) as PlantFamily[]).map((k) => (
-                    <option key={k} value={k}>
-                      {FAMILY_LABELS[k]}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <RangeListField label="Aussaat" values={sow} onChange={setSow} />
-              <RangeListField label="Pflanzung" values={plant} onChange={setPlant} />
-              <RangeListField label="Ernte" values={harvest} onChange={setHarvest} />
-              <div className="row">
-                <button
-                  type="button"
-                  className="primary"
-                  onClick={() => {
-                    dispatch({
-                      type: 'updatePlant',
-                      id: target.id,
-                      patch: {
-                        name: name.trim() || target.name,
-                        emoji,
-                        color,
-                        spacing: Math.max(1, spacing || target.spacing),
-                        height: Math.max(1, height || target.height),
-                        light,
-                        soil,
-                        family,
-                        sow,
-                        plant,
-                        harvest,
-                      },
-                    })
-                    setEditing(null)
-                  }}
-                >
-                  Speichern
-                </button>
-                <button
-                  type="button"
-                  className="danger"
-                  onClick={() => {
-                    dispatch({ type: 'removePlant', id: target.id })
-                    onPick(null)
-                    setEditing(null)
-                  }}
-                >
-                  Löschen
-                </button>
-                <button type="button" className="tool" onClick={() => setEditing(null)}>
-                  Abbrechen
-                </button>
-              </div>
-            </div>
-          )
-        })()}
+      {editing && (
+        <PlantForm
+          plant={state.plants.find((p) => p.id === editing)}
+          mode="edit"
+          onSave={(data) => {
+            const target = state.plants.find((p) => p.id === editing)
+            if (!target) return
+            dispatch({
+              type: 'updatePlant',
+              id: target.id,
+              patch: {
+                name: data.name.trim() || target.name,
+                emoji: data.emoji,
+                color: data.color,
+                spacing: Math.max(1, data.spacing || target.spacing),
+                height: Math.max(1, data.height || target.height),
+                light: data.light,
+                soil: data.soil,
+                family: data.family,
+                sow: data.sow,
+                plant: data.plant,
+                harvest: data.harvest,
+              },
+            })
+            setEditing(null)
+          }}
+          onCancel={() => setEditing(null)}
+          onDelete={() => {
+            const target = state.plants.find((p) => p.id === editing)
+            if (target) {
+              dispatch({ type: 'removePlant', id: target.id })
+              onPick(null)
+            }
+            setEditing(null)
+          }}
+        />
+      )}
 
-      {!editing &&
-        (adding ? (
-          <div className="form">
-            <h3>Neue Pflanze</h3>
-            <label>
-              Name
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="z.B. Mangold" />
-            </label>
-            <label>
-              Emoji
-              <input value={emoji} onChange={(e) => setEmoji(e.target.value)} />
-            </label>
-            <label>
-              Farbe
-              <div className="swatches">
-                {PLANT_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    className={color === c ? 'swatch active' : 'swatch'}
-                    style={{ background: c }}
-                    onClick={() => setColor(c)}
-                  />
-                ))}
-              </div>
-            </label>
-            <label>
-              Pflanzabstand (cm)
-              <input
-                type="number"
-                min={1}
-                value={spacing}
-                onChange={(e) => setSpacing(Number(e.target.value))}
-              />
-            </label>
-            <label>
-              Höhe (cm)
-              <input
-                type="number"
-                min={1}
-                value={height}
-                onChange={(e) => setHeight(Number(e.target.value))}
-              />
-            </label>
-            <label>
-              Lichtbedarf
-              <select value={light} onChange={(e) => setLight(e.target.value as LightRequirement)}>
-                {(Object.keys(LIGHT_LABELS) as LightRequirement[]).map((k) => (
-                  <option key={k} value={k}>
-                    {LIGHT_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Empfohlener Bodentyp
-              <select value={soil} onChange={(e) => setSoil(e.target.value as SoilType)}>
-                {(Object.keys(SOIL_LABELS) as SoilType[]).map((k) => (
-                  <option key={k} value={k}>
-                    {SOIL_ICONS[k]} {SOIL_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Pflanzenfamilie
-              <select value={family} onChange={(e) => setFamily(e.target.value as PlantFamily)}>
-                {(Object.keys(FAMILY_LABELS) as PlantFamily[]).map((k) => (
-                  <option key={k} value={k}>
-                    {FAMILY_LABELS[k]}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <RangeListField label="Aussaat" values={sow} onChange={setSow} />
-            <RangeListField label="Pflanzung" values={plant} onChange={setPlant} />
-            <RangeListField label="Ernte" values={harvest} onChange={setHarvest} />
-            <div className="row">
-              <button type="button" className="primary" onClick={addPlant}>
-                Hinzufügen
-              </button>
-              <button type="button" className="tool" onClick={() => setAdding(false)}>
-                Abbrechen
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button type="button" className="tool wide" onClick={() => setAdding(true)}>
-            ＋ Pflanze hinzufügen
-          </button>
-        ))}
+      {adding && (
+        <PlantForm
+          mode="add"
+          onSave={(data) => {
+            if (!data.name.trim()) return
+            dispatch({
+              type: 'addPlant',
+              plant: {
+                id: uid('plant'),
+                ...data,
+              },
+            })
+            setAdding(false)
+          }}
+          onCancel={() => setAdding(false)}
+        />
+      )}
+
+      {!adding && !editing && (
+        <button type="button" className="tool wide" onClick={() => setAdding(true)}>
+          ＋ Pflanze hinzufügen
+        </button>
+      )}
 
       {placedPlant && (
         <p className="hint active-hint">
-          „{placedPlant.name}“ ausgewählt – klicke in den Plan, um sie in ein Beet zu setzen.
+          „{placedPlant.name}" ausgewählt – klicke in den Plan, um sie in ein Beet zu setzen.
         </p>
       )}
     </>
   )
 }
+
+// ─── PlantLibrary ───────────────────────────────────────────────────────
 
 type Tab = 'plants' | 'seeds'
 
