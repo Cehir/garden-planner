@@ -10,6 +10,17 @@ import Diary from './Diary'
 
 const BED_COLORS = ['#7fb069', '#6fa3a8', '#d9a441', '#b0697f', '#8a7bb8', '#d07b4f', '#7b8f4f', '#4f7bb0']
 
+const COLOR_NAMES: Record<string, string> = {
+  '#7fb069': 'Grün',
+  '#6fa3a8': 'Blau',
+  '#d9a441': 'Gold',
+  '#b0697f': 'Purpur',
+  '#8a7bb8': 'Violett',
+  '#d07b4f': 'Orange',
+  '#7b8f4f': 'Oliv',
+  '#4f7bb0': 'Himmel',
+}
+
 interface BedDetailsProps {
   selected: Selected | null
   onClearSelection: () => void
@@ -219,7 +230,7 @@ export default function BedDetails({ selected, onClearSelection, year }: BedDeta
               className={bed.color === c ? 'swatch active' : 'swatch'}
               style={{ background: c }}
               onClick={() => dispatch({ type: 'updateBed', id: bed.id, patch: { color: c } })}
-              aria-label={`Farbe ${c}`}
+              aria-label={`Farbe ${COLOR_NAMES[c] ?? c}`}
             />
           ))}
         </div>

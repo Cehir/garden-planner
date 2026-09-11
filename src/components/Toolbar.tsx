@@ -79,6 +79,7 @@ export default function Toolbar({
           className={tool === 'select' ? 'tool active' : 'tool'}
           onClick={() => onTool('select')}
           title="Auswählen / Verschieben (V)"
+          aria-label="Auswählen / Verschieben"
         >
           ⤢
         </button>
@@ -87,6 +88,7 @@ export default function Toolbar({
           className={tool === 'bed' ? 'tool active' : 'tool'}
           onClick={() => onTool('bed')}
           title="Beet zeichnen (B)"
+          aria-label="Beet zeichnen"
         >
           ▭
         </button>
@@ -95,6 +97,7 @@ export default function Toolbar({
           className={tool === 'plant' ? 'tool active' : 'tool'}
           onClick={() => onTool('plant')}
           title="Pflanze platzieren (P)"
+          aria-label="Pflanze platzieren"
         >
           🌱
         </button>
@@ -105,7 +108,7 @@ export default function Toolbar({
       </div>
 
       <div className="toolbar-group">
-        <button type="button" className="tool" onClick={() => onZoom(zoom / 1.25)} title="Verkleinern">
+        <button type="button" className="tool" onClick={() => onZoom(zoom / 1.25)} title="Verkleinern" aria-label="Verkleinern">
           −
         </button>
         <span className="zoom-level" title="Aktueller Zoom">
@@ -114,7 +117,7 @@ export default function Toolbar({
         <button type="button" className="tool" onClick={onFit} title="Ansicht anpassen (F)">
           Fit
         </button>
-        <button type="button" className="tool" onClick={() => onZoom(zoom * 1.25)} title="Vergrößern">
+        <button type="button" className="tool" onClick={() => onZoom(zoom * 1.25)} title="Vergrößern" aria-label="Vergrößern">
           +
         </button>
       </div>
@@ -173,6 +176,7 @@ export default function Toolbar({
           onClick={onUndo}
           disabled={!canUndo}
           title={`Rückgängig (${undoLabel})`}
+          aria-label="Rückgängig"
         >
           ↩
         </button>
@@ -182,6 +186,7 @@ export default function Toolbar({
           onClick={onRedo}
           disabled={!canRedo}
           title={`Wiederholen (${redoLabel})`}
+          aria-label="Wiederholen"
         >
           ↪
         </button>
