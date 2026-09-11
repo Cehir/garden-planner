@@ -198,14 +198,14 @@ export default function Toolbar({
           📂 Import
           <input type="file" accept="application/json,.json" onChange={handleImportFile} hidden />
         </label>
-        <span className="toolbar-divider" />
+        <span className="toolbar-divider danger-separator" />
         <button
           type="button"
           className="tool wide danger"
           onClick={onReset}
           title="Alles zurücksetzen"
         >
-          🗑 Reset
+          ⚠ Reset
         </button>
       </div>
     </header>
