@@ -62,4 +62,35 @@ describe('PlantLibrary – "Jetzt pflanzbar"-Filter', () => {
     fireEvent.click(checkbox)
     expect(countByName(excluded!.name)).toBeGreaterThanOrEqual(1)
   })
+
+  it('nested kein Button in einem anderen Button (ungültiges HTML)', () => {
+    renderLibrary()
+    // Die Zeile einer Pflanze ist ein rolemarkierter Button; der ✏️-Button
+    // darf darin enthalten sein, aber nicht in einem echten <button> verschachtelt.
+    const rows = screen.getAllByRole('button').filter((el) =>
+      el.classList.contains('plant-item'),
+    )
+    expect(rows.length).toBeGreaterThanOrEqual(1)
+    for (const row of rows) {
+      expect(row.tagName).not.toBe('BUTTON')
+      const inner = row.querySelector('button')
+      expect(inner).not.toBeNull()
+      expect(inner!.parentElement).toBe(row)
+      expect(row.querySelector('button button')).toBeNull()
+    }
+  })
+
+  it('öffnet über den ✏️-Button die Bearbeitungsansicht, ohne die Auswahl zu ändern', () => {
+    const onPick = vi.fn()
+    render(
+      <StoreProvider>
+        <PlantLibrary placedPlant={null} onPick={onPick} tool="select" />
+      </StoreProvider>,
+    )
+    const first = DEFAULT_PLANTS[0]
+    const editBtn = screen.getByRole('button', { name: `${first.name} bearbeiten` })
+    fireEvent.click(editBtn)
+    expect(onPick).not.toHaveBeenCalled()
+    expect(screen.getByText('Pflanze bearbeiten')).toBeInTheDocument()
+  })
 })

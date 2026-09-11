@@ -333,18 +333,29 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
       <div className="plant-list">
         {filtered.map((p) => {
           const seedCount = seedCounts.get(p.id) ?? 0
+          const active = placedPlant?.id === p.id
           return (
-            <button
+            <div
               key={p.id}
-              type="button"
+              role="button"
+              tabIndex={0}
               className={
-                'plant-item' +
-                (placedPlant?.id === p.id ? ' active' : '') +
-                (editing === p.id ? ' editing' : '')
+                'plant-item' + (editing === p.id ? ' editing' : '')
               }
-              onClick={() => onPick(placedPlant?.id === p.id ? null : p)}
-              aria-label={placedPlant?.id === p.id ? `${p.name} — Auswahl aufheben` : `${p.name} — Platzieren`}
-              title={placedPlant?.id === p.id ? 'Auswahl aufheben' : 'Klicken, um zu platzieren'}
+              aria-pressed={active}
+              aria-label={active ? `${p.name} — Auswahl aufheben` : `${p.name} — Platzieren`}
+              title={active ? 'Auswahl aufheben' : 'Klicken, um zu platzieren'}
+              onClick={(e) => {
+                if ((e.target as Element).closest('[data-action="edit"]')) return
+                onPick(active ? null : p)
+              }}
+              onKeyDown={(e) => {
+                if (e.target !== e.currentTarget) return
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault()
+                  onPick(active ? null : p)
+                }
+              }}
             >
               <span className="emoji" style={{ background: p.color }}>
                 {p.emoji}
@@ -362,6 +373,9 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
               <button
                 type="button"
                 className="mini"
+                data-action="edit"
+                title="Pflanze bearbeiten"
+                aria-label={`${p.name} bearbeiten`}
                 onClick={(e) => {
                   e.stopPropagation()
                   setEditing(p.id)
@@ -369,7 +383,7 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
               >
                 ✏️
               </button>
-            </button>
+            </div>
           )
         })}
         {filtered.length === 0 && <p className="hint">Keine Pflanzen gefunden.</p>}

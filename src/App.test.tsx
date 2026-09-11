@@ -10,7 +10,7 @@ describe('Issue #1 – Pflanze auswählen aktiviert das Pflanz-Werkzeug', () => 
   it('schaltet beim Klick auf eine Pflanze ins Pflanz-Tool und zeigt den Platzier-Hinweis', () => {
     render(<App />)
 
-    const plant = screen.getByRole('button', { name: /Tomate/ })
+    const plant = screen.getByRole('button', { name: 'Tomate — Platzieren' })
     expect(plant).not.toHaveAttribute('title', /Pflanze platzieren.*aktivieren/)
     expect(plant).toHaveAttribute('title', 'Klicken, um zu platzieren')
 

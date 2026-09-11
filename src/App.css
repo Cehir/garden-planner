@@ -420,7 +420,7 @@
   border-color: #cfc6b2;
 }
 
-.plant-item.active {
+.plant-item[aria-pressed='true'] {
   border-color: #2f6f4f;
   background: #eef5ec;
 }
