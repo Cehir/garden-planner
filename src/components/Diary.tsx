@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { BedAction, DiaryEntry, DiaryTarget, PlantAction } from '../types'
 import {
   BED_ACTION_EMOJI,
@@ -56,23 +56,22 @@ export default function Diary() {
     }))
   }
 
-  function buildTargets(): DiaryTarget[] {
-    const targets: DiaryTarget[] = []
+  const targets = useMemo<DiaryTarget[]>(() => {
+    const result: DiaryTarget[] = []
     for (const [bedId, action] of Object.entries(selectedBeds)) {
       if (action) {
-        targets.push({ kind: 'bed', bedId, action })
+        result.push({ kind: 'bed', bedId, action })
       }
     }
     for (const [placedPlantId, action] of Object.entries(selectedPlants)) {
       if (action) {
-        targets.push({ kind: 'plant', placedPlantId, action })
+        result.push({ kind: 'plant', placedPlantId, action })
       }
     }
-    return targets
-  }
+    return result
+  }, [selectedBeds, selectedPlants])
 
   function handleSubmit() {
-    const targets = buildTargets()
     if (targets.length === 0) return
 
     const entry: DiaryEntry = {
@@ -210,7 +209,7 @@ export default function Diary() {
           type="button"
           className="primary wide"
           onClick={handleSubmit}
-          disabled={buildTargets().length === 0}
+          disabled={targets.length === 0}
         >
           Eintrag speichern
         </button>
