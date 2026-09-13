@@ -5,8 +5,7 @@ import { canDoNow, currentMonth, formatRanges, MONTHS_SHORT } from '../seasons'
 import { useStore } from '../store'
 import { uid } from '../utils'
 import SeedBank from './SeedBank'
-
-const PLANT_COLORS = ['#3f7d43', '#7fb069', '#d6364c', '#e8822e', '#e8a30f', '#8a7bb8', '#d0527a', '#6fa3a8']
+import { PLANT_COLORS } from '../palette'
 
 const LIGHT_ICONS: Record<LightRequirement, string> = {
   full: '☀️',

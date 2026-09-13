@@ -1,4 +1,5 @@
 import type { Bed, PlacedPlant, Plant } from './types'
+import { plantsById } from './selectors'
 
 export const SHADOW_LENGTH_FACTOR = 2.0
 
@@ -64,7 +65,7 @@ export function computeConflicts(
   plants: Plant[],
   beds: Bed[],
 ): ShadowConflict[] {
-  const byId = new Map(plants.map((p) => [p.id, p]))
+  const byId = plantsById(plants)
   const bedById = new Map(beds.map((b) => [b.id, b]))
   const conflicts: ShadowConflict[] = []
 

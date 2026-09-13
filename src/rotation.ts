@@ -1,5 +1,6 @@
 import type { Bed, PlantFamily, PlacedPlant, Plant } from './types'
 import { FAMILY_LABELS } from './types'
+import { plantsById } from './selectors'
 
 export interface RepeatWarning {
   year: number
@@ -38,7 +39,7 @@ export function repeatWarnings(
   plants: Plant[],
   bed: Bed,
 ): RepeatWarning[] {
-  const byId = new Map(plants.map((p) => [p.id, p]))
+  const byId = plantsById(plants)
   const inBed = placedPlants
     .filter((p) => p.bedId === bed.id)
     .map((p) => ({ p, plant: byId.get(p.plantId) }))

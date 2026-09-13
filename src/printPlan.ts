@@ -2,6 +2,8 @@ import type { AppState, Phase, Season } from './types'
 import { placedInYear } from './utils'
 import { phaseMatchesSeason } from './seasons'
 import { expiryStatus, EXPIRY_BADGES, formatSeedDate } from './seeds'
+import { plantsById, placedCenter } from './selectors'
+import { gridLines } from './grid'
 
 const SNAP = 10
 
@@ -35,7 +37,7 @@ export interface PrintSize {
 /** Eindeutige Pflanzenarten, die im gewählten Jahr in den Beeten liegen (für die Legende). */
 export function buildPrintLegend(state: AppState, year: number): PrintLegendItem[] {
   const placed = placedInYear(state.placedPlants, year)
-  const byId = new Map(state.plants.map((p) => [p.id, p]))
+  const byId = plantsById(state.plants)
   const seen = new Set<string>()
   const items: PrintLegendItem[] = []
   for (const p of placed) {
@@ -51,7 +53,7 @@ export function buildPrintLegend(state: AppState, year: number): PrintLegendItem
 export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintSize): string {
   const { garden, beds, plants } = state
   const placed = placedInYear(state.placedPlants, opts.year)
-  const plantById = new Map(plants.map((p) => [p.id, p]))
+  const plantById = plantsById(plants)
   const lines: string[] = []
 
   const sizeAttr = size ? ` width="${size.width}" height="${size.height}"` : ''
@@ -60,16 +62,9 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
     `<rect x="0" y="0" width="${garden.width}" height="${garden.height}" fill="#fdfbf5" stroke="#a89f8d" stroke-width="2"/>`,
   )
 
-  for (let x = 0; x <= garden.width; x += SNAP) {
-    const major = x % 50 === 0
+  for (const l of gridLines(garden.width, garden.height, SNAP)) {
     lines.push(
-      `<line x1="${x}" y1="0" x2="${x}" y2="${garden.height}" stroke="${major ? '#ddd3bf' : '#eee8da'}" stroke-width="1"/>`,
-    )
-  }
-  for (let y = 0; y <= garden.height; y += SNAP) {
-    const major = y % 50 === 0
-    lines.push(
-      `<line x1="0" y1="${y}" x2="${garden.width}" y2="${y}" stroke="${major ? '#ddd3bf' : '#eee8da'}" stroke-width="1"/>`,
+      `<line x1="${l.x1}" y1="${l.y1}" x2="${l.x2}" y2="${l.y2}" stroke="${l.major ? '#ddd3bf' : '#eee8da'}" stroke-width="1"/>`,
     )
   }
 
@@ -100,8 +95,7 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
     const bed = beds.find((b) => b.id === p.bedId)
     const plant = plantById.get(p.plantId)
     if (!bed || !plant) continue
-    const cx = bed.x + p.x * bed.w
-    const cy = bed.y + p.y * bed.h
+    const { x: cx, y: cy } = placedCenter(p, bed)
     const r = p.size / 2
     const dimmed = opts.season !== 'all' && !phaseMatchesSeason(plant, opts.phase, opts.season)
     lines.push(`<g${dimmed ? ' opacity="0.3"' : ''}>`)
@@ -135,7 +129,7 @@ export interface PrintSeedItem {
 
 /** Samenbank-Einträge, gruppiert nach Pflanze (alphabetisch nach Pflanzenname sortiert). */
 export function buildPrintSeedBank(state: AppState): PrintSeedGroup[] {
-  const plantById = new Map(state.plants.map((p) => [p.id, p]))
+  const plantById = plantsById(state.plants)
   const groups = new Map<string, PrintSeedGroup>()
 
   for (const seed of state.seeds) {

@@ -5,8 +5,10 @@ import { useStore } from '../store'
 import { snap, uid, placedInYear } from '../utils'
 import { computeConflicts, shadowPolygon } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
+import { plantsById, placedCenter } from '../selectors'
+import { gridLines as buildGridLines } from '../grid'
+import { DEFAULT_BED_COLOR } from '../palette'
 
-const SNAP = 10
 const MIN_SIZE = 20
 const HANDLE_SIZE = 8
 
@@ -117,7 +119,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     selected?.kind === 'bed' ? beds.find((b) => b.id === selected.id) ?? null : null
   const selectedPlaced: PlacedPlant | null =
     selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
-  const plantById = new Map(plants.map((p) => [p.id, p]))
+  const plantById = plantsById(plants)
   const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
@@ -149,8 +151,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     if (selectedPlaced) {
       const sbed = beds.find((b) => b.id === selectedPlaced.bedId)
       if (sbed) {
-        const cx = sbed.x + selectedPlaced.x * sbed.w
-        const cy = sbed.y + selectedPlaced.y * sbed.h
+        const { x: cx, y: cy } = placedCenter(selectedPlaced, sbed)
         if (Math.hypot(point.x - (cx + selectedPlaced.size / 2), point.y - cy) <= 10) {
           dragRef.current = {
             kind: 'resizePlaced',
@@ -170,8 +171,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     for (const p of visiblePlaced) {
       const bed = beds.find((b) => b.id === p.bedId)
       if (!bed) continue
-      const cx = bed.x + p.x * bed.w
-      const cy = bed.y + p.y * bed.h
+      const { x: cx, y: cy } = placedCenter(p, bed)
       if (Math.hypot(point.x - cx, point.y - cy) <= p.size / 2) {
         onSelect({ kind: 'placed', id: p.id })
         dragRef.current = {
@@ -229,8 +229,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     for (const p of visiblePlaced) {
       const bed = beds.find((b) => b.id === p.bedId)
       if (!bed) continue
-      const cx = bed.x + p.x * bed.w
-      const cy = bed.y + p.y * bed.h
+      const { x: cx, y: cy } = placedCenter(p, bed)
       const r = p.size / 2
       if (selectedPlaced?.id === p.id && Math.hypot(point.x - (cx + r), point.y - cy) <= 10) {
         dragRef.current = {
@@ -345,7 +344,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           y: draft.y,
           w: draft.w,
           h: draft.h,
-          color: '#7fb069',
+          color: DEFAULT_BED_COLOR,
           notes: '',
         },
       })
@@ -360,25 +359,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     commitTransaction()
   }
 
-  const gridLines: { x1: number; y1: number; x2: number; y2: number; major: boolean }[] = []
-  for (let x = 0; x <= garden.width; x += SNAP) {
-    gridLines.push({
-      x1: x,
-      y1: 0,
-      x2: x,
-      y2: garden.height,
-      major: x % 50 === 0,
-    })
-  }
-  for (let y = 0; y <= garden.height; y += SNAP) {
-    gridLines.push({
-      x1: 0,
-      y1: y,
-      x2: garden.width,
-      y2: y,
-      major: y % 50 === 0,
-    })
-  }
+  const gridLines = buildGridLines(garden.width, garden.height)
 
   const topLabels: { x: number; label: string }[] = []
   for (let x = 100; x <= garden.width; x += 100) {
@@ -491,8 +472,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
             const bed = beds.find((b) => b.id === p.bedId)
             if (!bed) return null
             const plant = plantById.get(p.plantId)
-            const cx = bed.x + p.x * bed.w
-            const cy = bed.y + p.y * bed.h
+            const { x: cx, y: cy } = placedCenter(p, bed)
             const r = p.size / 2
             const isSel = selectedPlaced?.id === p.id
             const dimmed = season !== 'all' && plant ? !phaseMatchesSeason(plant, phase, season) : false
@@ -581,7 +561,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
               y={draft.y}
               width={draft.w}
               height={draft.h}
-              fill="#7fb069"
+              fill={DEFAULT_BED_COLOR}
               fillOpacity={0.25}
               stroke="#2f6f4f"
               strokeWidth={2}

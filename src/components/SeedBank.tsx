@@ -8,6 +8,7 @@ import {
   formatSeedDate,
   type ExpiryStatus,
 } from '../seeds'
+import { plantsById } from '../selectors'
 
 const STATUS_RANK: Record<ExpiryStatus, number> = { expired: 0, soon: 1, ok: 2 }
 
@@ -23,7 +24,7 @@ export default function SeedBank() {
   const [filled, setFilled] = useState('')
   const [expires, setExpires] = useState('')
 
-  const plantById = useMemo(() => new Map(state.plants.map((p) => [p.id, p])), [state.plants])
+  const plantById = useMemo(() => plantsById(state.plants), [state.plants])
 
   const filtered = useMemo(() => {
     const needle = filter.trim().toLowerCase()
