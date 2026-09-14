@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { createDefaultState, historyReducer, MAX_HISTORY } from './store'
-import type { Action } from './store'
-import type { HistoryState } from './store'
+import { createDefaultState } from './persistence'
+import type { HistoryState } from './history'
 import type { Bed } from './types'
+import { historyReducer, MAX_HISTORY } from './history'
 
 function init(start?: HistoryState): HistoryState {
   return (
@@ -10,7 +10,7 @@ function init(start?: HistoryState): HistoryState {
   )
 }
 
-function mutate(hs: HistoryState, action: Action): HistoryState {
+function mutate(hs: HistoryState, action: import('./store').Action): HistoryState {
   return historyReducer(hs, { type: 'mutate', action })
 }
 
@@ -129,7 +129,7 @@ describe('historyReducer – Grenzen', () => {
     let hs = init()
     hs = mutate(hs, { type: 'addBed', bed: bed('b1') })
     hs = historyReducer(hs, { type: 'begin' })
-    hs = historyReducer(hs, { type: 'undo' }) // macht Vergangenheit
+    hs = historyReducer(hs, { type: 'undo' })
     hs = mutate(hs, { type: 'addBed', bed: bed('b2') })
 
     const fresh = createDefaultState()
