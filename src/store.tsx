@@ -1,76 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode, Dispatch } from 'react'
-import type { AppState, Bed, DiaryEntry, Garden, MonthRange, PlacedPlant, Plant, Seed } from './types'
-import { DEFAULT_PLANTS } from './plants'
+import type { AppState, Bed, DiaryEntry, Garden, PlacedPlant, Plant, Seed } from './types'
+import { createDefaultState as _createDefaultState, normalizeState as _normalizeState, loadState as _loadState, STORAGE_KEY as _STORAGE_KEY } from './persistence'
 
-const STORAGE_KEY = 'gartenplaner-state-v1'
-
-export function createDefaultState(): AppState {
-  return {
-    garden: { name: 'Mein Garten', width: 800, height: 600 },
-    beds: [],
-    plants: DEFAULT_PLANTS,
-    placedPlants: [],
-    seeds: [],
-    diary: [],
-  }
-}
-
-function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | undefined {
-  if (value == null) return undefined
-  if (Array.isArray(value[0])) return value as MonthRange[]
-  return [value as MonthRange]
-}
-
-export function normalizeState(raw: Partial<AppState>): AppState {
-  return {
-    ...raw,
-    garden: raw.garden ?? { name: 'Mein Garten', width: 800, height: 600 },
-    beds: raw.beds ?? [],
-    seeds: raw.seeds ?? [],
-    plants: (raw.plants ?? []).map((p) => ({
-      ...p,
-      spacing: p.spacing ?? 25,
-      height: p.height ?? 25,
-      light: p.light ?? 'full',
-      soil: p.soil ?? 'normal',
-      family: p.family ?? 'andere',
-      sow: toRanges(p.sow) ?? [[3, 6]],
-      plant: toRanges(p.plant) ?? [[3, 6]],
-      harvest: toRanges(p.harvest) ?? [[6, 9]],
-    })),
-    placedPlants: (raw.placedPlants ?? []).map((p) => ({
-      ...p,
-      plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
-    })),
-    diary: (raw.diary ?? []).map((e) => ({
-      ...e,
-      targets: e.targets ?? [],
-    })),
-  }
-}
+// Re-export persistence API for existing consumers
+export { createDefaultState, normalizeState, loadState, saveState } from './persistence'
 
 function loadState(): AppState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as AppState
-      if (
-        parsed &&
-        parsed.garden &&
-        Number.isFinite(parsed.garden.width) &&
-        Number.isFinite(parsed.garden.height) &&
-        Array.isArray(parsed.beds) &&
-        Array.isArray(parsed.plants) &&
-        Array.isArray(parsed.placedPlants)
-      ) {
-        return normalizeState(parsed)
-      }
-    }
-  } catch {
-    // unlesbarer Zustand -> Standard verwenden
-  }
-  return createDefaultState()
+  return _loadState()
 }
 
 export type Action =
@@ -146,7 +83,7 @@ export function reducer(state: AppState, action: Action): AppState {
     case 'removeDiaryEntry':
       return { ...state, diary: state.diary.filter((e) => e.id !== action.id) }
     case 'load':
-      return normalizeState(action.state)
+      return _normalizeState(action.state)
   }
 }
 
@@ -247,7 +184,7 @@ export function historyReducer(hs: HistoryState, sa: HistoryAction): HistoryStat
       }
     case 'mutate':
       if (sa.action.type === 'load') {
-        return createHistoryState(normalizeState(sa.action.state))
+        return createHistoryState(_normalizeState(sa.action.state))
       }
       if (hs.txnOpen) {
         return { ...hs, present: reducer(hs.present, sa.action) }
@@ -279,7 +216,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const commitTransaction = useCallback(() => historyDispatch({ type: 'commit' }), [])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history.present))
+    localStorage.setItem(_STORAGE_KEY, JSON.stringify(history.present))
   }, [history.present])
 
   const value = useMemo<StoreContextValue>(
