@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Seed } from '../types'
-import { useStore } from '../store'
+import { useStoreState, useStoreDispatch } from '../store'
 import { uid } from '../utils'
 import {
   daysUntil,
@@ -13,7 +13,8 @@ import { plantsById } from '../selectors'
 const STATUS_RANK: Record<ExpiryStatus, number> = { expired: 0, soon: 1, ok: 2 }
 
 export default function SeedBank() {
-  const { state, dispatch } = useStore()
+  const state = useStoreState()
+  const dispatch = useStoreDispatch()
   const [filter, setFilter] = useState('')
   const [plantFilter, setPlantFilter] = useState('')
   const [adding, setAdding] = useState(false)
@@ -23,7 +24,6 @@ export default function SeedBank() {
   const [producer, setProducer] = useState('')
   const [filled, setFilled] = useState('')
   const [expires, setExpires] = useState('')
-
   const plantById = useMemo(() => plantsById(state.plants), [state.plants])
 
   const filtered = useMemo(() => {

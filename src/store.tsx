@@ -5,4 +5,4 @@ export { createHistoryState, historyReducer, MAX_HISTORY, type HistoryState, typ
 // Reducer
 export { reducer, type Action } from './reducer'
 // Store context
-export { StoreProvider, useStore, type StoreContextValue } from './storeContext'
+export { StoreProvider, useStore, useStoreState, useStoreDispatch, useHistory, type StoreContextValue } from './storeContext'

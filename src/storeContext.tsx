@@ -64,3 +64,44 @@ export function useStore(): StoreContextValue {
   }
   return ctx
 }
+
+/** Lightweight hook — only the state slice. */
+export function useStoreState(): AppState {
+  const ctx = useContext(StoreContext)
+  if (!ctx) {
+    throw new Error('useStoreState must be used within StoreProvider')
+  }
+  return ctx.state
+}
+
+/** Lightweight hook — only the dispatch function. */
+export function useStoreDispatch(): Dispatch<Action> {
+  const ctx = useContext(StoreContext)
+  if (!ctx) {
+    throw new Error('useStoreDispatch must be used within StoreProvider')
+  }
+  return ctx.dispatch
+}
+
+/** Lightweight hook — only the history functions. */
+export function useHistory(): {
+  undo: () => void
+  redo: () => void
+  canUndo: boolean
+  canRedo: boolean
+  beginTransaction: () => void
+  commitTransaction: () => void
+} {
+  const ctx = useContext(StoreContext)
+  if (!ctx) {
+    throw new Error('useHistory must be used within StoreProvider')
+  }
+  return {
+    undo: ctx.undo,
+    redo: ctx.redo,
+    canUndo: ctx.canUndo,
+    canRedo: ctx.canRedo,
+    beginTransaction: ctx.beginTransaction,
+    commitTransaction: ctx.commitTransaction,
+  }
+}
