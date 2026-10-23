@@ -22,7 +22,7 @@ npm run build     # tsc -b && vite build  (this is the type check)
 npm run dev       # dev server on 127.0.0.1 (bound to IPv4 on purpose)
 ```
 
-Run **test → lint → build** after every change. Baseline (2026-10-23): 126 tests passing,
+Run **test → lint → build** after every change. Baseline (2026-10-23): 132 tests passing,
 lint 0 errors / 0 warnings (oxlint prints nothing when clean), build clean.
 Don't introduce new warnings. Note: oxlint's `only-export-components` also flags non-component
 *re-exports* from `.tsx` files — put hooks/helpers in `.ts` modules and import them from there.
