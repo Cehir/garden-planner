@@ -22,7 +22,7 @@ npm run build     # tsc -b && vite build  (this is the type check)
 npm run dev       # dev server on 127.0.0.1 (bound to IPv4 on purpose)
 ```
 
-Run **test → lint → build** after every change. Baseline (2026-10-23): 125 tests passing,
+Run **test → lint → build** after every change. Baseline (2026-10-23): 124 tests passing,
 lint 0 errors / 0 warnings (oxlint prints nothing when clean), build clean.
 Don't introduce new warnings. Note: oxlint's `only-export-components` also flags non-component
 *re-exports* from `.tsx` files — put hooks/helpers in `.ts` modules and import them from there.
@@ -33,7 +33,7 @@ Don't introduce new warnings. Note: oxlint's `only-export-components` also flags
 src/
   types.ts        Data model (Garden, Bed, Plant, PlacedPlant, Seed, DiaryEntry, AppState)
                   + German label maps (LIGHT_LABELS, SOIL_LABELS, FAMILY_LABELS, …)
-  reducer.ts      Action union + reducer (pure)
+  reducer.ts      Action union + reducer (pure; 'load' is handled in history.ts)
   history.ts      historyReducer: undo/redo, transactions, MAX_HISTORY (pure)
   persistence.ts  createDefaultState, normalizeState, loadState, saveState (localStorage)
   storeContext.ts StoreContext + hooks: useStore, useStoreState, useStoreDispatch, useHistory
@@ -61,7 +61,8 @@ Tests sit next to the source as `*.test.ts(x)`.
 - **State:** one `AppState` object, mutated only via `dispatch(Action)`. In components use the
   narrow hooks from `storeContext.ts` (`useStoreState()`, `useStoreDispatch()`, `useHistory()`);
   only `App.tsx` uses the umbrella `useStore()`.
-  New state changes = new `Action` variant + case in `reducer.ts` + test in `store.test.ts`.
+  New state changes = new `Action` variant + case in `reducer.ts` + test in `store.test.ts`
+  (reducer tests; `normalizeState`/load/save tests live in `persistence.test.ts`).
 - **History:** every dispatch is an undo step (`MAX_HISTORY = 10`). For drags, wrap the many
   updates in `beginTransaction()` … `commitTransaction()` so they collapse into one step.
   `load` resets history.
