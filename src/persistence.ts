@@ -72,5 +72,10 @@ export function loadState(): AppState {
 }
 
 export function saveState(state: AppState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (err) {
+    // Speicher voll oder gesperrt (Quota, Privatmodus) -> App nicht abstürzen lassen
+    console.warn('Gartenplaner: Zustand konnte nicht gespeichert werden', err)
+  }
 }

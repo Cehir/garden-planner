@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createDefaultState, loadState, normalizeState, saveState } from './persistence'
 import type { AppState, MonthRange, Plant } from './types'
 
@@ -223,6 +223,21 @@ describe('createDefaultState', () => {
 
 describe('loadState / saveState', () => {
   beforeEach(() => localStorage.clear())
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('wirft nicht, wenn der Speicher voll oder gesperrt ist', () => {
+    vi.stubGlobal('localStorage', {
+      setItem: () => {
+        throw new DOMException('voll', 'QuotaExceededError')
+      },
+    })
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    expect(() => saveState(createDefaultState())).not.toThrow()
+    expect(warn).toHaveBeenCalled()
+  })
 
   it('liefert den Standardzustand, wenn nichts gespeichert ist', () => {
     expect(loadState()).toEqual(createDefaultState())
