@@ -22,9 +22,10 @@ npm run build     # tsc -b && vite build  (this is the type check)
 npm run dev       # dev server on 127.0.0.1 (bound to IPv4 on purpose)
 ```
 
-Run **test → lint → build** after every change. Baseline (2026-10-23): 117 tests passing,
-lint 0 errors / 4 known `only-export-components` warnings in `src/store.tsx`, build clean.
-Don't introduce new warnings.
+Run **test → lint → build** after every change. Baseline (2026-10-23): 125 tests passing,
+lint 0 errors / 0 warnings (oxlint prints nothing when clean), build clean.
+Don't introduce new warnings. Note: oxlint's `only-export-components` also flags non-component
+*re-exports* from `.tsx` files — put hooks/helpers in `.ts` modules and import them from there.
 
 ## Layout
 
@@ -32,8 +33,11 @@ Don't introduce new warnings.
 src/
   types.ts        Data model (Garden, Bed, Plant, PlacedPlant, Seed, DiaryEntry, AppState)
                   + German label maps (LIGHT_LABELS, SOIL_LABELS, FAMILY_LABELS, …)
-  store.tsx       reducer + historyReducer (undo/redo, transactions) + localStorage
-                  persistence + StoreProvider/useStore
+  reducer.ts      Action union + reducer (pure)
+  history.ts      historyReducer: undo/redo, transactions, MAX_HISTORY (pure)
+  persistence.ts  createDefaultState, normalizeState, loadState, saveState (localStorage)
+  storeContext.ts StoreContext + hooks: useStore, useStoreState, useStoreDispatch, useHistory
+  store.tsx       StoreProvider only
   plants.ts       DEFAULT_PLANTS catalog
   selectors.ts    plantsById, placedCenter        ← use these, don't re-implement
   grid.ts         gridLines (Editor + print)
@@ -54,8 +58,10 @@ Tests sit next to the source as `*.test.ts(x)`.
 
 ## Key concepts / gotchas
 
-- **State:** one `AppState` object, mutated only via `dispatch(Action)` from `useStore()`.
-  New state changes = new `Action` variant in `store.tsx` + reducer case + test in `store.test.ts`.
+- **State:** one `AppState` object, mutated only via `dispatch(Action)`. In components use the
+  narrow hooks from `storeContext.ts` (`useStoreState()`, `useStoreDispatch()`, `useHistory()`);
+  only `App.tsx` uses the umbrella `useStore()`.
+  New state changes = new `Action` variant + case in `reducer.ts` + test in `store.test.ts`.
 - **History:** every dispatch is an undo step (`MAX_HISTORY = 10`). For drags, wrap the many
   updates in `beginTransaction()` … `commitTransaction()` so they collapse into one step.
   `load` resets history.
@@ -88,8 +94,8 @@ Tests sit next to the source as `*.test.ts(x)`.
 
 Branch `refactoring-phase-1` executes the SOLID refactor plan in
 `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md` (`.hermes/` is gitignored, local only).
-Phase 0 (selectors/grid/palette) is done. Next: Phase 1 — split `store.tsx` into
-`persistence.ts`, `history.ts`, `reducer.ts`, keeping re-exports from `store.tsx` so existing
-imports/tests keep working. The plan is a **pure refactor: no behavior changes**, run all three
+Phase 0 (selectors/grid/palette) and Phase 1 (store split) are done. Deviation from the plan:
+`store.tsx` does **not** re-export the moved symbols (that kept the lint warnings); importers
+point at the new modules directly. Next: Phase 2 — split `Editor.tsx`. The plan is a **pure refactor: no behavior changes**, run all three
 verify gates after each task, commit per task. The user prefers tasks done in-session rather
 than delegated to subagents.
