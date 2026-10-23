@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createDefaultState, loadState, normalizeState, saveState } from './persistence'
+import { DEFAULT_PLANTS } from './plants'
 import type { AppState, MonthRange, Plant } from './types'
 
 function legacyPlant(overrides: Partial<Plant> = {}): Plant {
@@ -195,6 +196,29 @@ describe('normalizeState', () => {
     expect(out.garden.width).toBe(800)
     expect(out.beds).toEqual([])
     expect(out.diary).toEqual([])
+    expect(out.plants).toEqual(DEFAULT_PLANTS)
+  })
+
+  it('behält eine bewusst leere Pflanzenliste bei', () => {
+    expect(normalizeState({ plants: [] }).plants).toEqual([])
+  })
+
+  it('ersetzt Sammlungen, die keine Arrays sind, durch leere Arrays', () => {
+    const raw = {
+      garden: { name: 'G', width: 100, height: 50 },
+      beds: 'x',
+      plants: [legacyPlant()],
+      placedPlants: {},
+      seeds: {},
+      diary: 'x',
+    } as unknown as AppState
+    const out = normalizeState(raw)
+    expect(out.garden.name).toBe('G')
+    expect(out.plants).toHaveLength(1)
+    expect(out.beds).toEqual([])
+    expect(out.placedPlants).toEqual([])
+    expect(out.seeds).toEqual([])
+    expect(out.diary).toEqual([])
   })
 })
 
@@ -247,6 +271,15 @@ describe('loadState / saveState', () => {
     const state = { ...createDefaultState(), garden: { name: 'Test', width: 300, height: 200 } }
     saveState(state)
     expect(loadState().garden).toEqual({ name: 'Test', width: 300, height: 200 })
+  })
+
+  it('behält den gespeicherten Garten, wenn seeds/diary beschädigt sind', () => {
+    const state = { ...createDefaultState(), garden: { name: 'Test', width: 300, height: 200 } }
+    localStorage.setItem('gartenplaner-state-v1', JSON.stringify({ ...state, seeds: {}, diary: 'x' }))
+    const loaded = loadState()
+    expect(loaded.garden.name).toBe('Test')
+    expect(loaded.seeds).toEqual([])
+    expect(loaded.diary).toEqual([])
   })
 
   it('fällt bei unlesbarem JSON auf den Standardzustand zurück', () => {
