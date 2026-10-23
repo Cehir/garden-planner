@@ -20,13 +20,18 @@ function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | 
   return [value as MonthRange]
 }
 
+// Beschädigte Sammlungen (kein Array) werden verworfen statt die App abstürzen zu lassen
+function arrayOr<T>(value: T[] | undefined, fallback: T[]): T[] {
+  return Array.isArray(value) ? value : fallback
+}
+
 export function normalizeState(raw: Partial<AppState>): AppState {
   return {
     ...raw,
     garden: raw.garden ?? { name: 'Mein Garten', width: 800, height: 600 },
-    beds: raw.beds ?? [],
-    seeds: raw.seeds ?? [],
-    plants: (raw.plants ?? []).map((p) => ({
+    beds: arrayOr(raw.beds, []),
+    seeds: arrayOr(raw.seeds, []),
+    plants: arrayOr(raw.plants, DEFAULT_PLANTS).map((p) => ({
       ...p,
       spacing: p.spacing ?? 25,
       height: p.height ?? 25,
@@ -37,11 +42,11 @@ export function normalizeState(raw: Partial<AppState>): AppState {
       plant: toRanges(p.plant) ?? [[3, 6]],
       harvest: toRanges(p.harvest) ?? [[6, 9]],
     })),
-    placedPlants: (raw.placedPlants ?? []).map((p) => ({
+    placedPlants: arrayOr(raw.placedPlants, []).map((p) => ({
       ...p,
       plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
     })),
-    diary: (raw.diary ?? []).map((e) => ({
+    diary: arrayOr(raw.diary, []).map((e) => ({
       ...e,
       targets: e.targets ?? [],
     })),
@@ -72,5 +77,10 @@ export function loadState(): AppState {
 }
 
 export function saveState(state: AppState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (err) {
+    // Speicher voll oder gesperrt (Quota, Privatmodus) -> App nicht abstürzen lassen
+    console.warn('Gartenplaner: Zustand konnte nicht gespeichert werden', err)
+  }
 }

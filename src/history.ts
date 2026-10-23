@@ -55,6 +55,8 @@ function sameState(a: AppState, b: AppState): boolean {
 export function historyReducer(hs: HistoryState, sa: HistoryAction): HistoryState {
   switch (sa.type) {
     case 'begin':
+      // Verschachteltes begin: ursprünglichen Ausgangszustand behalten
+      if (hs.txnOpen) return hs
       return { ...hs, txnOpen: true, txnBase: hs.present }
     case 'commit': {
       if (!hs.txnOpen || !hs.txnBase) return hs
@@ -68,7 +70,8 @@ export function historyReducer(hs: HistoryState, sa: HistoryAction): HistoryStat
       }
     }
     case 'undo':
-      if (hs.past.length === 0) return hs
+      // Während einer Ziehgeste kein Undo/Redo, sonst zerfällt die Transaktion
+      if (hs.txnOpen || hs.past.length === 0) return hs
       return {
         present: hs.past[hs.past.length - 1],
         past: hs.past.slice(0, -1),
@@ -77,7 +80,7 @@ export function historyReducer(hs: HistoryState, sa: HistoryAction): HistoryStat
         txnBase: null,
       }
     case 'redo':
-      if (hs.future.length === 0) return hs
+      if (hs.txnOpen || hs.future.length === 0) return hs
       return {
         present: hs.future[hs.future.length - 1],
         past: [...hs.past, hs.present].slice(-MAX_HISTORY),

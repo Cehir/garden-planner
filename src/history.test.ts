@@ -114,6 +114,43 @@ describe('historyReducer – Transaktionen', () => {
     const hs = init()
     expect(historyReducer(hs, { type: 'commit' })).toBe(hs)
   })
+
+  it('ignoriert Undo/Redo während einer offenen Transaktion (Strg+Z mitten im Ziehen)', () => {
+    let hs = init()
+    hs = mutate(hs, { type: 'addBed', bed: bed('b1') })
+    hs = historyReducer(hs, { type: 'undo' })
+    hs = historyReducer(hs, { type: 'redo' })
+    hs = mutate(hs, { type: 'addBed', bed: bed('b2') })
+    hs = historyReducer(hs, { type: 'undo' })
+    // jetzt: past = [leer], future = [b1+b2]
+
+    hs = historyReducer(hs, { type: 'begin' })
+    hs = mutate(hs, { type: 'updateBed', id: 'b1', patch: { x: 40 } })
+    const during = hs
+    expect(historyReducer(hs, { type: 'undo' })).toBe(during)
+    expect(historyReducer(hs, { type: 'redo' })).toBe(during)
+
+    hs = mutate(hs, { type: 'updateBed', id: 'b1', patch: { x: 60 } })
+    hs = historyReducer(hs, { type: 'commit' })
+    expect(hs.past).toHaveLength(2)
+    expect(hs.present.beds[0].x).toBe(60)
+
+    hs = historyReducer(hs, { type: 'undo' })
+    expect(hs.present.beds[0].x).toBe(10)
+  })
+
+  it('behält beim verschachtelten begin den ursprünglichen Ausgangszustand', () => {
+    let hs = init()
+    hs = historyReducer(hs, { type: 'begin' })
+    hs = mutate(hs, { type: 'addBed', bed: bed('b1') })
+    hs = historyReducer(hs, { type: 'begin' })
+    hs = mutate(hs, { type: 'updateBed', id: 'b1', patch: { x: 40 } })
+    hs = historyReducer(hs, { type: 'commit' })
+    expect(hs.past).toHaveLength(1)
+
+    hs = historyReducer(hs, { type: 'undo' })
+    expect(hs.present.beds).toHaveLength(0)
+  })
 })
 
 describe('historyReducer – Grenzen', () => {
