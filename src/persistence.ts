@@ -1,11 +1,13 @@
-import type { AppState, MonthRange } from './types'
+import type { AppState, Garden, MonthRange } from './types'
 import { DEFAULT_PLANTS } from './plants'
 
 const STORAGE_KEY = 'gartenplaner-state-v1'
 
+const DEFAULT_GARDEN: Garden = { name: 'Mein Garten', width: 800, height: 600 }
+
 export function createDefaultState(): AppState {
   return {
-    garden: { name: 'Mein Garten', width: 800, height: 600 },
+    garden: { ...DEFAULT_GARDEN },
     beds: [],
     plants: DEFAULT_PLANTS,
     placedPlants: [],
@@ -30,10 +32,24 @@ function arrayOr<T>(value: T[] | undefined, fallback: T[]): T[] {
   return Array.isArray(value) ? value.filter((item) => isRecord(item)) : fallback
 }
 
+function positiveOr(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : fallback
+}
+
+// Fehlende oder ungültige Gartenmaße würden die Editor-viewBox auf NaN setzen
+function normalizeGarden(value: unknown): Garden {
+  const g = isRecord(value) ? value : {}
+  return {
+    name: typeof g.name === 'string' ? g.name : DEFAULT_GARDEN.name,
+    width: positiveOr(g.width, DEFAULT_GARDEN.width),
+    height: positiveOr(g.height, DEFAULT_GARDEN.height),
+  }
+}
+
 export function normalizeState(raw: Partial<AppState>): AppState {
   return {
     ...raw,
-    garden: raw.garden ?? { name: 'Mein Garten', width: 800, height: 600 },
+    garden: normalizeGarden(raw.garden),
     beds: arrayOr(raw.beds, []),
     seeds: arrayOr(raw.seeds, []),
     plants: arrayOr(raw.plants, DEFAULT_PLANTS).map((p) => ({
@@ -65,12 +81,7 @@ export function loadState(): AppState {
       const parsed = JSON.parse(raw) as AppState
       // Nur ablehnen, was normalizeState nicht reparieren kann – sonst überschreibt der
       // Standardzustand beim nächsten Speichern die Daten des Nutzers
-      if (
-        isRecord(parsed) &&
-        isRecord(parsed.garden) &&
-        Number.isFinite(parsed.garden.width) &&
-        Number.isFinite(parsed.garden.height)
-      ) {
+      if (isRecord(parsed)) {
         return normalizeState(parsed)
       }
     }

@@ -221,6 +221,22 @@ describe('normalizeState', () => {
     expect(out.diary).toEqual([])
   })
 
+  it('ergänzt einen unvollständigen oder ungültigen Garten mit Standardwerten', () => {
+    expect(normalizeState({ garden: { name: 'x' } } as unknown as AppState).garden).toEqual({
+      name: 'x',
+      width: 800,
+      height: 600,
+    })
+    expect(normalizeState({ garden: 'x' } as unknown as AppState).garden).toEqual({
+      name: 'Mein Garten',
+      width: 800,
+      height: 600,
+    })
+    expect(
+      normalizeState({ garden: { name: 3, width: NaN, height: -5 } } as unknown as AppState).garden,
+    ).toEqual({ name: 'Mein Garten', width: 800, height: 600 })
+  })
+
   it('verwirft Einträge, die keine Objekte sind (z. B. null aus einem kaputten Import)', () => {
     const raw = {
       garden: { name: 'G', width: 100, height: 50 },
@@ -310,6 +326,14 @@ describe('loadState / saveState', () => {
     expect(loaded.beds).toEqual([bed])
     expect(loaded.plants).toEqual([])
     expect(loaded.placedPlants).toEqual([])
+  })
+
+  it('repariert einen beschädigten Garten, statt die Beete zu verwerfen', () => {
+    const bed = { id: 'b1', name: 'Beet', x: 0, y: 0, w: 10, h: 10, color: '#fff', notes: '' }
+    localStorage.setItem('gartenplaner-state-v1', JSON.stringify({ garden: { width: 'x' }, beds: [bed] }))
+    const loaded = loadState()
+    expect(loaded.garden).toEqual({ name: 'Mein Garten', width: 800, height: 600 })
+    expect(loaded.beds).toEqual([bed])
   })
 
   it('fällt bei unlesbarem JSON auf den Standardzustand zurück', () => {
