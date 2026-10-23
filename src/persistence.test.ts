@@ -299,6 +299,19 @@ describe('loadState / saveState', () => {
     expect(loaded.diary).toEqual([])
   })
 
+  it('behält die Beete, wenn plants/placedPlants fehlen oder null-Einträge enthalten', () => {
+    const bed = { id: 'b1', name: 'Beet', x: 0, y: 0, w: 10, h: 10, color: '#fff', notes: '' }
+    localStorage.setItem(
+      'gartenplaner-state-v1',
+      JSON.stringify({ garden: { name: 'Test', width: 300, height: 200 }, beds: [bed], plants: [null] }),
+    )
+    const loaded = loadState()
+    expect(loaded.garden.name).toBe('Test')
+    expect(loaded.beds).toEqual([bed])
+    expect(loaded.plants).toEqual([])
+    expect(loaded.placedPlants).toEqual([])
+  })
+
   it('fällt bei unlesbarem JSON auf den Standardzustand zurück', () => {
     localStorage.setItem('gartenplaner-state-v1', '{kaputt')
     expect(loadState()).toEqual(createDefaultState())

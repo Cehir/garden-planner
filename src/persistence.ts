@@ -63,14 +63,13 @@ export function loadState(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const parsed = JSON.parse(raw) as AppState
+      // Nur ablehnen, was normalizeState nicht reparieren kann – sonst überschreibt der
+      // Standardzustand beim nächsten Speichern die Daten des Nutzers
       if (
-        parsed &&
-        parsed.garden &&
+        isRecord(parsed) &&
+        isRecord(parsed.garden) &&
         Number.isFinite(parsed.garden.width) &&
-        Number.isFinite(parsed.garden.height) &&
-        Array.isArray(parsed.beds) &&
-        Array.isArray(parsed.plants) &&
-        Array.isArray(parsed.placedPlants)
+        Number.isFinite(parsed.garden.height)
       ) {
         return normalizeState(parsed)
       }
