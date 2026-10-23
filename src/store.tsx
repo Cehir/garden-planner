@@ -4,8 +4,8 @@ import { loadState, saveState } from './persistence'
 import type { Action } from './reducer'
 import { createHistoryState, historyReducer } from './history'
 import type { HistoryState } from './history'
-import { StoreContext } from './storeContext'
-import type { StoreContextValue } from './storeContext'
+import { DispatchContext, HistoryContext, StateContext } from './storeContext'
+import type { HistoryControls } from './storeContext'
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [history, historyDispatch] = useReducer(
@@ -27,19 +27,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveState(history.present)
   }, [history.present])
 
-  const value = useMemo<StoreContextValue>(
-    () => ({
-      state: history.present,
-      dispatch,
-      undo,
-      redo,
-      canUndo: history.past.length > 0,
-      canRedo: history.future.length > 0,
-      beginTransaction,
-      commitTransaction,
-    }),
-    [history, dispatch, undo, redo, beginTransaction, commitTransaction],
+  const canUndo = history.past.length > 0
+  const canRedo = history.future.length > 0
+  const historyControls = useMemo<HistoryControls>(
+    () => ({ undo, redo, canUndo, canRedo, beginTransaction, commitTransaction }),
+    [undo, redo, canUndo, canRedo, beginTransaction, commitTransaction],
   )
 
-  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
+  return (
+    <DispatchContext.Provider value={dispatch}>
+      <HistoryContext.Provider value={historyControls}>
+        <StateContext.Provider value={history.present}>{children}</StateContext.Provider>
+      </HistoryContext.Provider>
+    </DispatchContext.Provider>
+  )
 }

@@ -1,11 +1,9 @@
-import { createContext, useContext } from 'react'
-import type { Dispatch } from 'react'
+import { createContext, useContext, useMemo } from 'react'
+import type { Context, Dispatch } from 'react'
 import type { AppState } from './types'
 import type { Action } from './reducer'
 
-export interface StoreContextValue {
-  state: AppState
-  dispatch: Dispatch<Action>
+export interface HistoryControls {
   undo: () => void
   redo: () => void
   canUndo: boolean
@@ -14,31 +12,41 @@ export interface StoreContextValue {
   commitTransaction: () => void
 }
 
-export type HistoryControls = Pick<
-  StoreContextValue,
-  'undo' | 'redo' | 'canUndo' | 'canRedo' | 'beginTransaction' | 'commitTransaction'
->
+export interface StoreContextValue extends HistoryControls {
+  state: AppState
+  dispatch: Dispatch<Action>
+}
 
-export const StoreContext = createContext<StoreContextValue | null>(null)
+// Getrennte Contexts, damit z. B. reine dispatch-/History-Nutzer nicht bei jeder
+// State-Änderung neu rendern.
+export const StateContext = createContext<AppState | null>(null)
+export const DispatchContext = createContext<Dispatch<Action> | null>(null)
+export const HistoryContext = createContext<HistoryControls | null>(null)
+
+function useRequiredContext<T>(context: Context<T | null>, hook: string): T {
+  const value = useContext(context)
+  if (value === null) {
+    throw new Error(`${hook} must be used within StoreProvider`)
+  }
+  return value
+}
 
 /** Gesamter Store – nur dort verwenden, wo wirklich alles gebraucht wird (App). */
 export function useStore(): StoreContextValue {
-  const ctx = useContext(StoreContext)
-  if (!ctx) {
-    throw new Error('useStore must be used within StoreProvider')
-  }
-  return ctx
+  const state = useRequiredContext(StateContext, 'useStore')
+  const dispatch = useRequiredContext(DispatchContext, 'useStore')
+  const history = useRequiredContext(HistoryContext, 'useStore')
+  return useMemo(() => ({ ...history, state, dispatch }), [history, state, dispatch])
 }
 
 export function useStoreState(): AppState {
-  return useStore().state
+  return useRequiredContext(StateContext, 'useStoreState')
 }
 
 export function useStoreDispatch(): Dispatch<Action> {
-  return useStore().dispatch
+  return useRequiredContext(DispatchContext, 'useStoreDispatch')
 }
 
 export function useHistory(): HistoryControls {
-  const { undo, redo, canUndo, canRedo, beginTransaction, commitTransaction } = useStore()
-  return { undo, redo, canUndo, canRedo, beginTransaction, commitTransaction }
+  return useRequiredContext(HistoryContext, 'useHistory')
 }
