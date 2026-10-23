@@ -2,53 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
 import { useHistory, useStoreDispatch, useStoreState } from '../storeContext'
-import { snap, uid, placedInYear } from '../utils'
+import { uid, placedInYear } from '../utils'
 import { computeConflicts, shadowPolygon } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
 import { plantsById, placedCenter } from '../selectors'
 import { gridLines as buildGridLines } from '../grid'
 import { DEFAULT_BED_COLOR } from '../palette'
-import {
-  HANDLES,
-  HANDLE_SIZE,
-  MIN_SIZE,
-  handlePos,
-  hitTest,
-  nearHandle,
-  pointFromClient,
-  resizeRect,
-} from '../editor/geometry'
-import type { Handle } from '../editor/geometry'
-
-type DragState =
-  | { kind: 'draw'; startX: number; startY: number }
-  | { kind: 'moveBed'; bedId: string; startX: number; startY: number; origX: number; origY: number }
-  | {
-      kind: 'resizeBed'
-      bedId: string
-      handle: Handle
-      startX: number
-      startY: number
-      orig: Pick<Bed, 'x' | 'y' | 'w' | 'h'>
-    }
-  | {
-      kind: 'movePlaced'
-      id: string
-      bedId: string
-      startX: number
-      startY: number
-      origX: number
-      origY: number
-    }
-  | {
-      kind: 'resizePlaced'
-      id: string
-      centerX: number
-      centerY: number
-      startX: number
-      startY: number
-      origSize: number
-    }
+import { HANDLES, HANDLE_SIZE, handlePos, pointFromClient } from '../editor/geometry'
+import { dragMove, pointerDownIntent } from '../editor/drag'
+import type { DragState } from '../editor/drag'
 
 interface EditorProps {
   tool: Tool
@@ -96,191 +58,47 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     const point = getPoint(e)
     svg.setPointerCapture(e.pointerId)
 
-    if (tool === 'bed') {
-      dragRef.current = { kind: 'draw', startX: point.x, startY: point.y }
-      startTransaction()
-      return
-    }
-
-    if (selectedPlaced) {
-      const sbed = beds.find((b) => b.id === selectedPlaced.bedId)
-      if (sbed) {
-        const { x: cx, y: cy } = placedCenter(selectedPlaced, sbed)
-        if (Math.hypot(point.x - (cx + selectedPlaced.size / 2), point.y - cy) <= 10) {
-          dragRef.current = {
-            kind: 'resizePlaced',
-            id: selectedPlaced.id,
-            centerX: cx,
-            centerY: cy,
-            startX: point.x,
-            startY: point.y,
-            origSize: selectedPlaced.size,
-          }
-          startTransaction()
-          return
-        }
-      }
-    }
-
-    for (const p of visiblePlaced) {
-      const bed = beds.find((b) => b.id === p.bedId)
-      if (!bed) continue
-      const { x: cx, y: cy } = placedCenter(p, bed)
-      if (Math.hypot(point.x - cx, point.y - cy) <= p.size / 2) {
-        onSelect({ kind: 'placed', id: p.id })
-        dragRef.current = {
-          kind: 'movePlaced',
-          id: p.id,
-          bedId: p.bedId,
-          startX: point.x,
-          startY: point.y,
-          origX: p.x,
-          origY: p.y,
-        }
+    const intent = pointerDownIntent(point, {
+      tool,
+      beds,
+      visiblePlaced,
+      selectedBed,
+      selectedPlaced,
+      hasPlantToPlace: placedPlant !== null,
+    })
+    switch (intent.kind) {
+      case 'drag':
+        if (intent.select) onSelect(intent.select)
+        dragRef.current = intent.drag
         startTransaction()
-        return
-      }
+        break
+      case 'place':
+        if (!placedPlant) break
+        dispatch({
+          type: 'addPlacedPlant',
+          plant: {
+            id: uid('plp'),
+            bedId: intent.bed.id,
+            plantId: placedPlant.id,
+            x: intent.relX,
+            y: intent.relY,
+            size: placedPlant.spacing,
+            plantedYear: year,
+          },
+        })
+        break
+      case 'deselect':
+        onSelect(null)
+        break
     }
-
-    if (tool === 'plant') {
-      if (!placedPlant) return
-      const bed = beds.find((b) => hitTest(point.x, point.y, b))
-      if (!bed) return
-      const relX = Math.min(1, Math.max(0, (point.x - bed.x) / bed.w))
-      const relY = Math.min(1, Math.max(0, (point.y - bed.y) / bed.h))
-      dispatch({
-        type: 'addPlacedPlant',
-        plant: {
-          id: uid('plp'),
-          bedId: bed.id,
-          plantId: placedPlant.id,
-          x: relX,
-          y: relY,
-          size: placedPlant.spacing,
-          plantedYear: year,
-        },
-      })
-      return
-    }
-
-    // select tool
-    if (selectedBed) {
-      const handle = nearHandle(point.x, point.y, selectedBed)
-      if (handle) {
-        dragRef.current = {
-          kind: 'resizeBed',
-          bedId: selectedBed.id,
-          handle,
-          startX: point.x,
-          startY: point.y,
-          orig: { x: selectedBed.x, y: selectedBed.y, w: selectedBed.w, h: selectedBed.h },
-        }
-        startTransaction()
-        return
-      }
-    }
-
-    for (const p of visiblePlaced) {
-      const bed = beds.find((b) => b.id === p.bedId)
-      if (!bed) continue
-      const { x: cx, y: cy } = placedCenter(p, bed)
-      const r = p.size / 2
-      if (selectedPlaced?.id === p.id && Math.hypot(point.x - (cx + r), point.y - cy) <= 10) {
-        dragRef.current = {
-          kind: 'resizePlaced',
-          id: p.id,
-          centerX: cx,
-          centerY: cy,
-          startX: point.x,
-          startY: point.y,
-          origSize: p.size,
-        }
-        startTransaction()
-        return
-      }
-      if (Math.hypot(point.x - cx, point.y - cy) <= r) {
-        onSelect({ kind: 'placed', id: p.id })
-        dragRef.current = {
-          kind: 'movePlaced',
-          id: p.id,
-          bedId: p.bedId,
-          startX: point.x,
-          startY: point.y,
-          origX: p.x,
-          origY: p.y,
-        }
-        startTransaction()
-        return
-      }
-    }
-
-    for (const bed of beds) {
-      if (hitTest(point.x, point.y, bed)) {
-        onSelect({ kind: 'bed', id: bed.id })
-        dragRef.current = {
-          kind: 'moveBed',
-          bedId: bed.id,
-          startX: point.x,
-          startY: point.y,
-          origX: bed.x,
-          origY: bed.y,
-        }
-        startTransaction()
-        return
-      }
-    }
-
-    onSelect(null)
   }
 
   function handlePointerMove(e: ReactPointerEvent<SVGSVGElement>) {
     const drag = dragRef.current
     if (!drag) return
-    const point = getPoint(e)
-
-    switch (drag.kind) {
-      case 'draw': {
-        const x = Math.min(drag.startX, point.x)
-        const y = Math.min(drag.startY, point.y)
-        const w = Math.max(Math.abs(point.x - drag.startX), MIN_SIZE)
-        const h = Math.max(Math.abs(point.y - drag.startY), MIN_SIZE)
-        setDraft({ x: snap(x), y: snap(y), w: snap(w), h: snap(h) })
-        break
-      }
-      case 'moveBed': {
-        const dx = snap(point.x - drag.startX)
-        const dy = snap(point.y - drag.startY)
-        dispatch({
-          type: 'updateBed',
-          id: drag.bedId,
-          patch: { x: drag.origX + dx, y: drag.origY + dy },
-        })
-        break
-      }
-      case 'resizeBed': {
-        const dx = point.x - drag.startX
-        const dy = point.y - drag.startY
-        const rect = resizeRect(drag.orig, drag.handle, dx, dy)
-        dispatch({ type: 'updateBed', id: drag.bedId, patch: rect })
-        break
-      }
-      case 'movePlaced': {
-        const bed = beds.find((b) => b.id === drag.bedId)
-        if (!bed) break
-        const absX = snap(drag.origX * bed.w + bed.x + (point.x - drag.startX))
-        const absY = snap(drag.origY * bed.h + bed.y + (point.y - drag.startY))
-        const relX = Math.min(1, Math.max(0, (absX - bed.x) / bed.w))
-        const relY = Math.min(1, Math.max(0, (absY - bed.y) / bed.h))
-        dispatch({ type: 'updatePlacedPlant', id: drag.id, patch: { x: relX, y: relY } })
-        break
-      }
-      case 'resizePlaced': {
-        const dist = Math.hypot(point.x - drag.centerX, point.y - drag.centerY)
-        const size = Math.min(200, Math.max(10, snap(dist * 2, 5)))
-        dispatch({ type: 'updatePlacedPlant', id: drag.id, patch: { size } })
-        break
-      }
-    }
+    const effect = dragMove(drag, getPoint(e), beds)
+    if (effect?.kind === 'draft') setDraft(effect.rect)
+    else if (effect) dispatch(effect.action)
   }
 
   function startTransaction() {
