@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { createDefaultState, normalizeState, reducer } from './store'
+import { createDefaultState, normalizeState } from './persistence'
+import { reducer } from './store'
 import type { AppState, MonthRange, Plant } from './types'
 
 function legacyPlant(overrides: Partial<Plant> = {}): Plant {

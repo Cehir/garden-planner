@@ -1,77 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
 import type { ReactNode, Dispatch } from 'react'
-import type { AppState, Bed, DiaryEntry, Garden, MonthRange, PlacedPlant, Plant, Seed } from './types'
-import { DEFAULT_PLANTS } from './plants'
-
-const STORAGE_KEY = 'gartenplaner-state-v1'
-
-export function createDefaultState(): AppState {
-  return {
-    garden: { name: 'Mein Garten', width: 800, height: 600 },
-    beds: [],
-    plants: DEFAULT_PLANTS,
-    placedPlants: [],
-    seeds: [],
-    diary: [],
-  }
-}
-
-function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | undefined {
-  if (value == null) return undefined
-  if (Array.isArray(value[0])) return value as MonthRange[]
-  return [value as MonthRange]
-}
-
-export function normalizeState(raw: Partial<AppState>): AppState {
-  return {
-    ...raw,
-    garden: raw.garden ?? { name: 'Mein Garten', width: 800, height: 600 },
-    beds: raw.beds ?? [],
-    seeds: raw.seeds ?? [],
-    plants: (raw.plants ?? []).map((p) => ({
-      ...p,
-      spacing: p.spacing ?? 25,
-      height: p.height ?? 25,
-      light: p.light ?? 'full',
-      soil: p.soil ?? 'normal',
-      family: p.family ?? 'andere',
-      sow: toRanges(p.sow) ?? [[3, 6]],
-      plant: toRanges(p.plant) ?? [[3, 6]],
-      harvest: toRanges(p.harvest) ?? [[6, 9]],
-    })),
-    placedPlants: (raw.placedPlants ?? []).map((p) => ({
-      ...p,
-      plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
-    })),
-    diary: (raw.diary ?? []).map((e) => ({
-      ...e,
-      targets: e.targets ?? [],
-    })),
-  }
-}
-
-function loadState(): AppState {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as AppState
-      if (
-        parsed &&
-        parsed.garden &&
-        Number.isFinite(parsed.garden.width) &&
-        Number.isFinite(parsed.garden.height) &&
-        Array.isArray(parsed.beds) &&
-        Array.isArray(parsed.plants) &&
-        Array.isArray(parsed.placedPlants)
-      ) {
-        return normalizeState(parsed)
-      }
-    }
-  } catch {
-    // unlesbarer Zustand -> Standard verwenden
-  }
-  return createDefaultState()
-}
+import type { AppState, Bed, DiaryEntry, Garden, PlacedPlant, Plant, Seed } from './types'
+import { loadState, normalizeState, saveState } from './persistence'
 
 export type Action =
   | { type: 'setGarden'; patch: Partial<Garden> }
@@ -279,7 +209,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const commitTransaction = useCallback(() => historyDispatch({ type: 'commit' }), [])
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history.present))
+    saveState(history.present)
   }, [history.present])
 
   const value = useMemo<StoreContextValue>(

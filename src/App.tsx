@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { Phase, Plant, Season, Selected, Tool } from './types'
-import { StoreProvider, useStore, createDefaultState } from './store'
+import { StoreProvider, useStore } from './store'
+import { createDefaultState } from './persistence'
 import Toolbar from './components/Toolbar'
 import Editor from './components/Editor'
 import BedDetails from './components/BedDetails'
