@@ -22,7 +22,7 @@ npm run build     # tsc -b && vite build  (this is the type check)
 npm run dev       # dev server on 127.0.0.1 (bound to IPv4 on purpose)
 ```
 
-Run **test → lint → build** after every change. Baseline (2026-10-23): 139 tests passing,
+Run **test → lint → build** after every change. Baseline (2026-10-23): 168 tests passing,
 lint 0 errors / 0 warnings (oxlint prints nothing when clean), build clean.
 Don't introduce new warnings. Note: oxlint's `only-export-components` also flags non-component
 *re-exports* from `.tsx` files — put hooks/helpers in `.ts` modules and import them from there.
@@ -50,7 +50,11 @@ src/
   utils.ts        uid, snap, placedInYear
   utils/platform.ts  isMac
   App.tsx         layout, tool/selection state, keyboard shortcuts, import/export, print
-  components/     Editor (SVG canvas, ~650 L), Toolbar, PlantLibrary (+ PlantForm),
+  editor/         Editor internals: geometry.ts (hit-test, resize, handles, CTM),
+                  drag.ts (pointerDownIntent + dragMove, pure), useEditorPointer.ts
+                  (pointer handlers + drag transaction), SVG parts (GridLayer, BedShape,
+                  BedHandles, ShadowLayer, PlacedPlantShape, DraftRect, Compass)
+  components/     Editor (thin SVG orchestrator), Toolbar, PlantLibrary (+ PlantForm),
                   SeedBank, BedDetails, Diary
 ```
 
@@ -93,10 +97,12 @@ Tests sit next to the source as `*.test.ts(x)`.
 
 ## Ongoing work
 
-Branch `refactoring-phase-1` executes the SOLID refactor plan in
+The `refactoring-phase-*` branches execute the SOLID refactor plan in
 `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md` (`.hermes/` is gitignored, local only).
-Phase 0 (selectors/grid/palette) and Phase 1 (store split) are done. Deviation from the plan:
-`store.tsx` does **not** re-export the moved symbols (that kept the lint warnings); importers
-point at the new modules directly. Next: Phase 2 — split `Editor.tsx`. The plan is a **pure refactor: no behavior changes**, run all three
+Phase 0 (selectors/grid/palette), Phase 1 (store split) and Phase 2 (editor split) are done.
+Deviations from the plan: `store.tsx` does **not** re-export the moved symbols (that kept the
+lint warnings); importers point at the new modules directly. Phase 2 uses `editor/drag.ts`
+(pure functions) instead of a `dragReducer`, plus a `useEditorPointer` hook to keep `Editor`
+under 150 lines. Next: Phase 3 — split `App.tsx`. The plan is a **pure refactor: no behavior changes**, run all three
 verify gates after each task, commit per task. The user prefers tasks done in-session rather
 than delegated to subagents.

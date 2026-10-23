@@ -1,16 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+import { useMemo, useRef } from 'react'
 import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
-import { useHistory, useStoreDispatch, useStoreState } from '../storeContext'
-import { uid, placedInYear } from '../utils'
+import { useStoreState } from '../storeContext'
+import { placedInYear } from '../utils'
 import { computeConflicts } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
 import { plantsById } from '../selectors'
-import { DEFAULT_BED_COLOR } from '../palette'
-import { pointFromClient } from '../editor/geometry'
-import type { Rect } from '../editor/geometry'
-import { dragMove, pointerDownIntent } from '../editor/drag'
-import type { DragState } from '../editor/drag'
+import { useEditorPointer } from '../editor/useEditorPointer'
 import GridLayer from '../editor/GridLayer'
 import BedShape from '../editor/BedShape'
 import BedHandles from '../editor/BedHandles'
@@ -32,17 +27,8 @@ interface EditorProps {
 }
 
 export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
-  const state = useStoreState()
-  const dispatch = useStoreDispatch()
-  const { beginTransaction, commitTransaction } = useHistory()
+  const { garden, beds, plants, placedPlants } = useStoreState()
   const svgRef = useRef<SVGSVGElement>(null)
-  const dragRef = useRef<DragState | null>(null)
-  // Eigene Buchführung, damit pointerup, pointercancel und lostpointercapture die
-  // Transaktion gefahrlos mehrfach beenden können und sie nie offen hängen bleibt
-  const txnOpenRef = useRef(false)
-  const [draft, setDraft] = useState<Rect | null>(null)
-
-  const { garden, beds, plants, placedPlants } = state
 
   const visiblePlaced = useMemo(() => placedInYear(placedPlants, year), [placedPlants, year])
 
@@ -54,114 +40,17 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
   const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
-  function getPoint(e: ReactPointerEvent<SVGSVGElement>) {
-    return pointFromClient(svgRef.current, e.clientX, e.clientY)
-  }
-
-  function handlePointerDown(e: ReactPointerEvent<SVGSVGElement>) {
-    if (e.button !== 0) return
-    const svg = svgRef.current
-    if (!svg) return
-    const point = getPoint(e)
-    svg.setPointerCapture(e.pointerId)
-
-    const intent = pointerDownIntent(point, {
-      tool,
-      beds,
-      visiblePlaced,
-      selectedBed,
-      selectedPlaced,
-      hasPlantToPlace: placedPlant !== null,
-    })
-    switch (intent.kind) {
-      case 'drag':
-        if (intent.select) onSelect(intent.select)
-        dragRef.current = intent.drag
-        startTransaction()
-        break
-      case 'place':
-        if (!placedPlant) break
-        dispatch({
-          type: 'addPlacedPlant',
-          plant: {
-            id: uid('plp'),
-            bedId: intent.bed.id,
-            plantId: placedPlant.id,
-            x: intent.relX,
-            y: intent.relY,
-            size: placedPlant.spacing,
-            plantedYear: year,
-          },
-        })
-        break
-      case 'deselect':
-        onSelect(null)
-        break
-    }
-  }
-
-  function handlePointerMove(e: ReactPointerEvent<SVGSVGElement>) {
-    const drag = dragRef.current
-    if (!drag) return
-    const effect = dragMove(drag, getPoint(e), beds)
-    if (effect?.kind === 'draft') setDraft(effect.rect)
-    else if (effect) dispatch(effect.action)
-  }
-
-  function startTransaction() {
-    if (txnOpenRef.current) return
-    txnOpenRef.current = true
-    beginTransaction()
-  }
-
-  function endTransaction() {
-    if (!txnOpenRef.current) return
-    txnOpenRef.current = false
-    commitTransaction()
-  }
-
-  // Beim Unmount mitten im Ziehen die Transaktion schließen
-  useEffect(
-    () => () => {
-      if (txnOpenRef.current) {
-        txnOpenRef.current = false
-        commitTransaction()
-      }
-    },
-    [commitTransaction],
-  )
-
-  function handlePointerUp() {
-    const drag = dragRef.current
-    dragRef.current = null
-    if (!drag) return
-    if (drag.kind === 'draw' && draft) {
-      const id = uid('beet')
-      dispatch({
-        type: 'addBed',
-        bed: {
-          id,
-          name: `Beet ${beds.length + 1}`,
-          x: draft.x,
-          y: draft.y,
-          w: draft.w,
-          h: draft.h,
-          color: DEFAULT_BED_COLOR,
-          notes: '',
-        },
-      })
-      onSelect({ kind: 'bed', id })
-      setDraft(null)
-    }
-    endTransaction()
-  }
-
-  // Auch bei verlorenem Pointer-Capture (ohne pointerup), z. B. Fensterwechsel beim Ziehen
-  function handlePointerCancel() {
-    dragRef.current = null
-    setDraft(null)
-    endTransaction()
-  }
+  const { draft, handlers } = useEditorPointer({
+    svgRef,
+    tool,
+    beds,
+    visiblePlaced,
+    selectedBed,
+    selectedPlaced,
+    placedPlant,
+    year,
+    onSelect,
+  })
 
   return (
     <div className="editor-wrap">
@@ -181,11 +70,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           ref={svgRef}
           viewBox={`0 0 ${garden.width} ${garden.height}`}
           className="editor-svg"
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-          onLostPointerCapture={handlePointerCancel}
+          {...handlers}
           style={{ cursor: tool === 'bed' ? 'crosshair' : tool === 'plant' ? 'pointer' : 'default' }}
         >
           <GridLayer width={garden.width} height={garden.height} />
