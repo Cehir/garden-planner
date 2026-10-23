@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultState, normalizeState } from './persistence'
-import { reducer } from './store'
+import { reducer } from './reducer'
 import type { AppState, MonthRange, Plant } from './types'
 
 function legacyPlant(overrides: Partial<Plant> = {}): Plant {
@@ -186,8 +186,7 @@ describe('normalizeState', () => {
 })
 
 describe('reducer: updatePlacedPlant plantedYear', () => {
-  it('setzt das Pflanzjahr einer platzierten Pflanze', async () => {
-    const { reducer } = await import('./store')
+  it('setzt das Pflanzjahr einer platzierten Pflanze', () => {
     const s0: AppState = {
       garden: { name: 'G', width: 1, height: 1 },
       beds: [],
