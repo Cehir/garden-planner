@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { createDefaultState } from './persistence'
-import { historyReducer, MAX_HISTORY } from './store'
+import { historyReducer, MAX_HISTORY } from './history'
+import type { HistoryState } from './history'
 import type { Action } from './reducer'
-import type { HistoryState } from './store'
 import type { Bed } from './types'
 
 function init(start?: HistoryState): HistoryState {
