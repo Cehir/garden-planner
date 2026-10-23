@@ -22,7 +22,7 @@ npm run build     # tsc -b && vite build  (this is the type check)
 npm run dev       # dev server on 127.0.0.1 (bound to IPv4 on purpose)
 ```
 
-Run **test → lint → build** after every change. Baseline (2026-10-23): 124 tests passing,
+Run **test → lint → build** after every change. Baseline (2026-10-23): 126 tests passing,
 lint 0 errors / 0 warnings (oxlint prints nothing when clean), build clean.
 Don't introduce new warnings. Note: oxlint's `only-export-components` also flags non-component
 *re-exports* from `.tsx` files — put hooks/helpers in `.ts` modules and import them from there.
@@ -36,7 +36,7 @@ src/
   reducer.ts      Action union + reducer (pure; 'load' is handled in history.ts)
   history.ts      historyReducer: undo/redo, transactions, MAX_HISTORY (pure)
   persistence.ts  createDefaultState, normalizeState, loadState, saveState (localStorage)
-  storeContext.ts StoreContext + hooks: useStore, useStoreState, useStoreDispatch, useHistory
+  storeContext.ts State/Dispatch/HistoryContext + hooks: useStore, useStoreState, useStoreDispatch, useHistory
   store.tsx       StoreProvider only
   plants.ts       DEFAULT_PLANTS catalog
   selectors.ts    plantsById, placedCenter        ← use these, don't re-implement
