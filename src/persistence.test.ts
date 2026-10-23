@@ -220,6 +220,23 @@ describe('normalizeState', () => {
     expect(out.seeds).toEqual([])
     expect(out.diary).toEqual([])
   })
+
+  it('verwirft Einträge, die keine Objekte sind (z. B. null aus einem kaputten Import)', () => {
+    const raw = {
+      garden: { name: 'G', width: 100, height: 50 },
+      beds: [null, 'x'],
+      plants: [null, legacyPlant(), 3],
+      placedPlants: [null],
+      seeds: [[]],
+      diary: [null],
+    } as unknown as AppState
+    const out = normalizeState(raw)
+    expect(out.beds).toEqual([])
+    expect(out.plants.map((p) => p.id)).toEqual(['alt'])
+    expect(out.placedPlants).toEqual([])
+    expect(out.seeds).toEqual([])
+    expect(out.diary).toEqual([])
+  })
 })
 
 describe('createDefaultState', () => {

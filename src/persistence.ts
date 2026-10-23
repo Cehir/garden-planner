@@ -20,9 +20,14 @@ function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | 
   return [value as MonthRange]
 }
 
-// Beschädigte Sammlungen (kein Array) werden verworfen statt die App abstürzen zu lassen
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+// Beschädigte Sammlungen (kein Array) und Einträge, die keine Objekte sind (z. B. null),
+// werden verworfen statt die App abstürzen zu lassen
 function arrayOr<T>(value: T[] | undefined, fallback: T[]): T[] {
-  return Array.isArray(value) ? value : fallback
+  return Array.isArray(value) ? value.filter((item) => isRecord(item)) : fallback
 }
 
 export function normalizeState(raw: Partial<AppState>): AppState {
