@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import type { ChangeEvent } from 'react'
 import type { Phase, Season, Tool } from '../types'
 import { PHASE_LABELS, SEASON_LABELS } from '../seasons'
-import { useStore } from '../store'
+import { useStoreState } from '../storeContext'
 import { isMac } from '../utils/platform'
 
 interface ToolbarProps {
@@ -52,7 +52,7 @@ export default function Toolbar({
   year,
   onYear,
 }: ToolbarProps) {
-  const { state } = useStore()
+  const state = useStoreState()
 
   const years = useMemo(() => {
     const set = new Set(state.placedPlants.map((p) => p.plantedYear))

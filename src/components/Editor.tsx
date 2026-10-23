@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
-import { useStore } from '../store'
+import { useHistory, useStoreDispatch, useStoreState } from '../storeContext'
 import { snap, uid, placedInYear } from '../utils'
 import { computeConflicts, shadowPolygon } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
@@ -106,7 +106,9 @@ function nearHandle(
 }
 
 export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
-  const { state, dispatch, beginTransaction, commitTransaction } = useStore()
+  const state = useStoreState()
+  const dispatch = useStoreDispatch()
+  const { beginTransaction, commitTransaction } = useHistory()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<DragState | null>(null)
   const [draft, setDraft] = useState<{ x: number; y: number; w: number; h: number } | null>(null)

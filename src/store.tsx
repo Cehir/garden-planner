@@ -1,23 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useReducer } from 'react'
-import type { ReactNode, Dispatch } from 'react'
-import type { AppState } from './types'
+import { useCallback, useEffect, useMemo, useReducer } from 'react'
+import type { ReactNode } from 'react'
 import { loadState, saveState } from './persistence'
 import type { Action } from './reducer'
 import { createHistoryState, historyReducer } from './history'
 import type { HistoryState } from './history'
-
-interface StoreContextValue {
-  state: AppState
-  dispatch: Dispatch<Action>
-  undo: () => void
-  redo: () => void
-  canUndo: boolean
-  canRedo: boolean
-  beginTransaction: () => void
-  commitTransaction: () => void
-}
-
-const StoreContext = createContext<StoreContextValue | null>(null)
+import { StoreContext } from './storeContext'
+import type { StoreContextValue } from './storeContext'
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [history, historyDispatch] = useReducer(
@@ -54,12 +42,4 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>
-}
-
-export function useStore(): StoreContextValue {
-  const ctx = useContext(StoreContext)
-  if (!ctx) {
-    throw new Error('useStore must be used within StoreProvider')
-  }
-  return ctx
 }
