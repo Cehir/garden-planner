@@ -3,7 +3,7 @@ import type { Selected } from '../types'
 import { LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { formatRanges } from '../seasons'
 import { bedCycle, repeatWarnings } from '../rotation'
-import { useStore } from '../store'
+import { useStoreDispatch, useStoreState } from '../storeContext'
 import { computeConflicts } from '../shadow'
 import { placedInYear } from '../utils'
 import { BED_COLORS, BED_COLOR_NAMES } from '../palette'
@@ -16,7 +16,8 @@ interface BedDetailsProps {
 }
 
 export default function BedDetails({ selected, onClearSelection, year }: BedDetailsProps) {
-  const { state, dispatch } = useStore()
+  const state = useStoreState()
+  const dispatch = useStoreDispatch()
   const [activeTab, setActiveTab] = useState<'garden' | 'diary'>('garden')
 
   if (selected?.kind === 'placed') {

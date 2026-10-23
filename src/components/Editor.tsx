@@ -1,7 +1,7 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
-import { useStore } from '../store'
+import { useHistory, useStoreDispatch, useStoreState } from '../storeContext'
 import { snap, uid, placedInYear } from '../utils'
 import { computeConflicts, shadowPolygon } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
@@ -106,9 +106,14 @@ function nearHandle(
 }
 
 export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
-  const { state, dispatch, beginTransaction, commitTransaction } = useStore()
+  const state = useStoreState()
+  const dispatch = useStoreDispatch()
+  const { beginTransaction, commitTransaction } = useHistory()
   const svgRef = useRef<SVGSVGElement>(null)
   const dragRef = useRef<DragState | null>(null)
+  // Eigene Buchführung, damit pointerup, pointercancel und lostpointercapture die
+  // Transaktion gefahrlos mehrfach beenden können und sie nie offen hängen bleibt
+  const txnOpenRef = useRef(false)
   const [draft, setDraft] = useState<{ x: number; y: number; w: number; h: number } | null>(null)
 
   const { garden, beds, plants, placedPlants } = state
@@ -144,7 +149,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
 
     if (tool === 'bed') {
       dragRef.current = { kind: 'draw', startX: point.x, startY: point.y }
-      beginTransaction()
+      startTransaction()
       return
     }
 
@@ -162,7 +167,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
             startY: point.y,
             origSize: selectedPlaced.size,
           }
-          beginTransaction()
+          startTransaction()
           return
         }
       }
@@ -183,7 +188,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           origX: p.x,
           origY: p.y,
         }
-        beginTransaction()
+        startTransaction()
         return
       }
     }
@@ -221,7 +226,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           startY: point.y,
           orig: { x: selectedBed.x, y: selectedBed.y, w: selectedBed.w, h: selectedBed.h },
         }
-        beginTransaction()
+        startTransaction()
         return
       }
     }
@@ -241,7 +246,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           startY: point.y,
           origSize: p.size,
         }
-        beginTransaction()
+        startTransaction()
         return
       }
       if (Math.hypot(point.x - cx, point.y - cy) <= r) {
@@ -255,7 +260,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           origX: p.x,
           origY: p.y,
         }
-        beginTransaction()
+        startTransaction()
         return
       }
     }
@@ -271,7 +276,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           origX: bed.x,
           origY: bed.y,
         }
-        beginTransaction()
+        startTransaction()
         return
       }
     }
@@ -329,6 +334,29 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     }
   }
 
+  function startTransaction() {
+    if (txnOpenRef.current) return
+    txnOpenRef.current = true
+    beginTransaction()
+  }
+
+  function endTransaction() {
+    if (!txnOpenRef.current) return
+    txnOpenRef.current = false
+    commitTransaction()
+  }
+
+  // Beim Unmount mitten im Ziehen die Transaktion schließen
+  useEffect(
+    () => () => {
+      if (txnOpenRef.current) {
+        txnOpenRef.current = false
+        commitTransaction()
+      }
+    },
+    [commitTransaction],
+  )
+
   function handlePointerUp() {
     const drag = dragRef.current
     dragRef.current = null
@@ -351,12 +379,14 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
       onSelect({ kind: 'bed', id })
       setDraft(null)
     }
-    commitTransaction()
+    endTransaction()
   }
 
+  // Auch bei verlorenem Pointer-Capture (ohne pointerup), z. B. Fensterwechsel beim Ziehen
   function handlePointerCancel() {
     dragRef.current = null
-    commitTransaction()
+    setDraft(null)
+    endTransaction()
   }
 
   const gridLines = buildGridLines(garden.width, garden.height)
@@ -392,6 +422,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerCancel}
+          onLostPointerCapture={handlePointerCancel}
           style={{ cursor: tool === 'bed' ? 'crosshair' : tool === 'plant' ? 'pointer' : 'default' }}
         >
           <rect

@@ -6,11 +6,12 @@ import {
   PLANT_ACTION_EMOJI,
   PLANT_ACTION_LABELS,
 } from '../types'
-import { useStore } from '../store'
+import { useStoreDispatch, useStoreState } from '../storeContext'
 import { uid } from '../utils'
 
 export default function Diary() {
-  const { state, dispatch } = useStore()
+  const state = useStoreState()
+  const dispatch = useStoreDispatch()
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [note, setNote] = useState('')
   const [selectedBeds, setSelectedBeds] = useState<Record<string, BedAction | null>>({})

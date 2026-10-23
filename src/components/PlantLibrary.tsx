@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import type { LightRequirement, MonthRange, Plant, PlantFamily, SoilType } from '../types'
 import { FAMILY_LABELS, LIGHT_LABELS, SOIL_LABELS } from '../types'
 import { canDoNow, currentMonth, formatRanges, MONTHS_SHORT } from '../seasons'
-import { useStore } from '../store'
+import { useStoreDispatch, useStoreState } from '../storeContext'
 import { uid } from '../utils'
 import SeedBank from './SeedBank'
 import { PLANT_COLORS } from '../palette'
@@ -291,7 +291,8 @@ interface PlantsPanelProps {
 }
 
 function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
-  const { state, dispatch } = useStore()
+  const state = useStoreState()
+  const dispatch = useStoreDispatch()
   const [filter, setFilter] = useState('')
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
