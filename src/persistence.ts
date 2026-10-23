@@ -69,7 +69,7 @@ export function normalizeState(raw: Partial<AppState>): AppState {
     })),
     diary: arrayOr(raw.diary, []).map((e) => ({
       ...e,
-      targets: e.targets ?? [],
+      targets: arrayOr(e.targets, []),
     })),
   }
 }

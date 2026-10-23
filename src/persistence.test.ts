@@ -163,6 +163,16 @@ describe('normalizeState', () => {
     expect(result.diary[0].id).toBe('d1')
   })
 
+  it('ersetzt ungültige diary-targets durch ein leeres Array', () => {
+    const raw = {
+      diary: [
+        { id: 'd1', date: '2026-09-02', timestamp: 1000, note: 'x', targets: 'b1' },
+        { id: 'd2', date: '2026-09-03', timestamp: 2000, note: 'y' },
+      ],
+    } as unknown as AppState
+    expect(normalizeState(raw).diary.map((e) => e.targets)).toEqual([[], []])
+  })
+
   it('erhält vorhandene seeds', () => {
     const raw = {
       garden: { name: 'Alt', width: 100, height: 50 },
