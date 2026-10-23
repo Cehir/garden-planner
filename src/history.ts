@@ -9,7 +9,8 @@ export interface HistoryState {
   present: AppState
   past: AppState[]
   future: AppState[]
-  txnOpen: boolean
+  // Verschachtelungstiefe offener Transaktionen (0 = keine)
+  txnDepth: number
   txnBase: AppState | null
 }
 
@@ -21,7 +22,7 @@ export type HistoryAction =
   | { type: 'redo' }
 
 export function createHistoryState(state: AppState): HistoryState {
-  return { present: state, past: [], future: [], txnOpen: false, txnBase: null }
+  return { present: state, past: [], future: [], txnDepth: 0, txnBase: null }
 }
 
 function deepEqual(a: unknown, b: unknown): boolean {
@@ -56,50 +57,52 @@ export function historyReducer(hs: HistoryState, sa: HistoryAction): HistoryStat
   switch (sa.type) {
     case 'begin':
       // Verschachteltes begin: ursprünglichen Ausgangszustand behalten
-      if (hs.txnOpen) return hs
-      return { ...hs, txnOpen: true, txnBase: hs.present }
+      if (hs.txnDepth > 0) return { ...hs, txnDepth: hs.txnDepth + 1 }
+      return { ...hs, txnDepth: 1, txnBase: hs.present }
     case 'commit': {
-      if (!hs.txnOpen || !hs.txnBase) return hs
+      if (hs.txnDepth === 0 || !hs.txnBase) return hs
+      // Inneres commit: erst das äußerste schließt die Transaktion
+      if (hs.txnDepth > 1) return { ...hs, txnDepth: hs.txnDepth - 1 }
       const changed = !sameState(hs.txnBase, hs.present)
       return {
         present: hs.present,
         past: changed ? [...hs.past, hs.txnBase].slice(-MAX_HISTORY) : hs.past,
         future: changed ? [] : hs.future,
-        txnOpen: false,
+        txnDepth: 0,
         txnBase: null,
       }
     }
     case 'undo':
       // Während einer Ziehgeste kein Undo/Redo, sonst zerfällt die Transaktion
-      if (hs.txnOpen || hs.past.length === 0) return hs
+      if (hs.txnDepth > 0 || hs.past.length === 0) return hs
       return {
         present: hs.past[hs.past.length - 1],
         past: hs.past.slice(0, -1),
         future: [...hs.future, hs.present].slice(-MAX_HISTORY),
-        txnOpen: false,
+        txnDepth: 0,
         txnBase: null,
       }
     case 'redo':
-      if (hs.txnOpen || hs.future.length === 0) return hs
+      if (hs.txnDepth > 0 || hs.future.length === 0) return hs
       return {
         present: hs.future[hs.future.length - 1],
         past: [...hs.past, hs.present].slice(-MAX_HISTORY),
         future: hs.future.slice(0, -1),
-        txnOpen: false,
+        txnDepth: 0,
         txnBase: null,
       }
     case 'mutate':
       if (sa.action.type === 'load') {
         return createHistoryState(normalizeState(sa.action.state))
       }
-      if (hs.txnOpen) {
+      if (hs.txnDepth > 0) {
         return { ...hs, present: reducer(hs.present, sa.action) }
       }
       return {
         present: reducer(hs.present, sa.action),
         past: [...hs.past, hs.present].slice(-MAX_HISTORY),
         future: [],
-        txnOpen: false,
+        txnDepth: 0,
         txnBase: null,
       }
   }

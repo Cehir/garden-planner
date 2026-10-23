@@ -7,7 +7,7 @@ import type { Bed } from './types'
 
 function init(start?: HistoryState): HistoryState {
   return (
-    start ?? { present: createDefaultState(), past: [], future: [], txnOpen: false, txnBase: null }
+    start ?? { present: createDefaultState(), past: [], future: [], txnDepth: 0, txnBase: null }
   )
 }
 
@@ -146,7 +146,26 @@ describe('historyReducer – Transaktionen', () => {
     hs = historyReducer(hs, { type: 'begin' })
     hs = mutate(hs, { type: 'updateBed', id: 'b1', patch: { x: 40 } })
     hs = historyReducer(hs, { type: 'commit' })
+    hs = historyReducer(hs, { type: 'commit' })
     expect(hs.past).toHaveLength(1)
+
+    hs = historyReducer(hs, { type: 'undo' })
+    expect(hs.present.beds).toHaveLength(0)
+  })
+
+  it('schließt die äußere Transaktion erst mit dem äußersten commit', () => {
+    let hs = init()
+    hs = historyReducer(hs, { type: 'begin' })
+    hs = mutate(hs, { type: 'addBed', bed: bed('b1') })
+    hs = historyReducer(hs, { type: 'begin' })
+    hs = mutate(hs, { type: 'updateBed', id: 'b1', patch: { x: 40 } })
+    hs = historyReducer(hs, { type: 'commit' })
+    expect(hs.past).toHaveLength(0)
+
+    hs = mutate(hs, { type: 'updateBed', id: 'b1', patch: { x: 60 } })
+    hs = historyReducer(hs, { type: 'commit' })
+    expect(hs.past).toHaveLength(1)
+    expect(hs.present.beds[0].x).toBe(60)
 
     hs = historyReducer(hs, { type: 'undo' })
     expect(hs.present.beds).toHaveLength(0)
@@ -174,7 +193,7 @@ describe('historyReducer – Grenzen', () => {
     hs = mutate(hs, { type: 'load', state: fresh })
     expect(hs.past).toHaveLength(0)
     expect(hs.future).toHaveLength(0)
-    expect(hs.txnOpen).toBe(false)
+    expect(hs.txnDepth).toBe(0)
     expect(hs.present).toEqual(fresh)
   })
 })
