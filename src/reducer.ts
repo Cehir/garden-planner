@@ -1,5 +1,4 @@
 import type { AppState, Bed, DiaryEntry, Garden, PlacedPlant, Plant, Seed } from './types'
-import { normalizeState } from './persistence'
 
 export type Action =
   | { type: 'setGarden'; patch: Partial<Garden> }
@@ -19,7 +18,8 @@ export type Action =
   | { type: 'removeDiaryEntry'; id: string }
   | { type: 'load'; state: AppState }
 
-export function reducer(state: AppState, action: Action): AppState {
+// 'load' wird von historyReducer abgefangen (setzt auch die History zurück)
+export function reducer(state: AppState, action: Exclude<Action, { type: 'load' }>): AppState {
   switch (action.type) {
     case 'setGarden':
       return { ...state, garden: { ...state.garden, ...action.patch } }
@@ -73,7 +73,5 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, diary: [...state.diary, action.entry] }
     case 'removeDiaryEntry':
       return { ...state, diary: state.diary.filter((e) => e.id !== action.id) }
-    case 'load':
-      return normalizeState(action.state)
   }
 }
