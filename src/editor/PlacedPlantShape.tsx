@@ -13,6 +13,7 @@ interface PlacedPlantShapeProps {
   showRotation: boolean
 }
 
+// Eine gesetzte Pflanze mit Saison-Markierung, Größen-Anfasser, Konfliktwarnung und Pflanzjahr
 export default function PlacedPlantShape({
   placed,
   plant,

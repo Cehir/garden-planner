@@ -36,7 +36,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     selected?.kind === 'bed' ? beds.find((b) => b.id === selected.id) ?? null : null
   const selectedPlaced: PlacedPlant | null =
     selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
-  const plantById = plantsById(plants)
+  const plantById = useMemo(() => plantsById(plants), [plants])
   const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 

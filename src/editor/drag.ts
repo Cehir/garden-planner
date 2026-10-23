@@ -1,4 +1,4 @@
-import type { Bed, PlacedPlant, Selected, Tool } from '../types'
+import type { Bed, PlacedPlant, Plant, Selected, Tool } from '../types'
 import type { Action } from '../reducer'
 import { placedCenter } from '../selectors'
 import { snap } from '../utils'
@@ -39,12 +39,12 @@ export interface PointerDownContext {
   visiblePlaced: PlacedPlant[]
   selectedBed: Bed | null
   selectedPlaced: PlacedPlant | null
-  hasPlantToPlace: boolean
+  plantToPlace: Plant | null
 }
 
 export type PointerDownIntent =
   | { kind: 'drag'; drag: DragState; select?: Selected }
-  | { kind: 'place'; bed: Bed; relX: number; relY: number }
+  | { kind: 'place'; plant: Plant; bed: Bed; relX: number; relY: number }
   | { kind: 'deselect' }
   | { kind: 'none' }
 
@@ -91,12 +91,13 @@ export function pointerDownIntent(point: Point, ctx: PointerDownContext): Pointe
   }
 
   if (tool === 'plant') {
-    if (!ctx.hasPlantToPlace) return { kind: 'none' }
+    const plant = ctx.plantToPlace
+    if (!plant) return { kind: 'none' }
     const bed = beds.find((b) => hitTest(point.x, point.y, b))
     if (!bed) return { kind: 'none' }
     const relX = Math.min(1, Math.max(0, (point.x - bed.x) / bed.w))
     const relY = Math.min(1, Math.max(0, (point.y - bed.y) / bed.h))
-    return { kind: 'place', bed, relX, relY }
+    return { kind: 'place', plant, bed, relX, relY }
   }
 
   // Auswahl-Werkzeug

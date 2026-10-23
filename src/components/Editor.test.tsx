@@ -1,5 +1,5 @@
 import { act, fireEvent, render } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ComponentProps, Dispatch } from 'react'
 import { StoreProvider } from '../store'
 import { useHistory, useStoreDispatch, useStoreState } from '../storeContext'
@@ -9,11 +9,11 @@ import type { AppState, Bed, PlacedPlant } from '../types'
 import { createDefaultState, saveState } from '../persistence'
 import Editor from './Editor'
 
-// happy-dom liefert keine Screen-CTM: Client- = SVG-Koordinaten
-vi.mock('../editor/geometry', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../editor/geometry')>()),
-  pointFromClient: (_svg: unknown, x: number, y: number) => ({ x, y }),
-}))
+// happy-dom liefert keine Screen-CTM: Identität, also Client- = SVG-Koordinaten
+beforeEach(() => {
+  vi.spyOn(SVGSVGElement.prototype, 'getScreenCTM').mockReturnValue(new DOMMatrix())
+})
+afterEach(() => vi.restoreAllMocks())
 
 const bed: Bed = { id: 'b1', name: 'Beet 1', x: 100, y: 100, w: 200, h: 100, color: '#000', notes: '' }
 // Mittelpunkt (200, 150), Radius 20
@@ -21,8 +21,10 @@ const placed: PlacedPlant = { id: 'p1', bedId: 'b1', plantId: 'x', x: 0.5, y: 0.
 
 function renderEditor(props: Partial<ComponentProps<typeof Editor>> = {}) {
   const states: AppState[] = []
+  const histories: HistoryControls[] = []
   function Probe() {
     states.push(useStoreState())
+    histories.push(useHistory())
     return null
   }
   const utils = render(
@@ -43,7 +45,20 @@ function renderEditor(props: Partial<ComponentProps<typeof Editor>> = {}) {
     </StoreProvider>,
   )
   const svg = utils.container.querySelector('svg.editor-svg')!
-  return { ...utils, svg, state: () => states[states.length - 1] }
+  return {
+    ...utils,
+    svg,
+    state: () => states[states.length - 1],
+    history: () => histories[histories.length - 1],
+  }
+}
+
+// Beet b1 von (110, 110) aus um (dx, dy) ziehen, in mehreren Schritten
+function dragBed(svg: Element, dx: number, dy: number) {
+  fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: 110, clientY: 110 })
+  for (let i = 1; i <= 4; i++) {
+    fireEvent.pointerMove(svg, { pointerId: 1, clientX: 110 + (dx * i) / 4, clientY: 110 + (dy * i) / 4 })
+  }
 }
 
 describe('Editor', () => {
@@ -93,6 +108,77 @@ describe('Editor', () => {
       size: plant.spacing,
       plantedYear: 2026,
     })
+  })
+})
+
+describe('Editor: Undo beim Ziehen', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    saveState({ ...createDefaultState(), beds: [bed], placedPlants: [placed] })
+  })
+
+  it('viele Bewegungen bis pointerup ergeben genau einen Undo-Schritt', () => {
+    const { svg, state, history } = renderEditor()
+    dragBed(svg, 40, 20)
+    fireEvent.pointerUp(svg, { pointerId: 1 })
+    expect(state().beds[0]).toMatchObject({ x: 140, y: 120 })
+
+    act(() => history().undo())
+    expect(state().beds[0]).toMatchObject({ x: 100, y: 100 })
+    expect(history().canUndo).toBe(false)
+  })
+
+  it('Undo/Redo wird während des Ziehens ignoriert', () => {
+    const { svg, state, history } = renderEditor()
+    dragBed(svg, 40, 20)
+    act(() => history().undo())
+    expect(state().beds[0]).toMatchObject({ x: 140, y: 120 })
+    fireEvent.pointerUp(svg, { pointerId: 1 })
+  })
+
+  it('pointercancel schließt die Transaktion', () => {
+    const { svg, state, history } = renderEditor()
+    dragBed(svg, 40, 20)
+    fireEvent.pointerCancel(svg, { pointerId: 1 })
+
+    act(() => history().undo())
+    expect(state().beds[0]).toMatchObject({ x: 100, y: 100 })
+  })
+
+  it('Unmount mitten im Ziehen schließt die Transaktion', () => {
+    const histories: HistoryControls[] = []
+    const states: AppState[] = []
+    function Probe() {
+      histories.push(useHistory())
+      states.push(useStoreState())
+      return null
+    }
+    function Harness({ showEditor }: { showEditor: boolean }) {
+      return (
+        <StoreProvider>
+          {showEditor && (
+            <Editor
+              tool="select"
+              selected={null}
+              onSelect={() => {}}
+              placedPlant={null}
+              zoom={1}
+              season="all"
+              phase="plant"
+              showRotation={false}
+              year={2026}
+            />
+          )}
+          <Probe />
+        </StoreProvider>
+      )
+    }
+    const { container, rerender } = render(<Harness showEditor />)
+    dragBed(container.querySelector('svg.editor-svg')!, 40, 20)
+    rerender(<Harness showEditor={false} />)
+
+    act(() => histories[histories.length - 1].undo())
+    expect(states[states.length - 1].beds[0]).toMatchObject({ x: 100, y: 100 })
   })
 })
 

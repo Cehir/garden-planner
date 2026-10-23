@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Bed, PlacedPlant } from '../types'
+import { DEFAULT_PLANTS } from '../plants'
 import { dragMove, pointerDownIntent } from './drag'
 import type { DragState, PointerDownContext } from './drag'
 
@@ -14,10 +15,12 @@ function ctx(over: Partial<PointerDownContext> = {}): PointerDownContext {
     visiblePlaced: [placed],
     selectedBed: null,
     selectedPlaced: null,
-    hasPlantToPlace: false,
+    plantToPlace: null,
     ...over,
   }
 }
+
+const plant = DEFAULT_PLANTS[0]
 
 describe('pointerDownIntent', () => {
   it('Beet-Werkzeug startet immer ein Aufziehen', () => {
@@ -35,8 +38,9 @@ describe('pointerDownIntent', () => {
     expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'resizePlaced', id: 'p1', centerX: 200, centerY: 150, origSize: 40 } })
   })
   it('Pflanzen-Werkzeug setzt relativ zum Beet', () => {
-    expect(pointerDownIntent({ x: 150, y: 125 }, ctx({ tool: 'plant', hasPlantToPlace: true }))).toEqual({
+    expect(pointerDownIntent({ x: 150, y: 125 }, ctx({ tool: 'plant', plantToPlace: plant }))).toEqual({
       kind: 'place',
+      plant,
       bed,
       relX: 0.25,
       relY: 0.25,
@@ -44,7 +48,7 @@ describe('pointerDownIntent', () => {
   })
   it('Pflanzen-Werkzeug ohne gewählte Pflanze oder außerhalb eines Beets tut nichts', () => {
     expect(pointerDownIntent({ x: 150, y: 125 }, ctx({ tool: 'plant' })).kind).toBe('none')
-    expect(pointerDownIntent({ x: 10, y: 10 }, ctx({ tool: 'plant', hasPlantToPlace: true })).kind).toBe('none')
+    expect(pointerDownIntent({ x: 10, y: 10 }, ctx({ tool: 'plant', plantToPlace: plant })).kind).toBe('none')
   })
   it('Anfasser des ausgewählten Beets startet die Größenänderung', () => {
     const r = pointerDownIntent({ x: 300, y: 200 }, ctx({ selectedBed: bed }))
@@ -56,6 +60,34 @@ describe('pointerDownIntent', () => {
   })
   it('Klick ins Leere hebt die Auswahl auf', () => {
     expect(pointerDownIntent({ x: 10, y: 10 }, ctx()).kind).toBe('deselect')
+  })
+
+  describe('Priorität bei überlappenden Zielen', () => {
+    // Mittelpunkt (220, 150) = Größen-Anfasser von p1; liegt auch noch im Kreis von p1
+    const other: PlacedPlant = { ...placed, id: 'p2', x: 0.6 }
+    // Mittelpunkt (300, 200) = Südost-Anfasser des Beets
+    const corner: PlacedPlant = { ...placed, id: 'p3', x: 1, y: 1, size: 20 }
+
+    it('Anfasser der ausgewählten Pflanze schlägt Pflanzen darunter', () => {
+      const r = pointerDownIntent({ x: 220, y: 150 }, ctx({ visiblePlaced: [placed, other], selectedPlaced: placed }))
+      expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'resizePlaced', id: 'p1' } })
+    })
+    it('ohne Auswahl gewinnt die erste getroffene Pflanze', () => {
+      const r = pointerDownIntent({ x: 220, y: 150 }, ctx({ visiblePlaced: [placed, other] }))
+      expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'movePlaced', id: 'p1' } })
+    })
+    it('Pflanzen-Werkzeug auf einer vorhandenen Pflanze verschiebt sie statt neu zu pflanzen', () => {
+      const r = pointerDownIntent({ x: 200, y: 150 }, ctx({ tool: 'plant', plantToPlace: plant }))
+      expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'movePlaced', id: 'p1' }, select: { kind: 'placed', id: 'p1' } })
+    })
+    it('Pflanze auf dem Beet-Anfasser schlägt die Beet-Größenänderung', () => {
+      const r = pointerDownIntent({ x: 300, y: 200 }, ctx({ visiblePlaced: [corner], selectedBed: bed }))
+      expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'movePlaced', id: 'p3' } })
+    })
+    it('Beet-Anfasser schlägt das Verschieben des Beets', () => {
+      const r = pointerDownIntent({ x: 300, y: 200 }, ctx({ visiblePlaced: [], selectedBed: bed }))
+      expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'resizeBed', handle: 'se' } })
+    })
   })
 })
 

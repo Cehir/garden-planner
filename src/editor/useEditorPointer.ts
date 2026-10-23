@@ -83,7 +83,7 @@ export function useEditorPointer({
       visiblePlaced,
       selectedBed,
       selectedPlaced,
-      hasPlantToPlace: placedPlant !== null,
+      plantToPlace: placedPlant,
     })
     switch (intent.kind) {
       case 'drag':
@@ -92,16 +92,15 @@ export function useEditorPointer({
         startTransaction()
         break
       case 'place':
-        if (!placedPlant) break
         dispatch({
           type: 'addPlacedPlant',
           plant: {
             id: uid('plp'),
             bedId: intent.bed.id,
-            plantId: placedPlant.id,
+            plantId: intent.plant.id,
             x: intent.relX,
             y: intent.relY,
-            size: placedPlant.spacing,
+            size: intent.plant.spacing,
             plantedYear: year,
           },
         })

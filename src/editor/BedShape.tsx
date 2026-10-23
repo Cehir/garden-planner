@@ -1,5 +1,7 @@
 import type { Bed } from '../types'
 
+// Ein Beet mit Namen; ausgewählt kräftiger umrandet
+
 export default function BedShape({ bed, selected }: { bed: Bed; selected: boolean }) {
   const fontSize = Math.max(8, Math.min(16, Math.min(bed.w, bed.h) * 0.18))
   return (

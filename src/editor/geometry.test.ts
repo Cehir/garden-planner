@@ -1,5 +1,14 @@
-import { describe, expect, it } from 'vitest'
-import { HANDLES, HANDLE_SIZE, MIN_SIZE, handlePos, hitTest, nearHandle, resizeRect } from './geometry'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import {
+  HANDLES,
+  HANDLE_SIZE,
+  MIN_SIZE,
+  handlePos,
+  hitTest,
+  nearHandle,
+  pointFromClient,
+  resizeRect,
+} from './geometry'
 
 const orig = { x: 10, y: 20, w: 100, h: 50 }
 
@@ -58,5 +67,22 @@ describe('nearHandle', () => {
       const p = handlePos(orig, h)
       expect(nearHandle(p.x, p.y, orig)).toBe(h)
     }
+  })
+})
+
+describe('pointFromClient', () => {
+  afterEach(() => vi.restoreAllMocks())
+
+  it('rechnet über die inverse Screen-CTM in SVG-Koordinaten um', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    // SVG um (10, 20) verschoben und 2× gezoomt
+    vi.spyOn(svg, 'getScreenCTM').mockReturnValue(new DOMMatrix([2, 0, 0, 2, 10, 20]))
+    expect(pointFromClient(svg, 110, 220)).toEqual({ x: 50, y: 100 })
+  })
+  it('liefert (0, 0) ohne SVG oder ohne CTM', () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    vi.spyOn(svg, 'getScreenCTM').mockReturnValue(null)
+    expect(pointFromClient(svg, 5, 5)).toEqual({ x: 0, y: 0 })
+    expect(pointFromClient(null, 5, 5)).toEqual({ x: 0, y: 0 })
   })
 })
