@@ -8,12 +8,17 @@ import { phaseMatchesSeason } from '../seasons'
 import { plantsById, placedCenter } from '../selectors'
 import { gridLines as buildGridLines } from '../grid'
 import { DEFAULT_BED_COLOR } from '../palette'
-
-const MIN_SIZE = 20
-const HANDLE_SIZE = 8
-
-type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
-const HANDLES: Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
+import {
+  HANDLES,
+  HANDLE_SIZE,
+  MIN_SIZE,
+  handlePos,
+  hitTest,
+  nearHandle,
+  pointFromClient,
+  resizeRect,
+} from '../editor/geometry'
+import type { Handle } from '../editor/geometry'
 
 type DragState =
   | { kind: 'draw'; startX: number; startY: number }
@@ -57,54 +62,6 @@ interface EditorProps {
   year: number
 }
 
-function hitTest(x: number, y: number, rect: { x: number; y: number; w: number; h: number }) {
-  return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h
-}
-
-function resizeRect(
-  orig: Pick<Bed, 'x' | 'y' | 'w' | 'h'>,
-  handle: Handle,
-  dx: number,
-  dy: number,
-): Pick<Bed, 'x' | 'y' | 'w' | 'h'> {
-  const dxs = snap(dx)
-  const dys = snap(dy)
-  let { x, y, w, h } = orig
-  if (handle.includes('e')) w = Math.max(MIN_SIZE, orig.w + dxs)
-  if (handle.includes('s')) h = Math.max(MIN_SIZE, orig.h + dys)
-  if (handle.includes('w')) {
-    w = Math.max(MIN_SIZE, orig.w - dxs)
-    x = orig.x + (orig.w - w)
-  }
-  if (handle.includes('n')) {
-    h = Math.max(MIN_SIZE, orig.h - dys)
-    y = orig.y + (orig.h - h)
-  }
-  return { x, y, w, h }
-}
-
-function handlePos(rect: Pick<Bed, 'x' | 'y' | 'w' | 'h'>, h: Handle) {
-  const cx = rect.x + rect.w / 2
-  const cy = rect.y + rect.h / 2
-  const xs = h.includes('e') ? rect.x + rect.w : h.includes('w') ? rect.x : cx
-  const ys = h.includes('s') ? rect.y + rect.h : h.includes('n') ? rect.y : cy
-  return { x: xs, y: ys }
-}
-
-function nearHandle(
-  x: number,
-  y: number,
-  rect: Pick<Bed, 'x' | 'y' | 'w' | 'h'>,
-): Handle | null {
-  for (const h of HANDLES) {
-    const p = handlePos(rect, h)
-    if (Math.abs(x - p.x) <= HANDLE_SIZE && Math.abs(y - p.y) <= HANDLE_SIZE) {
-      return h
-    }
-  }
-  return null
-}
-
 export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
   const state = useStoreState()
   const dispatch = useStoreDispatch()
@@ -128,16 +85,8 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
   const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
-  function getPoint(e: ReactPointerEvent<SVGSVGElement> | PointerEvent): { x: number; y: number } {
-    const svg = svgRef.current
-    if (!svg) return { x: 0, y: 0 }
-    const pt = new DOMPoint(e.clientX, e.clientY)
-    const ctm = svg.getScreenCTM()
-    if (ctm) {
-      const p = pt.matrixTransform(ctm.inverse())
-      return { x: p.x, y: p.y }
-    }
-    return { x: 0, y: 0 }
+  function getPoint(e: ReactPointerEvent<SVGSVGElement>) {
+    return pointFromClient(svgRef.current, e.clientX, e.clientY)
   }
 
   function handlePointerDown(e: ReactPointerEvent<SVGSVGElement>) {
