@@ -4,5 +4,15 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
+      "plugins": ["jest"],
+      "rules": {
+        "jest/no-focused-tests": "error",
+        "jest/no-disabled-tests": "error"
+      }
+    }
+  ]
 }
