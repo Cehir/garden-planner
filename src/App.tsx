@@ -10,6 +10,7 @@ import PlantLibrary from './components/PlantLibrary'
 import { buildPrintSvg, buildPrintLegend, buildPrintSeedBankHtml, escapeXml } from './printPlan'
 import { SEASON_LABELS } from './seasons'
 import { isMac } from './utils/platform'
+import { ACCENT_COLOR } from './palette'
 import './App.css'
 
 const PRINT_PAGE_W = 794
@@ -150,10 +151,10 @@ function GardenApp() {
   * { box-sizing: border-box; }
   body { margin: 24px; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: #3a362e; }
   header { margin-bottom: 16px; }
-  h1 { margin: 0 0 4px; font-size: 20px; color: #2f6f4f; }
+  h1 { margin: 0 0 4px; font-size: 20px; color: ${ACCENT_COLOR}; }
   .meta { margin: 0; color: #6b6357; font-size: 13px; }
   svg { display: block; max-width: 100%; border: 1px solid #e2dccc; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  h2 { margin: 18px 0 8px; font-size: 15px; color: #2f6f4f; }
+  h2 { margin: 18px 0 8px; font-size: 15px; color: ${ACCENT_COLOR}; }
   .plan-legend { page-break-inside: avoid; break-inside: avoid; }
   ul.legend { list-style: none; padding: 0; margin: 0; column-width: 120px; column-gap: 16px; }
   ul.legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; page-break-inside: avoid; break-inside: avoid; }

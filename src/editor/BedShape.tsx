@@ -1,4 +1,5 @@
 import type { Bed } from '../types'
+import { ACCENT_COLOR } from '../palette'
 
 // Ein Beet mit Namen; ausgewählt kräftiger umrandet
 
@@ -13,7 +14,7 @@ export default function BedShape({ bed, selected }: { bed: Bed; selected: boolea
         height={bed.h}
         fill={bed.color}
         fillOpacity={selected ? 0.55 : 0.35}
-        stroke={selected ? '#2f6f4f' : bed.color}
+        stroke={selected ? ACCENT_COLOR : bed.color}
         strokeWidth={selected ? 3 : 1.5}
         rx={3}
       />

@@ -20,6 +20,9 @@ export const PLANT_COLORS = [
   '#6fa3a8',
 ]
 
+/** App accent (dark green) for selection, handles and headings — keep in sync with App.css. */
+export const ACCENT_COLOR = '#2f6f4f'
+
 /** Default color for newly drawn beds — must stay inside BED_COLORS. */
 export const DEFAULT_BED_COLOR = BED_COLORS[0]
 

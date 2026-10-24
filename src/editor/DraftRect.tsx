@@ -1,5 +1,5 @@
 import type { Rect } from './geometry'
-import { DEFAULT_BED_COLOR } from '../palette'
+import { ACCENT_COLOR, DEFAULT_BED_COLOR } from '../palette'
 
 // Vorschau des Beets, das gerade aufgezogen wird
 export default function DraftRect({ rect }: { rect: Rect }) {
@@ -11,7 +11,7 @@ export default function DraftRect({ rect }: { rect: Rect }) {
       height={rect.h}
       fill={DEFAULT_BED_COLOR}
       fillOpacity={0.25}
-      stroke="#2f6f4f"
+      stroke={ACCENT_COLOR}
       strokeWidth={2}
       strokeDasharray="6 4"
     />

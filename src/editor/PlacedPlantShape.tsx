@@ -1,6 +1,7 @@
 import type { Bed, PlacedPlant, Plant } from '../types'
 import { placedCenter } from '../selectors'
 import { HANDLE_SIZE } from './geometry'
+import { ACCENT_COLOR } from '../palette'
 
 interface PlacedPlantShapeProps {
   placed: PlacedPlant
@@ -36,7 +37,7 @@ export default function PlacedPlantShape({
           cy={cy}
           r={r + 6}
           fill="none"
-          stroke="#2f6f4f"
+          stroke={ACCENT_COLOR}
           strokeWidth={3}
           strokeDasharray="4 3"
           pointerEvents="none"
@@ -67,7 +68,7 @@ export default function PlacedPlantShape({
           cy={cy}
           r={HANDLE_SIZE / 2}
           fill="#fff"
-          stroke="#2f6f4f"
+          stroke={ACCENT_COLOR}
           strokeWidth={2}
           className="resize-handle"
         />

@@ -1,5 +1,6 @@
 import type { Rect } from './geometry'
 import { HANDLES, HANDLE_SIZE, handlePos } from './geometry'
+import { ACCENT_COLOR } from '../palette'
 
 // Die acht Größen-Anfasser des ausgewählten Beets
 export default function BedHandles({ rect }: { rect: Rect }) {
@@ -15,7 +16,7 @@ export default function BedHandles({ rect }: { rect: Rect }) {
             width={HANDLE_SIZE}
             height={HANDLE_SIZE}
             fill="#fff"
-            stroke="#2f6f4f"
+            stroke={ACCENT_COLOR}
             strokeWidth={2}
             className="resize-handle"
           />
