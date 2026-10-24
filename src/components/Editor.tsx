@@ -98,8 +98,7 @@ export default function Editor({ tool, selected, onSelect, plantToPlace, zoom, s
                 plant={plant}
                 bed={bed}
                 selected={selectedPlaced?.id === p.id}
-                dimmed={inSeason === false}
-                highlighted={inSeason === true}
+                inSeason={inSeason}
                 conflicted={conflictedIds.has(p.id)}
                 showRotation={showRotation}
               />

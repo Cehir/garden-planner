@@ -7,8 +7,8 @@ interface PlacedPlantShapeProps {
   plant: Plant | undefined
   bed: Bed
   selected: boolean
-  dimmed: boolean
-  highlighted: boolean
+  // Passt die Pflanze zur gewählten Saison? null = kein Saisonfilter
+  inSeason: boolean | null
   conflicted: boolean
   showRotation: boolean
 }
@@ -19,8 +19,7 @@ export default function PlacedPlantShape({
   plant,
   bed,
   selected,
-  dimmed,
-  highlighted,
+  inSeason,
   conflicted,
   showRotation,
 }: PlacedPlantShapeProps) {
@@ -29,9 +28,9 @@ export default function PlacedPlantShape({
   return (
     <g
       className={selected ? 'plant selected' : 'plant'}
-      style={{ opacity: dimmed ? 0.3 : 1 }}
+      style={{ opacity: inSeason === false ? 0.3 : 1 }}
     >
-      {highlighted && (
+      {inSeason === true && (
         <circle
           cx={cx}
           cy={cy}
