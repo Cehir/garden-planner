@@ -1,22 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
-import type { Bed, PlacedPlant, Plant, Selected, Tool } from '../types'
+import type { Selected } from '../types'
 import { useHistory, useStoreDispatch } from '../storeContext'
 import { uid } from '../utils'
 import { DEFAULT_BED_COLOR } from '../palette'
 import { pointFromClient } from './geometry'
 import type { Rect } from './geometry'
 import { dragMove, pointerDownIntent } from './drag'
-import type { DragState } from './drag'
+import type { DragState, PointerDownContext } from './drag'
 
-interface EditorPointerOptions {
+interface EditorPointerOptions extends PointerDownContext {
   svgRef: RefObject<SVGSVGElement | null>
-  tool: Tool
-  beds: Bed[]
-  visiblePlaced: PlacedPlant[]
-  selectedBed: Bed | null
-  selectedPlaced: PlacedPlant | null
-  plantToPlace: Plant | null
   year: number
   onSelect: (sel: Selected | null) => void
 }
@@ -24,17 +18,7 @@ interface EditorPointerOptions {
 type SvgPointerEvent = ReactPointerEvent<SVGSVGElement>
 
 /** Zeigergesten des Editors: Beete aufziehen/verschieben/skalieren, Pflanzen setzen/ziehen. */
-export function useEditorPointer({
-  svgRef,
-  tool,
-  beds,
-  visiblePlaced,
-  selectedBed,
-  selectedPlaced,
-  plantToPlace,
-  year,
-  onSelect,
-}: EditorPointerOptions) {
+export function useEditorPointer({ svgRef, year, onSelect, ...ctx }: EditorPointerOptions) {
   const dispatch = useStoreDispatch()
   const { beginTransaction, commitTransaction } = useHistory()
   const dragRef = useRef<DragState | null>(null)
@@ -77,14 +61,7 @@ export function useEditorPointer({
     const point = getPoint(e)
     svg.setPointerCapture(e.pointerId)
 
-    const intent = pointerDownIntent(point, {
-      tool,
-      beds,
-      visiblePlaced,
-      selectedBed,
-      selectedPlaced,
-      plantToPlace,
-    })
+    const intent = pointerDownIntent(point, ctx)
     switch (intent.kind) {
       case 'drag':
         if (intent.select) onSelect(intent.select)
@@ -114,7 +91,7 @@ export function useEditorPointer({
   function onPointerMove(e: SvgPointerEvent) {
     const drag = dragRef.current
     if (!drag) return
-    const effect = dragMove(drag, getPoint(e), beds)
+    const effect = dragMove(drag, getPoint(e), ctx.beds)
     if (effect?.kind === 'draft') setDraft(effect.rect)
     else if (effect) dispatch(effect.action)
   }
@@ -129,7 +106,7 @@ export function useEditorPointer({
         type: 'addBed',
         bed: {
           id,
-          name: `Beet ${beds.length + 1}`,
+          name: `Beet ${ctx.beds.length + 1}`,
           x: draft.x,
           y: draft.y,
           w: draft.w,
