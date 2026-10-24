@@ -1,6 +1,6 @@
 import type { Bed, PlacedPlant, Plant, Point, Selected, Tool } from '../types'
 import type { Action } from '../reducer'
-import { bedsById, placedCenter, relativeInBed } from '../selectors'
+import { placedCenter, relativeInBed } from '../selectors'
 import { snap } from '../utils'
 import { MIN_SIZE, hitTest, nearHandle, resizeRect } from './geometry'
 import type { Handle, Rect } from './geometry'
@@ -37,6 +37,7 @@ const PLACED_MAX_SIZE = 200
 export interface PointerDownContext {
   tool: Tool
   beds: Bed[]
+  bedById: Map<string, Bed>
   visiblePlaced: PlacedPlant[]
   selectedBed: Bed | null
   selectedPlaced: PlacedPlant | null
@@ -55,8 +56,7 @@ function movePlacedDrag(p: PlacedPlant, point: Point): DragState {
 
 /** Entscheidet, was ein Klick an `point` auslöst (Reihenfolge = Priorität). */
 export function pointerDownIntent(point: Point, ctx: PointerDownContext): PointerDownIntent {
-  const { tool, beds, visiblePlaced, selectedBed, selectedPlaced, plantToPlace } = ctx
-  const bedById = bedsById(beds)
+  const { tool, beds, bedById, visiblePlaced, selectedBed, selectedPlaced, plantToPlace } = ctx
 
   if (tool === 'bed') {
     return { kind: 'drag', drag: { kind: 'draw', startX: point.x, startY: point.y } }
@@ -134,7 +134,7 @@ export function pointerDownIntent(point: Point, ctx: PointerDownContext): Pointe
 export type DragEffect = { kind: 'draft'; rect: Rect } | { kind: 'dispatch'; action: Action }
 
 /** Wirkung einer Zeigerbewegung während eines laufenden Drags. */
-export function dragMove(drag: DragState, point: Point, beds: Bed[]): DragEffect | null {
+export function dragMove(drag: DragState, point: Point, bedById: Map<string, Bed>): DragEffect | null {
   switch (drag.kind) {
     case 'draw': {
       const x = Math.min(drag.startX, point.x)
@@ -156,7 +156,7 @@ export function dragMove(drag: DragState, point: Point, beds: Bed[]): DragEffect
       return { kind: 'dispatch', action: { type: 'updateBed', id: drag.bedId, patch: rect } }
     }
     case 'movePlaced': {
-      const bed = beds.find((b) => b.id === drag.bedId)
+      const bed = bedById.get(drag.bedId)
       if (!bed) return null
       const absX = snap(drag.origX * bed.w + bed.x + (point.x - drag.startX))
       const absY = snap(drag.origY * bed.h + bed.y + (point.y - drag.startY))

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Bed, PlacedPlant } from '../types'
 import { DEFAULT_PLANTS } from '../plants'
+import { bedsById } from '../selectors'
 import { dragMove, pointerDownIntent } from './drag'
 import type { DragState, PointerDownContext } from './drag'
 
@@ -12,6 +13,7 @@ function ctx(over: Partial<PointerDownContext> = {}): PointerDownContext {
   return {
     tool: 'select',
     beds: [bed],
+    bedById: bedsById([bed]),
     visiblePlaced: [placed],
     selectedBed: null,
     selectedPlaced: null,
@@ -92,39 +94,40 @@ describe('pointerDownIntent', () => {
 })
 
 describe('dragMove', () => {
+  const bedById = bedsById([bed])
   it('Aufziehen liefert ein eingerastetes Entwurfsrechteck, mindestens MIN_SIZE', () => {
     const drag: DragState = { kind: 'draw', startX: 100, startY: 100 }
-    expect(dragMove(drag, { x: 52, y: 107 }, [])).toEqual({ kind: 'draft', rect: { x: 50, y: 100, w: 50, h: 20 } })
+    expect(dragMove(drag, { x: 52, y: 107 }, new Map())).toEqual({ kind: 'draft', rect: { x: 50, y: 100, w: 50, h: 20 } })
   })
   it('Größenänderung nach Osten um 30 vergrößert die Breite', () => {
     const drag: DragState = { kind: 'resizeBed', bedId: 'b1', handle: 'e', startX: 300, startY: 150, orig: bed }
-    expect(dragMove(drag, { x: 330, y: 150 }, [bed])).toEqual({
+    expect(dragMove(drag, { x: 330, y: 150 }, bedById)).toEqual({
       kind: 'dispatch',
       action: { type: 'updateBed', id: 'b1', patch: { x: 100, y: 100, w: 230, h: 100 } },
     })
   })
   it('Verschieben eines Beets rastet ein', () => {
     const drag: DragState = { kind: 'moveBed', bedId: 'b1', startX: 0, startY: 0, origX: 100, origY: 100 }
-    expect(dragMove(drag, { x: 23, y: -7 }, [bed])).toEqual({
+    expect(dragMove(drag, { x: 23, y: -7 }, bedById)).toEqual({
       kind: 'dispatch',
       action: { type: 'updateBed', id: 'b1', patch: { x: 120, y: 90 } },
     })
   })
   it('Verschieben einer Pflanze begrenzt die relativen Koordinaten auf [0,1]', () => {
     const drag: DragState = { kind: 'movePlaced', id: 'p1', bedId: 'b1', startX: 200, startY: 150, origX: 0.5, origY: 0.5 }
-    expect(dragMove(drag, { x: 1000, y: -1000 }, [bed])).toEqual({
+    expect(dragMove(drag, { x: 1000, y: -1000 }, bedById)).toEqual({
       kind: 'dispatch',
       action: { type: 'updatePlacedPlant', id: 'p1', patch: { x: 1, y: 0 } },
     })
   })
   it('Verschieben einer Pflanze ohne Beet bewirkt nichts', () => {
     const drag: DragState = { kind: 'movePlaced', id: 'p1', bedId: 'weg', startX: 0, startY: 0, origX: 0, origY: 0 }
-    expect(dragMove(drag, { x: 10, y: 10 }, [bed])).toBeNull()
+    expect(dragMove(drag, { x: 10, y: 10 }, bedById)).toBeNull()
   })
   it('Größenänderung einer Pflanze ist auf 10–200 begrenzt', () => {
     const drag: DragState = { kind: 'resizePlaced', id: 'p1', centerX: 0, centerY: 0, startX: 0, startY: 0, origSize: 40 }
-    expect(dragMove(drag, { x: 1, y: 0 }, [])).toMatchObject({ action: { patch: { size: 10 } } })
-    expect(dragMove(drag, { x: 500, y: 0 }, [])).toMatchObject({ action: { patch: { size: 200 } } })
-    expect(dragMove(drag, { x: 31, y: 0 }, [])).toMatchObject({ action: { patch: { size: 60 } } })
+    expect(dragMove(drag, { x: 1, y: 0 }, new Map())).toMatchObject({ action: { patch: { size: 10 } } })
+    expect(dragMove(drag, { x: 500, y: 0 }, new Map())).toMatchObject({ action: { patch: { size: 200 } } })
+    expect(dragMove(drag, { x: 31, y: 0 }, new Map())).toMatchObject({ action: { patch: { size: 60 } } })
   })
 })

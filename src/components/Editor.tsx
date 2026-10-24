@@ -32,12 +32,12 @@ export default function Editor({ tool, selected, onSelect, plantToPlace, zoom, s
 
   const visiblePlaced = useMemo(() => placedInYear(placedPlants, year), [placedPlants, year])
 
-  const selectedBed: Bed | null =
-    selected?.kind === 'bed' ? beds.find((b) => b.id === selected.id) ?? null : null
-  const selectedPlaced: PlacedPlant | null =
-    selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
   const plantById = useMemo(() => plantsById(plants), [plants])
   const bedById = useMemo(() => bedsById(beds), [beds])
+  const selectedBed: Bed | null =
+    selected?.kind === 'bed' ? bedById.get(selected.id) ?? null : null
+  const selectedPlaced: PlacedPlant | null =
+    selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
   const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
@@ -45,6 +45,7 @@ export default function Editor({ tool, selected, onSelect, plantToPlace, zoom, s
     svgRef,
     tool,
     beds,
+    bedById,
     visiblePlaced,
     selectedBed,
     selectedPlaced,

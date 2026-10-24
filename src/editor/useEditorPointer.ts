@@ -91,7 +91,7 @@ export function useEditorPointer({ svgRef, year, onSelect, ...ctx }: EditorPoint
   function onPointerMove(e: SvgPointerEvent) {
     const drag = dragRef.current
     if (!drag) return
-    const effect = dragMove(drag, getPoint(e), ctx.beds)
+    const effect = dragMove(drag, getPoint(e), ctx.bedById)
     if (effect?.kind === 'draft') setDraft(effect.rect)
     else if (effect) dispatch(effect.action)
   }
