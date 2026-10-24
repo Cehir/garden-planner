@@ -1,4 +1,4 @@
-import type { Bed } from '../types'
+import type { Bed, Point } from '../types'
 import { snap } from '../utils'
 
 export const MIN_SIZE = 20
@@ -52,7 +52,7 @@ export function pointFromClient(
   svg: SVGSVGElement | null,
   clientX: number,
   clientY: number,
-): { x: number; y: number } {
+): Point {
   if (!svg) return { x: 0, y: 0 }
   const ctm = svg.getScreenCTM()
   if (!ctm) return { x: 0, y: 0 }

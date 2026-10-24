@@ -1,11 +1,9 @@
-import type { Bed, PlacedPlant, Plant, Selected, Tool } from '../types'
+import type { Bed, PlacedPlant, Plant, Point, Selected, Tool } from '../types'
 import type { Action } from '../reducer'
 import { bedsById, placedCenter } from '../selectors'
 import { snap } from '../utils'
 import { MIN_SIZE, hitTest, nearHandle, resizeRect } from './geometry'
 import type { Handle, Rect } from './geometry'
-
-type Point = { x: number; y: number }
 
 export type DragState =
   | { kind: 'draw'; startX: number; startY: number }

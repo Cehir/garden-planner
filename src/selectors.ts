@@ -1,4 +1,4 @@
-import type { Bed, PlacedPlant, Plant } from './types'
+import type { Bed, PlacedPlant, Plant, Point } from './types'
 
 /** O(1) lookup of plants by id — the single source used everywhere. */
 export function plantsById(plants: Plant[]): Map<string, Plant> {
@@ -11,6 +11,6 @@ export function bedsById(beds: Bed[]): Map<string, Bed> {
 }
 
 /** Absolute garden-space center of a placed plant (bed origin + relative offset). */
-export function placedCenter(placed: PlacedPlant, bed: Bed): { x: number; y: number } {
+export function placedCenter(placed: PlacedPlant, bed: Bed): Point {
   return { x: bed.x + placed.x * bed.w, y: bed.y + placed.y * bed.h }
 }
