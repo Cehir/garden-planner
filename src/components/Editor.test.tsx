@@ -33,7 +33,7 @@ function renderEditor(props: Partial<ComponentProps<typeof Editor>> = {}) {
         tool="select"
         selected={null}
         onSelect={() => {}}
-        placedPlant={null}
+        plantToPlace={null}
         zoom={1}
         season="all"
         phase="plant"
@@ -98,7 +98,7 @@ describe('Editor', () => {
 
   it('Pflanzen-Werkzeug setzt die gewählte Pflanze ins Beet', () => {
     const plant = createDefaultState().plants[0]
-    const { svg, state } = renderEditor({ tool: 'plant', placedPlant: plant })
+    const { svg, state } = renderEditor({ tool: 'plant', plantToPlace: plant })
     fireEvent.pointerDown(svg, { button: 0, pointerId: 1, clientX: 150, clientY: 125 })
     expect(state().placedPlants[1]).toMatchObject({
       bedId: 'b1',
@@ -161,7 +161,7 @@ describe('Editor: Undo beim Ziehen', () => {
               tool="select"
               selected={null}
               onSelect={() => {}}
-              placedPlant={null}
+              plantToPlace={null}
               zoom={1}
               season="all"
               phase="plant"
@@ -200,7 +200,7 @@ describe('Editor: Ziehgesten-Transaktion', () => {
           tool="bed"
           selected={null}
           onSelect={() => {}}
-          placedPlant={null}
+          plantToPlace={null}
           zoom={1}
           season="all"
           phase="plant"

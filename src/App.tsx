@@ -21,7 +21,7 @@ function GardenApp() {
   const { state, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tool, setTool] = useState<Tool>('select')
   const [selected, setSelected] = useState<Selected | null>(null)
-  const [placedPlant, setPlacedPlant] = useState<Plant | null>(null)
+  const [plantToPlace, setPlantToPlace] = useState<Plant | null>(null)
   const [userZoom, setUserZoom] = useState<number | null>(null)
   const [season, setSeason] = useState<Season>('all')
   const [phase, setPhase] = useState<Phase>('plant')
@@ -79,7 +79,7 @@ function GardenApp() {
         }
       } else if (e.key === 'Escape') {
         setSelected(null)
-        setPlacedPlant(null)
+        setPlantToPlace(null)
         setTool('select')
       } else if (e.key === 'v' || e.key === 'V') {
         setTool('select')
@@ -98,14 +98,14 @@ function GardenApp() {
   function setToolSafe(t: Tool) {
     setTool(t)
     if (t !== 'plant') {
-      setPlacedPlant(null)
+      setPlantToPlace(null)
     }
   }
 
   // Issue #1: picking a plant in the library should immediately arm the plant
   // tool, so the "click to place" hint is truthful from the first click.
   function handlePick(plant: Plant | null) {
-    setPlacedPlant(plant)
+    setPlantToPlace(plant)
     if (plant) {
       setTool('plant')
     }
@@ -219,7 +219,7 @@ ${seedBankHtml}
         }
         dispatch({ type: 'load', state: { ...createDefaultState(), ...parsed } })
         setSelected(null)
-        setPlacedPlant(null)
+        setPlantToPlace(null)
         setUserZoom(null)
         setTool('select')
       } catch {
@@ -233,7 +233,7 @@ ${seedBankHtml}
     if (window.confirm('Wirklich alles zurücksetzen? Alle Beete und Pflanzen werden gelöscht.')) {
       dispatch({ type: 'load', state: createDefaultState() })
       setSelected(null)
-      setPlacedPlant(null)
+      setPlantToPlace(null)
       setUserZoom(null)
       setTool('select')
     }
@@ -287,7 +287,7 @@ ${seedBankHtml}
           tool={tool}
           selected={selected}
           onSelect={setSelected}
-          placedPlant={placedPlant}
+          plantToPlace={plantToPlace}
           zoom={zoom}
           season={season}
           phase={phase}
@@ -300,7 +300,7 @@ ${seedBankHtml}
             onClick={(e) => { if (e.target === e.currentTarget) setMobileSidebar(null); }}
           >
             <button className="close-btn" onClick={() => setMobileSidebar(null)}>✕</button>
-            <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
+            <PlantLibrary plantToPlace={plantToPlace} onPick={handlePick} tool={tool} />
           </div>
         )}
         {mobileSidebar === 'details' && (
@@ -312,14 +312,14 @@ ${seedBankHtml}
             <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
           </div>
         )}
-        <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
+        <PlantLibrary plantToPlace={plantToPlace} onPick={handlePick} tool={tool} />
         <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
       </div>
       <footer className="statusbar">
         {tool === 'bed' && <span>Ziehe mit der Maus, um ein Beet aufzuzeichnen.</span>}
         {tool === 'plant' &&
-          (placedPlant
-            ? <span>Klicke in ein Beet, um „{placedPlant.name}“ zu platzieren.</span>
+          (plantToPlace
+            ? <span>Klicke in ein Beet, um „{plantToPlace.name}“ zu platzieren.</span>
             : <span>Wähle links in der Bibliothek eine Pflanze aus.</span>)}
         {tool === 'select' && <span>Auswählen &amp; Verschieben · Beete an den Ecken skalieren · Entf zum Löschen.</span>}
         <span className="keys">Tasten: V · B · P · F · Esc · {isMac ? '⌘Z' : 'Ctrl+Z'} · {isMac ? '⇧⌘Z' : 'Shift+Ctrl+Z'}</span>

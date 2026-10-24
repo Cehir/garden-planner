@@ -285,12 +285,12 @@ function PlantForm({ plant, onSave, onCancel, onDelete, mode }: PlantFormProps) 
 // ─── PlantsPanel ────────────────────────────────────────────────────────
 
 interface PlantsPanelProps {
-  placedPlant: Plant | null
+  plantToPlace: Plant | null
   onPick: (plant: Plant | null) => void
   tool: 'select' | 'bed' | 'plant'
 }
 
-function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
+function PlantsPanel({ plantToPlace, onPick }: PlantsPanelProps) {
   const state = useStoreState()
   const dispatch = useStoreDispatch()
   const [filter, setFilter] = useState('')
@@ -333,7 +333,7 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
       <div className="plant-list">
         {filtered.map((p) => {
           const seedCount = seedCounts.get(p.id) ?? 0
-          const active = placedPlant?.id === p.id
+          const active = plantToPlace?.id === p.id
           return (
             <div
               key={p.id}
@@ -451,9 +451,9 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
         </button>
       )}
 
-      {placedPlant && (
+      {plantToPlace && (
         <p className="hint active-hint">
-          „{placedPlant.name}" ausgewählt – klicke in den Plan, um sie in ein Beet zu setzen.
+          „{plantToPlace.name}" ausgewählt – klicke in den Plan, um sie in ein Beet zu setzen.
         </p>
       )}
     </>
@@ -465,7 +465,7 @@ function PlantsPanel({ placedPlant, onPick }: PlantsPanelProps) {
 type Tab = 'plants' | 'seeds'
 
 interface PlantLibraryProps {
-  placedPlant: Plant | null
+  plantToPlace: Plant | null
   onPick: (plant: Plant | null) => void
   tool: 'select' | 'bed' | 'plant'
 }

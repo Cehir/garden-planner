@@ -16,7 +16,7 @@ interface EditorPointerOptions {
   visiblePlaced: PlacedPlant[]
   selectedBed: Bed | null
   selectedPlaced: PlacedPlant | null
-  placedPlant: Plant | null
+  plantToPlace: Plant | null
   year: number
   onSelect: (sel: Selected | null) => void
 }
@@ -31,7 +31,7 @@ export function useEditorPointer({
   visiblePlaced,
   selectedBed,
   selectedPlaced,
-  placedPlant,
+  plantToPlace,
   year,
   onSelect,
 }: EditorPointerOptions) {
@@ -83,7 +83,7 @@ export function useEditorPointer({
       visiblePlaced,
       selectedBed,
       selectedPlaced,
-      plantToPlace: placedPlant,
+      plantToPlace,
     })
     switch (intent.kind) {
       case 'drag':

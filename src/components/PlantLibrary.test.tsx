@@ -24,7 +24,7 @@ beforeEach(() => {
 function renderLibrary() {
   return render(
     <StoreProvider>
-      <PlantLibrary placedPlant={null} onPick={vi.fn()} tool="select" />
+      <PlantLibrary plantToPlace={null} onPick={vi.fn()} tool="select" />
     </StoreProvider>,
   )
 }
@@ -84,7 +84,7 @@ describe('PlantLibrary – "Jetzt pflanzbar"-Filter', () => {
     const onPick = vi.fn()
     render(
       <StoreProvider>
-        <PlantLibrary placedPlant={null} onPick={onPick} tool="select" />
+        <PlantLibrary plantToPlace={null} onPick={onPick} tool="select" />
       </StoreProvider>,
     )
     const first = DEFAULT_PLANTS[0]

@@ -18,7 +18,7 @@ interface EditorProps {
   tool: Tool
   selected: Selected | null
   onSelect: (sel: Selected | null) => void
-  placedPlant: Plant | null
+  plantToPlace: Plant | null
   zoom: number
   season: Season
   phase: Phase
@@ -26,7 +26,7 @@ interface EditorProps {
   year: number
 }
 
-export default function Editor({ tool, selected, onSelect, placedPlant, zoom, season, phase, showRotation, year }: EditorProps) {
+export default function Editor({ tool, selected, onSelect, plantToPlace, zoom, season, phase, showRotation, year }: EditorProps) {
   const { garden, beds, plants, placedPlants } = useStoreState()
   const svgRef = useRef<SVGSVGElement>(null)
 
@@ -48,7 +48,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
     visiblePlaced,
     selectedBed,
     selectedPlaced,
-    placedPlant,
+    plantToPlace,
     year,
     onSelect,
   })
