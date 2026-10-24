@@ -28,7 +28,7 @@ describe('pointerDownIntent', () => {
   it('Beet-Werkzeug startet immer ein Aufziehen', () => {
     expect(pointerDownIntent({ x: 5, y: 5 }, ctx({ tool: 'bed' }))).toEqual({
       kind: 'drag',
-      drag: { kind: 'draw', startX: 5, startY: 5 },
+      drag: { kind: 'draw', start: { x: 5, y: 5 } },
     })
   })
   it('Klick auf eine Pflanze wählt sie aus und startet das Verschieben', () => {
@@ -37,15 +37,14 @@ describe('pointerDownIntent', () => {
   })
   it('Anfasser der ausgewählten Pflanze startet die Größenänderung', () => {
     const r = pointerDownIntent({ x: 220, y: 150 }, ctx({ selectedPlaced: placed }))
-    expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'resizePlaced', id: 'p1', centerX: 200, centerY: 150, origSize: 40 } })
+    expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'resizePlaced', id: 'p1', center: { x: 200, y: 150 }, origSize: 40 } })
   })
   it('Pflanzen-Werkzeug setzt relativ zum Beet', () => {
     expect(pointerDownIntent({ x: 150, y: 125 }, ctx({ tool: 'plant', plantToPlace: plant }))).toEqual({
       kind: 'place',
       plant,
       bed,
-      relX: 0.25,
-      relY: 0.25,
+      rel: { x: 0.25, y: 0.25 },
     })
   })
   it('Pflanzen-Werkzeug ohne gewählte Pflanze oder außerhalb eines Beets tut nichts', () => {
@@ -58,7 +57,7 @@ describe('pointerDownIntent', () => {
   })
   it('Klick ins Beet wählt es aus und startet das Verschieben', () => {
     const r = pointerDownIntent({ x: 110, y: 110 }, ctx())
-    expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'moveBed', bedId: 'b1', origX: 100, origY: 100 }, select: { kind: 'bed', id: 'b1' } })
+    expect(r).toMatchObject({ kind: 'drag', drag: { kind: 'moveBed', bedId: 'b1', orig: { x: 100, y: 100 } }, select: { kind: 'bed', id: 'b1' } })
   })
   it('Klick ins Leere hebt die Auswahl auf', () => {
     expect(pointerDownIntent({ x: 10, y: 10 }, ctx()).kind).toBe('deselect')
@@ -96,36 +95,36 @@ describe('pointerDownIntent', () => {
 describe('dragMove', () => {
   const bedById = bedsById([bed])
   it('Aufziehen liefert ein eingerastetes Entwurfsrechteck, mindestens MIN_SIZE', () => {
-    const drag: DragState = { kind: 'draw', startX: 100, startY: 100 }
+    const drag: DragState = { kind: 'draw', start: { x: 100, y: 100 } }
     expect(dragMove(drag, { x: 52, y: 107 }, new Map())).toEqual({ kind: 'draft', rect: { x: 50, y: 100, w: 50, h: 20 } })
   })
   it('Größenänderung nach Osten um 30 vergrößert die Breite', () => {
-    const drag: DragState = { kind: 'resizeBed', bedId: 'b1', handle: 'e', startX: 300, startY: 150, orig: bed }
+    const drag: DragState = { kind: 'resizeBed', bedId: 'b1', handle: 'e', start: { x: 300, y: 150 }, orig: bed }
     expect(dragMove(drag, { x: 330, y: 150 }, bedById)).toEqual({
       kind: 'dispatch',
       action: { type: 'updateBed', id: 'b1', patch: { x: 100, y: 100, w: 230, h: 100 } },
     })
   })
   it('Verschieben eines Beets rastet ein', () => {
-    const drag: DragState = { kind: 'moveBed', bedId: 'b1', startX: 0, startY: 0, origX: 100, origY: 100 }
+    const drag: DragState = { kind: 'moveBed', bedId: 'b1', start: { x: 0, y: 0 }, orig: { x: 100, y: 100 } }
     expect(dragMove(drag, { x: 23, y: -7 }, bedById)).toEqual({
       kind: 'dispatch',
       action: { type: 'updateBed', id: 'b1', patch: { x: 120, y: 90 } },
     })
   })
   it('Verschieben einer Pflanze begrenzt die relativen Koordinaten auf [0,1]', () => {
-    const drag: DragState = { kind: 'movePlaced', id: 'p1', bedId: 'b1', startX: 200, startY: 150, origX: 0.5, origY: 0.5 }
+    const drag: DragState = { kind: 'movePlaced', id: 'p1', bedId: 'b1', start: { x: 200, y: 150 }, orig: { x: 0.5, y: 0.5 } }
     expect(dragMove(drag, { x: 1000, y: -1000 }, bedById)).toEqual({
       kind: 'dispatch',
       action: { type: 'updatePlacedPlant', id: 'p1', patch: { x: 1, y: 0 } },
     })
   })
   it('Verschieben einer Pflanze ohne Beet bewirkt nichts', () => {
-    const drag: DragState = { kind: 'movePlaced', id: 'p1', bedId: 'weg', startX: 0, startY: 0, origX: 0, origY: 0 }
+    const drag: DragState = { kind: 'movePlaced', id: 'p1', bedId: 'weg', start: { x: 0, y: 0 }, orig: { x: 0, y: 0 } }
     expect(dragMove(drag, { x: 10, y: 10 }, bedById)).toBeNull()
   })
   it('Größenänderung einer Pflanze ist auf 10–200 begrenzt', () => {
-    const drag: DragState = { kind: 'resizePlaced', id: 'p1', centerX: 0, centerY: 0, startX: 0, startY: 0, origSize: 40 }
+    const drag: DragState = { kind: 'resizePlaced', id: 'p1', center: { x: 0, y: 0 }, start: { x: 0, y: 0 }, origSize: 40 }
     expect(dragMove(drag, { x: 1, y: 0 }, new Map())).toMatchObject({ action: { patch: { size: 10 } } })
     expect(dragMove(drag, { x: 500, y: 0 }, new Map())).toMatchObject({ action: { patch: { size: 200 } } })
     expect(dragMove(drag, { x: 31, y: 0 }, new Map())).toMatchObject({ action: { patch: { size: 60 } } })

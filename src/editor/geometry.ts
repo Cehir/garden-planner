@@ -8,7 +8,7 @@ export type Rect = Pick<Bed, 'x' | 'y' | 'w' | 'h'>
 export type Handle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 export const HANDLES: Handle[] = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
 
-export function hitTest(x: number, y: number, rect: Rect) {
+export function hitTest({ x, y }: Point, rect: Rect) {
   return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h
 }
 
@@ -37,7 +37,7 @@ export function handlePos(rect: Rect, h: Handle) {
   return { x: xs, y: ys }
 }
 
-export function nearHandle(x: number, y: number, rect: Rect): Handle | null {
+export function nearHandle({ x, y }: Point, rect: Rect): Handle | null {
   for (const h of HANDLES) {
     const p = handlePos(rect, h)
     if (Math.abs(x - p.x) <= HANDLE_SIZE && Math.abs(y - p.y) <= HANDLE_SIZE) {

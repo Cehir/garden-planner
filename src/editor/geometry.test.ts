@@ -38,9 +38,9 @@ describe('resizeRect', () => {
 
 describe('hitTest', () => {
   it('true innerhalb und auf dem Rand, false außerhalb', () => {
-    expect(hitTest(50, 30, orig)).toBe(true)
-    expect(hitTest(110, 70, orig)).toBe(true)
-    expect(hitTest(200, 30, orig)).toBe(false)
+    expect(hitTest({ x: 50, y: 30 }, orig)).toBe(true)
+    expect(hitTest({ x: 110, y: 70 }, orig)).toBe(true)
+    expect(hitTest({ x: 200, y: 30 }, orig)).toBe(false)
   })
 })
 
@@ -55,17 +55,17 @@ describe('handlePos', () => {
 
 describe('nearHandle', () => {
   it('findet den Anfasser innerhalb von HANDLE_SIZE', () => {
-    expect(nearHandle(110 + HANDLE_SIZE, 45, orig)).toBe('e')
-    expect(nearHandle(12, 22, orig)).toBe('nw')
+    expect(nearHandle({ x: 110 + HANDLE_SIZE, y: 45 }, orig)).toBe('e')
+    expect(nearHandle({ x: 12, y: 22 }, orig)).toBe('nw')
   })
   it('null außerhalb der Anfasser', () => {
-    expect(nearHandle(60, 45, orig)).toBeNull()
+    expect(nearHandle({ x: 60, y: 45 }, orig)).toBeNull()
   })
   it('kennt alle acht Anfasser', () => {
     expect(HANDLES).toHaveLength(8)
     for (const h of HANDLES) {
       const p = handlePos(orig, h)
-      expect(nearHandle(p.x, p.y, orig)).toBe(h)
+      expect(nearHandle(p, orig)).toBe(h)
     }
   })
 })
