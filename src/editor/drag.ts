@@ -1,6 +1,6 @@
 import type { Bed, PlacedPlant, Plant, Point, Selected, Tool } from '../types'
 import type { Action } from '../reducer'
-import { bedsById, placedCenter } from '../selectors'
+import { bedsById, placedCenter, relativeInBed } from '../selectors'
 import { snap } from '../utils'
 import { MIN_SIZE, hitTest, nearHandle, resizeRect } from './geometry'
 import type { Handle, Rect } from './geometry'
@@ -30,6 +30,9 @@ export type DragState =
 
 // Abstand (cm) zum Größen-Anfasser rechts an einer Pflanze
 const PLACED_HANDLE_RADIUS = 10
+// Grenzen (cm) für den Durchmesser einer gesetzten Pflanze beim Skalieren
+const PLACED_MIN_SIZE = 10
+const PLACED_MAX_SIZE = 200
 
 export interface PointerDownContext {
   tool: Tool
@@ -60,9 +63,9 @@ export function pointerDownIntent(point: Point, ctx: PointerDownContext): Pointe
   }
 
   if (selectedPlaced) {
-    const sbed = bedById.get(selectedPlaced.bedId)
-    if (sbed) {
-      const { x: cx, y: cy } = placedCenter(selectedPlaced, sbed)
+    const placedBed = bedById.get(selectedPlaced.bedId)
+    if (placedBed) {
+      const { x: cx, y: cy } = placedCenter(selectedPlaced, placedBed)
       if (Math.hypot(point.x - (cx + selectedPlaced.size / 2), point.y - cy) <= PLACED_HANDLE_RADIUS) {
         return {
           kind: 'drag',
@@ -94,9 +97,8 @@ export function pointerDownIntent(point: Point, ctx: PointerDownContext): Pointe
     if (!plant) return { kind: 'none' }
     const bed = beds.find((b) => hitTest(point.x, point.y, b))
     if (!bed) return { kind: 'none' }
-    const relX = Math.min(1, Math.max(0, (point.x - bed.x) / bed.w))
-    const relY = Math.min(1, Math.max(0, (point.y - bed.y) / bed.h))
-    return { kind: 'place', plant, bed, relX, relY }
+    const rel = relativeInBed(point, bed)
+    return { kind: 'place', plant, bed, relX: rel.x, relY: rel.y }
   }
 
   // Auswahl-Werkzeug
@@ -159,13 +161,12 @@ export function dragMove(drag: DragState, point: Point, beds: Bed[]): DragEffect
       if (!bed) return null
       const absX = snap(drag.origX * bed.w + bed.x + (point.x - drag.startX))
       const absY = snap(drag.origY * bed.h + bed.y + (point.y - drag.startY))
-      const relX = Math.min(1, Math.max(0, (absX - bed.x) / bed.w))
-      const relY = Math.min(1, Math.max(0, (absY - bed.y) / bed.h))
-      return { kind: 'dispatch', action: { type: 'updatePlacedPlant', id: drag.id, patch: { x: relX, y: relY } } }
+      const rel = relativeInBed({ x: absX, y: absY }, bed)
+      return { kind: 'dispatch', action: { type: 'updatePlacedPlant', id: drag.id, patch: rel } }
     }
     case 'resizePlaced': {
       const dist = Math.hypot(point.x - drag.centerX, point.y - drag.centerY)
-      const size = Math.min(200, Math.max(10, snap(dist * 2, 5)))
+      const size = Math.min(PLACED_MAX_SIZE, Math.max(PLACED_MIN_SIZE, snap(dist * 2, 5)))
       return { kind: 'dispatch', action: { type: 'updatePlacedPlant', id: drag.id, patch: { size } } }
     }
   }

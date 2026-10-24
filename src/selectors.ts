@@ -14,3 +14,11 @@ export function bedsById(beds: Bed[]): Map<string, Bed> {
 export function placedCenter(placed: PlacedPlant, bed: Bed): Point {
   return { x: bed.x + placed.x * bed.w, y: bed.y + placed.y * bed.h }
 }
+
+/** Inverse of placedCenter: bed-relative (0–1) position of a garden point, clamped to the bed. */
+export function relativeInBed(point: Point, bed: Bed): Point {
+  return {
+    x: Math.min(1, Math.max(0, (point.x - bed.x) / bed.w)),
+    y: Math.min(1, Math.max(0, (point.y - bed.y) / bed.h)),
+  }
+}

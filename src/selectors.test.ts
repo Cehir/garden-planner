@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bedsById, plantsById, placedCenter } from './selectors'
+import { bedsById, plantsById, placedCenter, relativeInBed } from './selectors'
 import type { Bed, PlacedPlant, Plant } from './types'
 
 function plant(id: string): Plant {
@@ -50,5 +50,15 @@ describe('placedCenter', () => {
     // bed at (10,20) 100x50, plant at rel (0.5, 0.5)
     const c = placedCenter(placed(0.5, 0.5), bed(10, 20, 100, 50))
     expect(c).toEqual({ x: 60, y: 45 })
+  })
+})
+
+describe('relativeInBed', () => {
+  it('is the inverse of placedCenter', () => {
+    expect(relativeInBed({ x: 60, y: 45 }, bed(10, 20, 100, 50))).toEqual({ x: 0.5, y: 0.5 })
+  })
+
+  it('clamps points outside the bed to 0..1', () => {
+    expect(relativeInBed({ x: 0, y: 200 }, bed(10, 20, 100, 50))).toEqual({ x: 0, y: 1 })
   })
 })
