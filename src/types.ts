@@ -4,6 +4,12 @@ export interface Garden {
   height: number
 }
 
+// Punkt im Garten-Koordinatensystem (cm)
+export interface Point {
+  x: number
+  y: number
+}
+
 export interface Bed {
   id: string
   name: string

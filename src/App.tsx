@@ -10,6 +10,7 @@ import PlantLibrary from './components/PlantLibrary'
 import { buildPrintSvg, buildPrintLegend, buildPrintSeedBankHtml, escapeXml } from './printPlan'
 import { SEASON_LABELS } from './seasons'
 import { isMac } from './utils/platform'
+import { ACCENT_COLOR, INK_COLOR } from './palette'
 import './App.css'
 
 const PRINT_PAGE_W = 794
@@ -21,7 +22,7 @@ function GardenApp() {
   const { state, dispatch, undo, redo, canUndo, canRedo } = useStore()
   const [tool, setTool] = useState<Tool>('select')
   const [selected, setSelected] = useState<Selected | null>(null)
-  const [placedPlant, setPlacedPlant] = useState<Plant | null>(null)
+  const [plantToPlace, setPlantToPlace] = useState<Plant | null>(null)
   const [userZoom, setUserZoom] = useState<number | null>(null)
   const [season, setSeason] = useState<Season>('all')
   const [phase, setPhase] = useState<Phase>('plant')
@@ -79,7 +80,7 @@ function GardenApp() {
         }
       } else if (e.key === 'Escape') {
         setSelected(null)
-        setPlacedPlant(null)
+        setPlantToPlace(null)
         setTool('select')
       } else if (e.key === 'v' || e.key === 'V') {
         setTool('select')
@@ -98,14 +99,14 @@ function GardenApp() {
   function setToolSafe(t: Tool) {
     setTool(t)
     if (t !== 'plant') {
-      setPlacedPlant(null)
+      setPlantToPlace(null)
     }
   }
 
   // Issue #1: picking a plant in the library should immediately arm the plant
   // tool, so the "click to place" hint is truthful from the first click.
   function handlePick(plant: Plant | null) {
-    setPlacedPlant(plant)
+    setPlantToPlace(plant)
     if (plant) {
       setTool('plant')
     }
@@ -148,12 +149,12 @@ function GardenApp() {
 <title>${escapeXml(title)}</title>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 24px; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: #3a362e; }
+  body { margin: 24px; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: ${INK_COLOR}; }
   header { margin-bottom: 16px; }
-  h1 { margin: 0 0 4px; font-size: 20px; color: #2f6f4f; }
+  h1 { margin: 0 0 4px; font-size: 20px; color: ${ACCENT_COLOR}; }
   .meta { margin: 0; color: #6b6357; font-size: 13px; }
   svg { display: block; max-width: 100%; border: 1px solid #e2dccc; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-  h2 { margin: 18px 0 8px; font-size: 15px; color: #2f6f4f; }
+  h2 { margin: 18px 0 8px; font-size: 15px; color: ${ACCENT_COLOR}; }
   .plan-legend { page-break-inside: avoid; break-inside: avoid; }
   ul.legend { list-style: none; padding: 0; margin: 0; column-width: 120px; column-gap: 16px; }
   ul.legend li { display: flex; align-items: center; gap: 8px; font-size: 13px; page-break-inside: avoid; break-inside: avoid; }
@@ -162,7 +163,7 @@ function GardenApp() {
   .muted { color: #8a8172; font-style: italic; }
   .seedbank { margin-top: 24px; page-break-before: always; break-before: page; }
   .seed-group { margin: 0 0 14px; }
-  .seed-group h3 { margin: 0 0 6px; font-size: 14px; color: #3a362e; }
+  .seed-group h3 { margin: 0 0 6px; font-size: 14px; color: ${INK_COLOR}; }
   .seed-emoji { font-size: 18px; margin-right: 8px; }
   table.seed-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   table.seed-table th, table.seed-table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #e2dccc; }
@@ -219,7 +220,7 @@ ${seedBankHtml}
         }
         dispatch({ type: 'load', state: { ...createDefaultState(), ...parsed } })
         setSelected(null)
-        setPlacedPlant(null)
+        setPlantToPlace(null)
         setUserZoom(null)
         setTool('select')
       } catch {
@@ -233,7 +234,7 @@ ${seedBankHtml}
     if (window.confirm('Wirklich alles zurücksetzen? Alle Beete und Pflanzen werden gelöscht.')) {
       dispatch({ type: 'load', state: createDefaultState() })
       setSelected(null)
-      setPlacedPlant(null)
+      setPlantToPlace(null)
       setUserZoom(null)
       setTool('select')
     }
@@ -287,7 +288,7 @@ ${seedBankHtml}
           tool={tool}
           selected={selected}
           onSelect={setSelected}
-          placedPlant={placedPlant}
+          plantToPlace={plantToPlace}
           zoom={zoom}
           season={season}
           phase={phase}
@@ -300,7 +301,7 @@ ${seedBankHtml}
             onClick={(e) => { if (e.target === e.currentTarget) setMobileSidebar(null); }}
           >
             <button className="close-btn" onClick={() => setMobileSidebar(null)}>✕</button>
-            <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
+            <PlantLibrary plantToPlace={plantToPlace} onPick={handlePick} tool={tool} />
           </div>
         )}
         {mobileSidebar === 'details' && (
@@ -312,14 +313,14 @@ ${seedBankHtml}
             <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
           </div>
         )}
-        <PlantLibrary placedPlant={placedPlant} onPick={handlePick} tool={tool} />
+        <PlantLibrary plantToPlace={plantToPlace} onPick={handlePick} tool={tool} />
         <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
       </div>
       <footer className="statusbar">
         {tool === 'bed' && <span>Ziehe mit der Maus, um ein Beet aufzuzeichnen.</span>}
         {tool === 'plant' &&
-          (placedPlant
-            ? <span>Klicke in ein Beet, um „{placedPlant.name}“ zu platzieren.</span>
+          (plantToPlace
+            ? <span>Klicke in ein Beet, um „{plantToPlace.name}“ zu platzieren.</span>
             : <span>Wähle links in der Bibliothek eine Pflanze aus.</span>)}
         {tool === 'select' && <span>Auswählen &amp; Verschieben · Beete an den Ecken skalieren · Entf zum Löschen.</span>}
         <span className="keys">Tasten: V · B · P · F · Esc · {isMac ? '⌘Z' : 'Ctrl+Z'} · {isMac ? '⇧⌘Z' : 'Shift+Ctrl+Z'}</span>
