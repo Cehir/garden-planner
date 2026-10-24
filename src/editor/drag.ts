@@ -55,7 +55,7 @@ function movePlacedDrag(p: PlacedPlant, point: Point): DragState {
 
 /** Entscheidet, was ein Klick an `point` auslöst (Reihenfolge = Priorität). */
 export function pointerDownIntent(point: Point, ctx: PointerDownContext): PointerDownIntent {
-  const { tool, beds, visiblePlaced, selectedBed, selectedPlaced } = ctx
+  const { tool, beds, visiblePlaced, selectedBed, selectedPlaced, plantToPlace } = ctx
   const bedById = bedsById(beds)
 
   if (tool === 'bed') {
@@ -93,12 +93,11 @@ export function pointerDownIntent(point: Point, ctx: PointerDownContext): Pointe
   }
 
   if (tool === 'plant') {
-    const plant = ctx.plantToPlace
-    if (!plant) return { kind: 'none' }
+    if (!plantToPlace) return { kind: 'none' }
     const bed = beds.find((b) => hitTest(point.x, point.y, b))
     if (!bed) return { kind: 'none' }
     const rel = relativeInBed(point, bed)
-    return { kind: 'place', plant, bed, relX: rel.x, relY: rel.y }
+    return { kind: 'place', plant: plantToPlace, bed, relX: rel.x, relY: rel.y }
   }
 
   // Auswahl-Werkzeug
