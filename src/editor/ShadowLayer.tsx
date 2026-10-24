@@ -3,16 +3,16 @@ import { shadowPolygon } from '../shadow'
 
 interface ShadowLayerProps {
   placed: PlacedPlant[]
-  beds: Bed[]
+  bedById: Map<string, Bed>
   plantById: Map<string, Plant>
 }
 
 // Schattenwurf der sichtbaren Pflanzen (Sonne aus Süden)
-export default function ShadowLayer({ placed, beds, plantById }: ShadowLayerProps) {
+export default function ShadowLayer({ placed, bedById, plantById }: ShadowLayerProps) {
   return (
     <>
       {placed.map((p) => {
-        const bed = beds.find((b) => b.id === p.bedId)
+        const bed = bedById.get(p.bedId)
         if (!bed) return null
         const plant = plantById.get(p.plantId)
         const shape = plant ? shadowPolygon(plant, p, bed) : null

@@ -4,7 +4,7 @@ import { useStoreState } from '../storeContext'
 import { placedInYear } from '../utils'
 import { computeConflicts } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
-import { plantsById } from '../selectors'
+import { bedsById, plantsById } from '../selectors'
 import { useEditorPointer } from '../editor/useEditorPointer'
 import GridLayer from '../editor/GridLayer'
 import BedShape from '../editor/BedShape'
@@ -37,6 +37,7 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
   const selectedPlaced: PlacedPlant | null =
     selected?.kind === 'placed' ? placedPlants.find((p) => p.id === selected.id) ?? null : null
   const plantById = useMemo(() => plantsById(plants), [plants])
+  const bedById = useMemo(() => bedsById(beds), [beds])
   const conflicts = useMemo(() => computeConflicts(visiblePlaced, plants, beds), [visiblePlaced, plants, beds])
   const conflictedIds = useMemo(() => new Set(conflicts.map((c) => c.targetId)), [conflicts])
 
@@ -83,10 +84,10 @@ export default function Editor({ tool, selected, onSelect, placedPlant, zoom, se
             />
           ))}
 
-          <ShadowLayer placed={visiblePlaced} beds={beds} plantById={plantById} />
+          <ShadowLayer placed={visiblePlaced} bedById={bedById} plantById={plantById} />
 
           {visiblePlaced.map((p) => {
-            const bed = beds.find((b) => b.id === p.bedId)
+            const bed = bedById.get(p.bedId)
             if (!bed) return null
             const plant = plantById.get(p.plantId)
             const inSeason = season !== 'all' && plant ? phaseMatchesSeason(plant, phase, season) : null

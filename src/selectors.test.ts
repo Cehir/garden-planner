@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { plantsById, placedCenter } from './selectors'
+import { bedsById, plantsById, placedCenter } from './selectors'
 import type { Bed, PlacedPlant, Plant } from './types'
 
 function plant(id: string): Plant {
@@ -32,6 +32,15 @@ describe('plantsById', () => {
     const m = plantsById([plant('tomate'), plant('salat')])
     expect(m.get('tomate')?.name).toBe('tomate')
     expect(m.size).toBe(2)
+    expect(m.get('nope')).toBeUndefined()
+  })
+})
+
+describe('bedsById', () => {
+  it('maps bed id -> bed', () => {
+    const b = bed(0, 0, 10, 10)
+    const m = bedsById([b])
+    expect(m.get('b')).toBe(b)
     expect(m.get('nope')).toBeUndefined()
   })
 })

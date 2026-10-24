@@ -1,6 +1,6 @@
 import type { Bed, PlacedPlant, Plant, Selected, Tool } from '../types'
 import type { Action } from '../reducer'
-import { placedCenter } from '../selectors'
+import { bedsById, placedCenter } from '../selectors'
 import { snap } from '../utils'
 import { MIN_SIZE, hitTest, nearHandle, resizeRect } from './geometry'
 import type { Handle, Rect } from './geometry'
@@ -55,13 +55,14 @@ function movePlacedDrag(p: PlacedPlant, point: Point): DragState {
 /** Entscheidet, was ein Klick an `point` auslöst (Reihenfolge = Priorität). */
 export function pointerDownIntent(point: Point, ctx: PointerDownContext): PointerDownIntent {
   const { tool, beds, visiblePlaced, selectedBed, selectedPlaced } = ctx
+  const bedById = bedsById(beds)
 
   if (tool === 'bed') {
     return { kind: 'drag', drag: { kind: 'draw', startX: point.x, startY: point.y } }
   }
 
   if (selectedPlaced) {
-    const sbed = beds.find((b) => b.id === selectedPlaced.bedId)
+    const sbed = bedById.get(selectedPlaced.bedId)
     if (sbed) {
       const { x: cx, y: cy } = placedCenter(selectedPlaced, sbed)
       if (Math.hypot(point.x - (cx + selectedPlaced.size / 2), point.y - cy) <= PLACED_HANDLE_RADIUS) {
@@ -82,7 +83,7 @@ export function pointerDownIntent(point: Point, ctx: PointerDownContext): Pointe
   }
 
   for (const p of visiblePlaced) {
-    const bed = beds.find((b) => b.id === p.bedId)
+    const bed = bedById.get(p.bedId)
     if (!bed) continue
     const { x: cx, y: cy } = placedCenter(p, bed)
     if (Math.hypot(point.x - cx, point.y - cy) <= p.size / 2) {
