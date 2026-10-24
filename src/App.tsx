@@ -10,7 +10,7 @@ import PlantLibrary from './components/PlantLibrary'
 import { buildPrintSvg, buildPrintLegend, buildPrintSeedBankHtml, escapeXml } from './printPlan'
 import { SEASON_LABELS } from './seasons'
 import { isMac } from './utils/platform'
-import { ACCENT_COLOR } from './palette'
+import { ACCENT_COLOR, INK_COLOR } from './palette'
 import './App.css'
 
 const PRINT_PAGE_W = 794
@@ -149,7 +149,7 @@ function GardenApp() {
 <title>${escapeXml(title)}</title>
 <style>
   * { box-sizing: border-box; }
-  body { margin: 24px; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: #3a362e; }
+  body { margin: 24px; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; color: ${INK_COLOR}; }
   header { margin-bottom: 16px; }
   h1 { margin: 0 0 4px; font-size: 20px; color: ${ACCENT_COLOR}; }
   .meta { margin: 0; color: #6b6357; font-size: 13px; }
@@ -163,7 +163,7 @@ function GardenApp() {
   .muted { color: #8a8172; font-style: italic; }
   .seedbank { margin-top: 24px; page-break-before: always; break-before: page; }
   .seed-group { margin: 0 0 14px; }
-  .seed-group h3 { margin: 0 0 6px; font-size: 14px; color: #3a362e; }
+  .seed-group h3 { margin: 0 0 6px; font-size: 14px; color: ${INK_COLOR}; }
   .seed-emoji { font-size: 18px; margin-right: 8px; }
   table.seed-table { width: 100%; border-collapse: collapse; font-size: 12px; }
   table.seed-table th, table.seed-table td { text-align: left; padding: 4px 8px; border-bottom: 1px solid #e2dccc; }

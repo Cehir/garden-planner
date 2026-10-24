@@ -4,6 +4,7 @@ import { phaseMatchesSeason } from './seasons'
 import { expiryStatus, EXPIRY_BADGES, formatSeedDate } from './seeds'
 import { plantsById, placedCenter } from './selectors'
 import { gridLines } from './grid'
+import { FRAME_COLOR, INK_COLOR } from './palette'
 
 const SNAP = 10
 
@@ -59,7 +60,7 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
   const sizeAttr = size ? ` width="${size.width}" height="${size.height}"` : ''
   lines.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${garden.width} ${garden.height}"${sizeAttr}>`)
   lines.push(
-    `<rect x="0" y="0" width="${garden.width}" height="${garden.height}" fill="#fdfbf5" stroke="#a89f8d" stroke-width="2"/>`,
+    `<rect x="0" y="0" width="${garden.width}" height="${garden.height}" fill="#fdfbf5" stroke="${FRAME_COLOR}" stroke-width="2"/>`,
   )
 
   for (const l of gridLines(garden.width, garden.height, SNAP)) {
@@ -86,7 +87,7 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
     )
     if (bed.name) {
       lines.push(
-        `<text x="${bed.x + bed.w / 2}" y="${bed.y + bed.h / 2}" text-anchor="middle" dominant-baseline="central" font-size="${fontSize}" fill="#3a362e" stroke="#fff" stroke-width="3" paint-order="stroke">${escapeXml(bed.name)}</text>`,
+        `<text x="${bed.x + bed.w / 2}" y="${bed.y + bed.h / 2}" text-anchor="middle" dominant-baseline="central" font-size="${fontSize}" fill="${INK_COLOR}" stroke="#fff" stroke-width="3" paint-order="stroke">${escapeXml(bed.name)}</text>`,
       )
     }
   }

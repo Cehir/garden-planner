@@ -23,6 +23,12 @@ export const PLANT_COLORS = [
 /** App accent (dark green) for selection, handles and headings — keep in sync with App.css. */
 export const ACCENT_COLOR = '#2f6f4f'
 
+/** Dark brown ink for text on the plan and shadow fills — keep in sync with App.css. */
+export const INK_COLOR = '#3a362e'
+
+/** Muted brown for the garden frame and the compass ring. */
+export const FRAME_COLOR = '#a89f8d'
+
 /** Default color for newly drawn beds — must stay inside BED_COLORS. */
 export const DEFAULT_BED_COLOR = BED_COLORS[0]
 

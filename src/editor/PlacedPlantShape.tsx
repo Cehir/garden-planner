@@ -1,7 +1,7 @@
 import type { Bed, PlacedPlant, Plant } from '../types'
 import { placedCenter } from '../selectors'
 import { HANDLE_SIZE } from './geometry'
-import { ACCENT_COLOR } from '../palette'
+import { ACCENT_COLOR, INK_COLOR } from '../palette'
 
 interface PlacedPlantShapeProps {
   placed: PlacedPlant
@@ -90,7 +90,7 @@ export default function PlacedPlantShape({
           y={cy + r + 14}
           textAnchor="middle"
           fontSize={Math.max(9, r * 0.6)}
-          fill="#3a362e"
+          fill={INK_COLOR}
           stroke="#fff"
           strokeWidth={2.5}
           paintOrder="stroke"

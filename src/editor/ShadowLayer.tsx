@@ -1,5 +1,6 @@
 import type { Bed, PlacedPlant, Plant } from '../types'
 import { shadowPolygon } from '../shadow'
+import { INK_COLOR } from '../palette'
 
 interface ShadowLayerProps {
   placed: PlacedPlant[]
@@ -21,7 +22,7 @@ export default function ShadowLayer({ placed, bedById, plantById }: ShadowLayerP
           <polygon
             key={`sh-${p.id}`}
             points={shape.polygon.map((pt) => pt.join(',')).join(' ')}
-            fill="#3a362e"
+            fill={INK_COLOR}
             fillOpacity={0.12}
             pointerEvents="none"
           />

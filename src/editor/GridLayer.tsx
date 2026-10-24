@@ -1,4 +1,5 @@
 import { gridLines as buildGridLines } from '../grid'
+import { FRAME_COLOR } from '../palette'
 
 // Gartenfläche, Raster und Lineal-Beschriftung (alle 100 cm)
 export default function GridLayer({ width, height }: { width: number; height: number }) {
@@ -21,7 +22,7 @@ export default function GridLayer({ width, height }: { width: number; height: nu
         width={width}
         height={height}
         fill="#fdfbf5"
-        stroke="#a89f8d"
+        stroke={FRAME_COLOR}
         strokeWidth={2}
       />
       {gridLines.map((l, i) => (
