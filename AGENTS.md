@@ -106,3 +106,17 @@ lint warnings); importers point at the new modules directly. Phase 2 uses `edito
 under 150 lines. Next: Phase 3 — split `App.tsx`. The plan is a **pure refactor: no behavior changes**, run all three
 verify gates after each task, commit per task. The user prefers tasks done in-session rather
 than delegated to subagents.
+
+## Agent skills
+
+### Issue tracker
+
+Issues are tracked in GitHub Issues (`Cehir/garden-planner`) via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
