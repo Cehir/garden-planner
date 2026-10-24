@@ -22,34 +22,44 @@ const placed: PlacedPlant = { id: 'p1', bedId: 'b1', plantId: 'x', x: 0.5, y: 0.
 function renderEditor(props: Partial<ComponentProps<typeof Editor>> = {}) {
   const states: AppState[] = []
   const histories: HistoryControls[] = []
+  const dispatches: Dispatch<Action>[] = []
   function Probe() {
     states.push(useStoreState())
     histories.push(useHistory())
+    dispatches.push(useStoreDispatch())
     return null
   }
-  const utils = render(
-    <StoreProvider>
-      <Editor
-        tool="select"
-        selected={null}
-        onSelect={() => {}}
-        plantToPlace={null}
-        zoom={1}
-        season="all"
-        phase="plant"
-        showRotation={false}
-        year={2026}
-        {...props}
-      />
-      <Probe />
-    </StoreProvider>,
-  )
+  function tree(showEditor: boolean) {
+    return (
+      <StoreProvider>
+        {showEditor && (
+          <Editor
+            tool="select"
+            selected={null}
+            onSelect={() => {}}
+            plantToPlace={null}
+            zoom={1}
+            season="all"
+            phase="plant"
+            showRotation={false}
+            year={2026}
+            {...props}
+          />
+        )}
+        <Probe />
+      </StoreProvider>
+    )
+  }
+  const utils = render(tree(true))
   const svg = utils.container.querySelector('svg.editor-svg')!
   return {
     ...utils,
     svg,
     state: () => states[states.length - 1],
     history: () => histories[histories.length - 1],
+    dispatch: () => dispatches[dispatches.length - 1],
+    // Nur den Editor aushängen, der Store bleibt bestehen
+    unmountEditor: () => utils.rerender(tree(false)),
   }
 }
 
@@ -146,39 +156,12 @@ describe('Editor: Undo beim Ziehen', () => {
   })
 
   it('Unmount mitten im Ziehen schließt die Transaktion', () => {
-    const histories: HistoryControls[] = []
-    const states: AppState[] = []
-    function Probe() {
-      histories.push(useHistory())
-      states.push(useStoreState())
-      return null
-    }
-    function Harness({ showEditor }: { showEditor: boolean }) {
-      return (
-        <StoreProvider>
-          {showEditor && (
-            <Editor
-              tool="select"
-              selected={null}
-              onSelect={() => {}}
-              plantToPlace={null}
-              zoom={1}
-              season="all"
-              phase="plant"
-              showRotation={false}
-              year={2026}
-            />
-          )}
-          <Probe />
-        </StoreProvider>
-      )
-    }
-    const { container, rerender } = render(<Harness showEditor />)
-    dragBed(container.querySelector('svg.editor-svg')!, 40, 20)
-    rerender(<Harness showEditor={false} />)
+    const { svg, state, history, unmountEditor } = renderEditor()
+    dragBed(svg, 40, 20)
+    unmountEditor()
 
-    act(() => histories[histories.length - 1].undo())
-    expect(states[states.length - 1].beds[0]).toMatchObject({ x: 100, y: 100 })
+    act(() => history().undo())
+    expect(state().beds[0]).toMatchObject({ x: 100, y: 100 })
   })
 })
 
@@ -186,41 +169,17 @@ describe('Editor: Ziehgesten-Transaktion', () => {
   beforeEach(() => localStorage.clear())
 
   it('schließt die Transaktion bei verlorenem Pointer-Capture ohne pointerup', () => {
-    const histories: HistoryControls[] = []
-    const dispatches: Dispatch<Action>[] = []
-    function Probe() {
-      histories.push(useHistory())
-      dispatches.push(useStoreDispatch())
-      return null
-    }
-
-    const { container } = render(
-      <StoreProvider>
-        <Editor
-          tool="bed"
-          selected={null}
-          onSelect={() => {}}
-          plantToPlace={null}
-          zoom={1}
-          season="all"
-          phase="plant"
-          showRotation={false}
-          year={2026}
-        />
-        <Probe />
-      </StoreProvider>,
-    )
-    const svg = container.querySelector('svg.editor-svg')!
+    const { svg, history, dispatch } = renderEditor({ tool: 'bed' })
     fireEvent.pointerDown(svg, { button: 0, pointerId: 1 })
     fireEvent.lostPointerCapture(svg, { pointerId: 1 })
 
     act(() =>
-      dispatches[0]({
+      dispatch()({
         type: 'addBed',
         bed: { id: 'b1', name: 'Beet', x: 0, y: 0, w: 50, h: 50, color: '#fff', notes: '' },
       }),
     )
     // Ohne geschlossene Transaktion würde addBed darin verschwinden und Undo ignoriert
-    expect(histories[histories.length - 1].canUndo).toBe(true)
+    expect(history().canUndo).toBe(true)
   })
 })
