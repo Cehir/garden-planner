@@ -51,3 +51,18 @@ export const EXPIRY_BADGES: Record<ExpiryStatus, string> = {
   soon: '⏳ läuft bald ab',
   ok: '✓ haltbar',
 }
+export interface SeedBadge {
+  text: string
+  className: string
+}
+
+/** Ablauf-Abzeichen für die Samenbank; null, wenn das Saatgut noch lange haltbar ist. */
+export function seedBadge(seed: Seed, today: Date = new Date()): SeedBadge | null {
+  const status = expiryStatus(seed, today)
+  if (status === 'expired') return { text: '⚠️ abgelaufen', className: 'badge expired' }
+  if (status === 'ok') return null
+  const d = daysUntil(seed, today)
+  const text =
+    d === null ? '⏳ läuft bald ab' : d === 0 ? '⏳ läuft heute ab' : `⏳ läuft in ${d} Tag${d === 1 ? '' : 'en'} ab`
+  return { text, className: 'badge soon' }
+}

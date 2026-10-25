@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Seed } from './types'
-import { daysUntil, expiryStatus, formatSeedDate, parseSeedDate } from './seeds'
+import { daysUntil, expiryStatus, formatSeedDate, parseSeedDate, seedBadge } from './seeds'
 
 function seed(expires: string): Seed {
   return {
@@ -64,5 +64,23 @@ describe('date helpers', () => {
 
   it('formatiert ANSI-Datum für de-DE-Anzeige', () => {
     expect(formatSeedDate('2026-12-31')).toBe('31.12.2026')
+  })
+})
+describe('seedBadge', () => {
+  const today = new Date(2026, 2, 31)
+
+  it('markiert abgelaufenes Saatgut', () => {
+    expect(seedBadge(seed('2026-01-01'), today)).toEqual({ text: '⚠️ abgelaufen', className: 'badge expired' })
+  })
+
+  it('zählt die Tage bis zum baldigen Ablauf', () => {
+    expect(seedBadge(seed('2026-04-10'), today)).toEqual({ text: '⏳ läuft in 10 Tagen ab', className: 'badge soon' })
+    expect(seedBadge(seed('2026-04-01'), today)?.text).toBe('⏳ läuft in 1 Tag ab')
+    expect(seedBadge(seed('2026-03-31'), today)?.text).toBe('⏳ läuft heute ab')
+  })
+
+  it('zeigt für haltbares oder undatiertes Saatgut kein Abzeichen', () => {
+    expect(seedBadge(seed('2027-01-01'), today)).toBeNull()
+    expect(seedBadge(seed(''), today)).toBeNull()
   })
 })
