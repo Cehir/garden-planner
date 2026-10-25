@@ -913,6 +913,18 @@
     display: flex;
   }
 
+  /* Inhalt im Overlay (selbst ein .sidebar) normal im Fluss anzeigen statt versteckt/fixiert */
+  .sidebar.mobile-open > .sidebar {
+    display: flex;
+    position: static;
+    width: auto;
+    padding: 24px 0 0; /* Platz für den Schließen-Button */
+    border-left: none;
+    box-shadow: none;
+    overflow: visible;
+    z-index: auto;
+  }
+
   /* Close button for mobile overlays */
   .sidebar .close-btn {
     position: absolute;
