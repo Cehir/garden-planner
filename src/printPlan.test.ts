@@ -86,6 +86,14 @@ describe('buildPrintSvg', () => {
     expect(Number(corner?.[2])).toBeGreaterThan(0)
   })
 
+  it('setzt die Labels am rechten und unteren Rand innerhalb des Gartens', () => {
+    // makeState(): Garten 800 × 600 cm
+    const svg = buildPrintSvg(makeState(), base)
+    expect(svg).toMatch(/<text x="800" y="0"[^>]*text-anchor="end" dx="-\d+"[^>]*>800</)
+    const bottom = svg.match(/<text x="0" y="600"[^>]*dy="(-?\d+)">600</)
+    expect(Number(bottom?.[1])).toBeLessThan(0)
+  })
+
   it('zeichnet Beete mit Name (maskiert)', () => {
     const svg = buildPrintSvg(makeState(), base)
     expect(svg).toContain('<rect x="100" y="100" width="200" height="150" fill="#7fb069"')

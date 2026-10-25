@@ -73,4 +73,49 @@ describe('rulerLabels', () => {
       expect(label.x).toBeGreaterThanOrEqual(100)
     }
   })
+
+  it('right-aligns the last top label on the right edge so it stays inside', () => {
+    const last = rulerLabels(300, 150).find((label) => label.edge === 'top' && label.value === 300)
+    expect(last).toMatchObject({ x: 300, anchor: 'end' })
+    expect(last?.dx).toBeLessThan(0)
+  })
+
+  it('right-aligns a top label that sits just short of the right edge', () => {
+    const last = rulerLabels(305, 150).find((label) => label.edge === 'top' && label.value === 300)
+    expect(last?.anchor).toBe('end')
+  })
+
+  it('keeps top labels well away from the right edge centred', () => {
+    const labels = rulerLabels(350, 150).filter((label) => label.edge === 'top')
+    expect(labels.map((label) => label.anchor)).toEqual(['middle', 'middle', 'middle'])
+  })
+
+  it('keeps top labels clear of the right edge', () => {
+    for (const width of [300, 301, 305, 310, 315, 350]) {
+      const top = rulerLabels(width, 150).filter((label) => label.edge === 'top')
+      for (const label of top.filter((label) => label.anchor === 'end')) {
+        // right-aligned text ends left of the right edge
+        expect(label.x + label.dx).toBeLessThan(width)
+      }
+      for (const label of top.filter((label) => label.anchor === 'middle')) {
+        // centred text keeps at least one font size to the right edge (≥ half a 4-digit label)
+        expect(width - label.x).toBeGreaterThanOrEqual(RULER_FONT_SIZE)
+      }
+    }
+  })
+
+  it('lifts the last left label on the bottom edge above it', () => {
+    const last = rulerLabels(150, 200).find((label) => label.edge === 'left' && label.value === 200)
+    expect(last).toMatchObject({ y: 200 })
+    // baseline above the bottom edge → the text sits fully inside
+    expect(last?.dy).toBeLessThan(0)
+  })
+
+  it('keeps left labels clear of the bottom edge and its 2px frame', () => {
+    for (let height = 200; height <= 210; height++) {
+      for (const label of rulerLabels(150, height).filter((label) => label.edge === 'left')) {
+        expect(label.y + label.dy).toBeLessThanOrEqual(height - 2)
+      }
+    }
+  })
 })
