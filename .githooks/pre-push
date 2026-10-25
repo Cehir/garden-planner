@@ -1,0 +1,10 @@
+#!/bin/sh
+# Langsamere Gates vor jedem Push (Typprüfung + Browser, wenige Sekunden). Überspringen: git push --no-verify
+# CI prüft ohnehin alles; der Hook spart nur den Umweg über einen roten PR.
+set -e
+
+echo '▶ pre-push: npm run build'
+npm run build --silent
+
+echo '▶ pre-push: npm run e2e'
+npm run e2e --silent
