@@ -26,7 +26,8 @@ mobile Seitenleiste ohne Inhalt (#28) kann sie grundsätzlich nicht finden.
   festgehalten, nicht nebenbei behoben.
 - Durchgesetzt wird die Suite von GitHub Actions (für öffentliche Repos kostenlos); Git-Hooks
   in `.githooks/` (ohne zusätzliche Abhängigkeit) geben nur schnelleres Feedback. Der
-  Workflow liegt in `.github/workflows/ci.yml`; die Hooks folgen in einem eigenen PR.
+  Workflow liegt in `.github/workflows/ci.yml`; `npm install` aktiviert die Hooks über das
+  `prepare`-Skript (`git config core.hooksPath .githooks`).
 
 ## Alternativen
 

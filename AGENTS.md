@@ -42,6 +42,10 @@ is reused without rebuilding, so stop it (or restart it after `vite build`) to t
 `main` (Node 24, Chromium only). On failure the Playwright report is uploaded as the
 `playwright-report` artifact (traces included). Don't merge a PR with red CI.
 
+**Git hooks** (`.githooks/`, activated by `npm install` via the `prepare` script →
+`core.hooksPath`): pre-commit runs test + lint, pre-push runs build + e2e. They check the working
+tree, not just staged changes. `--no-verify` skips them; CI still runs everything.
+
 Note: oxlint's `only-export-components` also flags non-component *re-exports* from `.tsx` files —
 put hooks/helpers in `.ts` modules and import them from there.
 

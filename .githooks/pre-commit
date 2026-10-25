@@ -1,0 +1,10 @@
+#!/bin/sh
+# Schnelle Gates vor jedem Commit (einige Sekunden). Überspringen: git commit --no-verify
+# Hinweis: geprüft wird der Arbeitsbaum, nicht nur die gestagten Änderungen.
+set -e
+
+echo '▶ pre-commit: npm test'
+npm test --silent
+
+echo '▶ pre-commit: npm run lint'
+npm run lint --silent
