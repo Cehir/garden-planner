@@ -32,6 +32,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+// normalizeState prüft und repariert jedes Feld einzeln, daher genügt hier „ist ein Objekt“
+function isStateLike(value: unknown): value is Partial<AppState> {
+  return isRecord(value)
+}
+
 // Beschädigte Sammlungen (kein Array) und Einträge, die keine Objekte sind (z. B. null),
 // werden verworfen statt die App abstürzen zu lassen
 function arrayOr<T>(value: T[] | undefined, fallback: T[]): T[] {
@@ -84,10 +89,10 @@ export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as AppState
+      const parsed: unknown = JSON.parse(raw)
       // Nur ablehnen, was normalizeState nicht reparieren kann – sonst überschreibt der
       // Standardzustand beim nächsten Speichern die Daten des Nutzers
-      if (isRecord(parsed)) {
+      if (isStateLike(parsed)) {
         return normalizeState(parsed)
       }
     }
