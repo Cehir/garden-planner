@@ -15,7 +15,7 @@ import { useImportExport } from './hooks/useImportExport'
 import './App.css'
 
 function GardenApp() {
-  const { state, dispatch, undo, redo, canUndo, canRedo } = useStore()
+  const { state, dispatch, undo, redo } = useStore()
   const ui = useEditorUi()
   const { tool, selected, setSelected, plantToPlace, season, phase, showRotation, year, mobileSidebar, setMobileSidebar } = ui
   const { zoom, setZoom, fit } = useFitZoom(state.garden)
@@ -58,27 +58,16 @@ function GardenApp() {
   return (
     <div className="app">
       <Toolbar
-        tool={tool}
-        onTool={ui.setToolSafe}
-        zoom={zoom}
-        onZoom={setZoom}
-        onFit={fit}
-        onPrint={handlePrint}
-        onExport={handleExport}
-        onImport={handleImport}
-        onReset={handleReset}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        season={season}
-        onSeason={ui.setSeason}
-        phase={phase}
-        onPhase={ui.setPhase}
-        showRotation={showRotation}
-        onShowRotation={ui.setShowRotation}
-        year={year}
-        onYear={ui.handleYear}
+        view={{ tool, zoom, season, phase, showRotation, year }}
+        onView={{
+          tool: ui.setToolSafe,
+          zoom: setZoom,
+          season: ui.setSeason,
+          phase: ui.setPhase,
+          showRotation: ui.setShowRotation,
+          year: ui.handleYear,
+        }}
+        actions={{ fit, print: handlePrint, export: handleExport, import: handleImport, reset: handleReset }}
       />
       <div className="mobile-toggle-bar">
         <button
