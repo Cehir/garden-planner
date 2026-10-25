@@ -29,6 +29,9 @@ export const INK_COLOR = '#3a362e'
 /** Muted brown for the garden frame and the compass ring. */
 export const FRAME_COLOR = '#a89f8d'
 
+/** Light brown for the ruler labels at the garden edge (editor + print). */
+export const RULER_COLOR = '#b3a892'
+
 /** Default color for newly drawn beds — must stay inside BED_COLORS. */
 export const DEFAULT_BED_COLOR = BED_COLORS[0]
 

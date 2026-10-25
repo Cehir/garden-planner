@@ -3,8 +3,8 @@ import { placedInYear } from './selection'
 import { phaseMatchesSeason, SEASON_LABELS } from './seasons'
 import { expiryStatus, EXPIRY_BADGES, formatSeedDate } from './seeds'
 import { plantsById, placedCenter } from './selectors'
-import { gridLines, rulerLabels } from './grid'
-import { ACCENT_COLOR, FRAME_COLOR, INK_COLOR } from './palette'
+import { gridLines, RULER_FONT_SIZE, rulerLabels } from './grid'
+import { ACCENT_COLOR, FRAME_COLOR, INK_COLOR, RULER_COLOR } from './palette'
 
 // A4 hochkant in CSS-Pixeln (96 dpi); Platz für Kopf + Legende wird freigehalten
 export const PRINT_PAGE_W = 794
@@ -73,15 +73,9 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
     )
   }
 
-  const ruler = rulerLabels(garden.width, garden.height)
-  for (const x of ruler.top) {
+  for (const l of rulerLabels(garden.width, garden.height)) {
     lines.push(
-      `<text x="${x}" y="0" fill="#b3a892" font-size="12" text-anchor="middle" dy="-4">${x}</text>`,
-    )
-  }
-  for (const y of ruler.left) {
-    lines.push(
-      `<text x="0" y="${y}" fill="#b3a892" font-size="12" dx="4" dy="4">${y}</text>`,
+      `<text x="${l.x}" y="${l.y}" fill="${RULER_COLOR}" font-size="${RULER_FONT_SIZE}" text-anchor="${l.anchor}" dx="${l.dx}" dy="${l.dy}">${l.value}</text>`,
     )
   }
 
