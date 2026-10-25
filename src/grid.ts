@@ -27,8 +27,10 @@ export function gridLines(width: number, height: number, step = GRID_STEP): Grid
 
 /** Schriftgröße der Lineal-Beschriftung (Editor + Druck). */
 export const RULER_FONT_SIZE = 12
-/** Abstand der Beschriftung vom Gartenrand. */
+/** Abstand der Beschriftung vom linken Gartenrand. */
 const RULER_INSET = 4
+/** Grundlinie der linken Beschriftung knapp unter dem Messpunkt (Text steht etwa mittig). */
+const RULER_LEFT_DY = 4
 /** Grundlinie der oberen Beschriftung: Schrifthöhe + Abstand → Text steht innerhalb des Randes. */
 const RULER_TOP_DY = RULER_FONT_SIZE + 2
 
@@ -61,7 +63,7 @@ export function rulerLabels(width: number, height: number): RulerLabel[] {
       { edge: 'top', value: x, x, y: 0, anchor: 'middle', dx: 0, dy: RULER_TOP_DY }
     )),
     ...labelSteps(height).map((y): RulerLabel => (
-      { edge: 'left', value: y, x: 0, y, anchor: 'start', dx: RULER_INSET, dy: RULER_INSET }
+      { edge: 'left', value: y, x: 0, y, anchor: 'start', dx: RULER_INSET, dy: RULER_LEFT_DY }
     )),
   ]
 }

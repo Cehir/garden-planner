@@ -29,19 +29,19 @@ export default function GridLayer({ width, height }: { width: number; height: nu
           strokeWidth={1}
         />
       ))}
-      {ruler.map((l) => (
+      {ruler.map((label) => (
         <text
-          key={`${l.edge}${l.value}`}
-          x={l.x}
-          y={l.y}
+          key={`${label.edge}${label.value}`}
+          x={label.x}
+          y={label.y}
           fill={RULER_COLOR}
           fontSize={RULER_FONT_SIZE}
-          textAnchor={l.anchor}
-          dx={l.dx}
-          dy={l.dy}
+          textAnchor={label.anchor}
+          dx={label.dx}
+          dy={label.dy}
           pointerEvents="none"
         >
-          {l.value}
+          {label.value}
         </text>
       ))}
     </>

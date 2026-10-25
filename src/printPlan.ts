@@ -73,9 +73,9 @@ export function buildPrintSvg(state: AppState, opts: PrintOptions, size?: PrintS
     )
   }
 
-  for (const l of rulerLabels(garden.width, garden.height)) {
+  for (const label of rulerLabels(garden.width, garden.height)) {
     lines.push(
-      `<text x="${l.x}" y="${l.y}" fill="${RULER_COLOR}" font-size="${RULER_FONT_SIZE}" text-anchor="${l.anchor}" dx="${l.dx}" dy="${l.dy}">${l.value}</text>`,
+      `<text x="${label.x}" y="${label.y}" fill="${RULER_COLOR}" font-size="${RULER_FONT_SIZE}" text-anchor="${label.anchor}" dx="${label.dx}" dy="${label.dy}">${label.value}</text>`,
     )
   }
 
