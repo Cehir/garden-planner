@@ -1,11 +1,5 @@
-import { expect, test } from './fixtures'
+import { currentYear as year, expect, sampleBed as bed, sampleTomato as tomato, test } from './fixtures'
 import { bedGroup, centerOf, clickAt, dragBy, plantGroup, savedState, toScreen } from './editor'
-import type { Bed, PlacedPlant } from '../src/types'
-
-const bed: Bed = { id: 'b1', name: 'Hochbeet', x: 200, y: 200, w: 200, h: 120, color: '#8bc34a', notes: '' }
-const year = new Date().getFullYear()
-// Tomate in der Beetmitte, Durchmesser 60 cm
-const tomato: PlacedPlant = { id: 'p1', bedId: 'b1', plantId: 'tomate', x: 0.5, y: 0.5, size: 60, plantedYear: year }
 
 test.describe('Editor: Beete', () => {
   test('zeichnet ein Beet mit dem Beet-Werkzeug', async ({ page }) => {

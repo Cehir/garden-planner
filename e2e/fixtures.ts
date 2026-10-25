@@ -1,5 +1,5 @@
 import { test as base, expect } from '@playwright/test'
-import type { AppState, Garden } from '../src/types'
+import type { AppState, Bed, Garden, PlacedPlant } from '../src/types'
 import { createDefaultState, normalizeState, STORAGE_KEY } from '../src/persistence'
 
 // Wie Partial<AppState>, aber auch der Garten darf nur teilweise angegeben werden
@@ -30,3 +30,17 @@ export const test = base.extend<{ seedState: SeedState }>({
 })
 
 export { expect }
+
+// Beispieldaten für mehrere Specs
+export const currentYear = new Date().getFullYear()
+export const sampleBed: Bed = { id: 'b1', name: 'Hochbeet', x: 200, y: 200, w: 200, h: 120, color: '#8bc34a', notes: '' }
+// Tomate in der Beetmitte, Durchmesser 60 cm
+export const sampleTomato: PlacedPlant = {
+  id: 'p1',
+  bedId: 'b1',
+  plantId: 'tomate',
+  x: 0.5,
+  y: 0.5,
+  size: 60,
+  plantedYear: currentYear,
+}
