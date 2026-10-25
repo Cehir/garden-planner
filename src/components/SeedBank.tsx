@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { Seed } from '../types'
 import { useStoreDispatch, useStoreState } from '../storeContext'
-import { uid } from '../utils'
+import { uid } from '../id'
 import {
   expiryStatus,
   formatSeedDate,

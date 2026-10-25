@@ -27,6 +27,12 @@ describe('parseImport', () => {
     expect(parseImport('{}')).toBeNull()
     expect(parseImport(JSON.stringify({ garden: { name: 'G' }, beds: {} }))).toBeNull()
   })
+
+  it('lehnt JSON-Werte ab, die keine Objekte sind', () => {
+    expect(parseImport('42')).toBeNull()
+    expect(parseImport('"Garten"')).toBeNull()
+    expect(parseImport('[]')).toBeNull()
+  })
 })
 
 describe('exportFileName', () => {

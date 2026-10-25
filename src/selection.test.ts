@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { placedInYear } from './utils'
+import { placedInYear } from './selection'
 import type { PlacedPlant } from './types'
 
 function placed(id: string, plantedYear: number): PlacedPlant {

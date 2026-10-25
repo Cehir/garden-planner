@@ -1,5 +1,5 @@
 import type { Bed, Point } from '../types'
-import { snap } from '../utils'
+import { snap } from '../grid'
 
 export const MIN_SIZE = 20
 export const HANDLE_SIZE = 8

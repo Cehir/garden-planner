@@ -3,11 +3,23 @@ import type { AppState } from '../types'
 import type { Action } from '../reducer'
 import { createDefaultState } from '../persistence'
 
+// Mindestanforderung an einen exportierten Plan: ein Garten und eine Beet-Liste
+function isImportablePlan(value: unknown): value is Partial<AppState> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'garden' in value &&
+    Boolean(value.garden) &&
+    'beds' in value &&
+    Array.isArray(value.beds)
+  )
+}
+
 /** Liest einen exportierten Gartenplan; `null`, wenn der Text kein gültiger Plan ist. */
 export function parseImport(text: string): AppState | null {
   try {
-    const parsed = JSON.parse(text) as AppState | null
-    if (!parsed || !parsed.garden || !Array.isArray(parsed.beds)) return null
+    const parsed: unknown = JSON.parse(text)
+    if (!isImportablePlan(parsed)) return null
     return { ...createDefaultState(), ...parsed }
   } catch {
     return null

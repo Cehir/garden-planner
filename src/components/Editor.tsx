@@ -1,7 +1,7 @@
 import { useMemo, useRef } from 'react'
 import type { Bed, Phase, PlacedPlant, Plant, Season, Selected, Tool } from '../types'
 import { useStoreState } from '../storeContext'
-import { placedInYear } from '../utils'
+import { placedInYear } from '../selection'
 import { computeConflicts } from '../shadow'
 import { phaseMatchesSeason } from '../seasons'
 import { bedsById, plantsById } from '../selectors'

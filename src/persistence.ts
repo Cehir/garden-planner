@@ -16,14 +16,25 @@ export function createDefaultState(): AppState {
   }
 }
 
-function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | undefined {
+// Ältere Exporte speicherten einen einzelnen Bereich ([3, 6]) statt einer Liste ([[3, 6]])
+type LegacyRanges = MonthRange | MonthRange[]
+
+function isRangeList(value: LegacyRanges): value is MonthRange[] {
+  return Array.isArray(value[0])
+}
+
+function toRanges(value: LegacyRanges | undefined): MonthRange[] | undefined {
   if (value == null) return undefined
-  if (Array.isArray(value[0])) return value as MonthRange[]
-  return [value as MonthRange]
+  return isRangeList(value) ? value : [value]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+// normalizeState prüft und repariert jedes Feld einzeln, daher genügt hier „ist ein Objekt“
+function isStateLike(value: unknown): value is Partial<AppState> {
+  return isRecord(value)
 }
 
 // Beschädigte Sammlungen (kein Array) und Einträge, die keine Objekte sind (z. B. null),
@@ -65,7 +76,7 @@ export function normalizeState(raw: Partial<AppState>): AppState {
     })),
     placedPlants: arrayOr(raw.placedPlants, []).map((p) => ({
       ...p,
-      plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
+      plantedYear: Number.isFinite(p.plantedYear) ? p.plantedYear : new Date().getFullYear(),
     })),
     diary: arrayOr(raw.diary, []).map((e) => ({
       ...e,
@@ -78,10 +89,10 @@ export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
-      const parsed = JSON.parse(raw) as AppState
+      const parsed: unknown = JSON.parse(raw)
       // Nur ablehnen, was normalizeState nicht reparieren kann – sonst überschreibt der
       // Standardzustand beim nächsten Speichern die Daten des Nutzers
-      if (isRecord(parsed)) {
+      if (isStateLike(parsed)) {
         return normalizeState(parsed)
       }
     }

@@ -1,7 +1,7 @@
 import type { Bed, PlacedPlant, Plant, Point, Selected, Tool } from '../types'
 import type { Action } from '../reducer'
 import { placedCenter, relativeInBed } from '../selectors'
-import { snap } from '../utils'
+import { snap } from '../grid'
 import { MIN_SIZE, hitTest, nearHandle, resizeRect } from './geometry'
 import type { Handle, Rect } from './geometry'
 

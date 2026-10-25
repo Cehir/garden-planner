@@ -7,7 +7,7 @@ import {
   PLANT_ACTION_LABELS,
 } from '../types'
 import { useStoreDispatch, useStoreState } from '../storeContext'
-import { uid } from '../utils'
+import { uid } from '../id'
 
 export default function Diary() {
   const state = useStoreState()
