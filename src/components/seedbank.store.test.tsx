@@ -101,6 +101,14 @@ describe('SeedBank – Bearbeiten', () => {
     expect(screen.getByRole('textbox', { name: /Sorte/ })).toHaveValue('')
   })
 
+  it('zeigt beim Hinzufügen einen leeren Platzhalter und keinen Löschen-Button', () => {
+    renderSeedBank()
+    fireEvent.click(screen.getByRole('button', { name: /Saatgut hinzufügen/ }))
+    expect(screen.getByRole('heading', { name: 'Neues Saatgut' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /Sorte/ })).toHaveAttribute('placeholder', 'z.B. ')
+    expect(screen.queryByRole('button', { name: 'Löschen' })).not.toBeInTheDocument()
+  })
+
   it('übernimmt den Pflanzenfilter als Vorauswahl beim Hinzufügen', () => {
     renderSeedBank()
     fireEvent.change(screen.getByDisplayValue('Alle Pflanzen'), { target: { value: 'tomate' } })
