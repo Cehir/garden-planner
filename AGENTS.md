@@ -156,24 +156,14 @@ from `e2e/fixtures.ts`.
 
 ## Ongoing work
 
-The SOLID refactor plan in `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md`
-(`.hermes/` is gitignored, local only) is merged into `main`: phases 0–5 (shared modules, store
-split, editor split, `App.tsx` split, sidebar split, type-safety/DRY/OCP polish), PRs #23–#32.
-Only the plan's final manual verification pass remains. The plan is a pure refactor, so bugs
-that pass turns up go into GitHub issues instead of being fixed inline. The plan's line numbers
-refer to the pre-refactor files — locate code by name.
+No multi-PR plan is in progress. Finished plans, kept for history:
 
-Intentional deviations from the plan (the code is right, not the plan): `store.tsx` does
-**not** re-export the moved symbols — importers point at the new modules directly. Phase 2 uses
-`editor/drag.ts` (pure functions) instead of a `dragReducer`. Phase 3 uses
-`printPageScale(garden)` + `printSvgSize(garden)` instead of `printPageScale(garden, opts)`.
-Phase 4 puts `bedStats` in `bedStats.ts` (not `selectors.ts`, to avoid an import cycle);
-`SeedForm` takes one `SeedDraft` + `onChange(patch)` instead of five field props; `Toolbar` gets
-`onView` as one setter per field (not `onView(patch)`) and reads garden/years via
-`useStoreState()` and undo/redo via `useHistory()` instead of props. Phase 5 uses an
-`isRangeList` type guard instead of `as` casts in `toRanges`; `utils.ts` was deleted without a
-temporary barrel; `detectMac` checks `userAgentData.platform` case-insensitively **or** the user
-agent (not `??`), so behavior matches the old check.
+- **SOLID refactor** (`.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md`, gitignored,
+  local only): phases 0–5 merged in PRs #23–#32. The E2E suite replaces its final manual
+  verification pass. Where plan and code disagree, the code is right; the plan's line numbers
+  refer to the pre-refactor files.
+- **E2E test strategy** (`docs/adr/0001-e2e-testing-strategy.md`): PRs #40–#47 — accessible SVG
+  names, Playwright suite, CI, git hooks, editor/data/layout flows.
 
 ## Agent skills
 
