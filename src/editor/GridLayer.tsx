@@ -1,16 +1,16 @@
-import { gridLines as buildGridLines } from '../grid'
+import { gridLines as buildGridLines, RULER_LABEL_STEP } from '../grid'
 import { FRAME_COLOR } from '../palette'
 
-// Gartenfläche, Raster und Lineal-Beschriftung (alle 100 cm)
+// Gartenfläche, Raster und Lineal-Beschriftung (alle RULER_LABEL_STEP cm)
 export default function GridLayer({ width, height }: { width: number; height: number }) {
   const gridLines = buildGridLines(width, height)
 
   const topLabels: { x: number; label: string }[] = []
-  for (let x = 100; x <= width; x += 100) {
+  for (let x = RULER_LABEL_STEP; x <= width; x += RULER_LABEL_STEP) {
     topLabels.push({ x, label: `${x}` })
   }
   const leftLabels: { y: number; label: string }[] = []
-  for (let y = 100; y <= height; y += 100) {
+  for (let y = RULER_LABEL_STEP; y <= height; y += RULER_LABEL_STEP) {
     leftLabels.push({ y, label: `${y}` })
   }
 

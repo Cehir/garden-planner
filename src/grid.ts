@@ -1,3 +1,10 @@
+/** Rasterweite in cm: feine Linien und Einrasten beim Zeichnen/Verschieben. */
+export const GRID_STEP = 10
+/** Abstand der kräftigeren Hauptlinien in cm. */
+export const GRID_MAJOR_STEP = 50
+/** Abstand der Lineal-Beschriftung am Gartenrand in cm (Editor + Druck). */
+export const RULER_LABEL_STEP = 100
+
 export interface GridLine {
   x1: number
   y1: number
@@ -6,16 +13,16 @@ export interface GridLine {
   major: boolean
 }
 
-/** Grid lines for a garden of `width`×`height` on a `step` cm step (major every 50 cm). */
-export function gridLines(width: number, height: number, step = 10): GridLine[] {
+/** Grid lines for a garden of `width`×`height` on a `step` cm step (major every `GRID_MAJOR_STEP` cm). */
+export function gridLines(width: number, height: number, step = GRID_STEP): GridLine[] {
   const out: GridLine[] = []
   for (let x = 0; x <= width; x += step) {
-    out.push({ x1: x, y1: 0, x2: x, y2: height, major: x % 50 === 0 })
+    out.push({ x1: x, y1: 0, x2: x, y2: height, major: x % GRID_MAJOR_STEP === 0 })
   }
   for (let y = 0; y <= height; y += step) {
-    out.push({ x1: 0, y1: y, x2: width, y2: y, major: y % 50 === 0 })
+    out.push({ x1: 0, y1: y, x2: width, y2: y, major: y % GRID_MAJOR_STEP === 0 })
   }
   return out
 }
 
-export const snap = (v: number, grid = 10): number => Math.round(v / grid) * grid
+export const snap = (v: number, grid = GRID_STEP): number => Math.round(v / grid) * grid

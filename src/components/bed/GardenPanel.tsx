@@ -3,6 +3,9 @@ import Diary from '../Diary'
 
 export type GardenTab = 'garden' | 'diary'
 
+/** Kleinste einstellbare Gartenbreite/-höhe in cm. */
+const MIN_GARDEN_SIZE = 100
+
 interface GardenPanelProps {
   activeTab: GardenTab
   onTabChange: (tab: GardenTab) => void
@@ -44,18 +47,18 @@ export default function GardenPanel({ activeTab, onTabChange }: GardenPanelProps
             Breite (cm)
             <input
               type="number"
-              min={100}
+              min={MIN_GARDEN_SIZE}
               value={garden.width}
-              onChange={(e) => dispatch({ type: 'setGarden', patch: { width: Math.max(100, Number(e.target.value) || 100) } })}
+              onChange={(e) => dispatch({ type: 'setGarden', patch: { width: Math.max(MIN_GARDEN_SIZE, Number(e.target.value) || MIN_GARDEN_SIZE) } })}
             />
           </label>
           <label>
             Höhe (cm)
             <input
               type="number"
-              min={100}
+              min={MIN_GARDEN_SIZE}
               value={garden.height}
-              onChange={(e) => dispatch({ type: 'setGarden', patch: { height: Math.max(100, Number(e.target.value) || 100) } })}
+              onChange={(e) => dispatch({ type: 'setGarden', patch: { height: Math.max(MIN_GARDEN_SIZE, Number(e.target.value) || MIN_GARDEN_SIZE) } })}
             />
           </label>
           <p className="hint">
