@@ -42,7 +42,7 @@ src/
   store.tsx       StoreProvider only
   plants.ts       DEFAULT_PLANTS catalog
   selectors.ts    plantsById, placedCenter        ← use these, don't re-implement
-  grid.ts         gridLines (Editor + print)
+  grid.ts         gridLines (Editor + print), snap
   palette.ts      BED_COLORS, PLANT_COLORS, DEFAULT_BED_COLOR
   shadow.ts       shadow polygons + conflict detection (sun from south, SHADOW_LENGTH_FACTOR)
   seasons.ts      month/season helpers
@@ -52,7 +52,8 @@ src/
                   because shadow.ts/rotation.ts import selectors.ts)
   printPlan.ts    print SVG / legend / seed-bank / full document builders + page scale (pure)
   printWindow.ts  openPrintWindow (DOM glue for the print dialog)
-  utils.ts        uid, snap, placedInYear
+  id.ts           uid
+  selection.ts    placedInYear
   utils/platform.ts  isMac
   App.tsx         layout + wiring of the hooks below (GardenApp)
   hooks/          useEditorUi (tool/selection/filter/year state), useKeyboardShortcuts,

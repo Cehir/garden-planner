@@ -17,3 +17,5 @@ export function gridLines(width: number, height: number, step = 10): GridLine[] 
   }
   return out
 }
+
+export const snap = (v: number, grid = 10): number => Math.round(v / grid) * grid

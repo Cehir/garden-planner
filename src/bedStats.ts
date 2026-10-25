@@ -3,7 +3,7 @@ import { bedCycle, repeatWarnings } from './rotation'
 import type { RepeatWarning } from './rotation'
 import { computeConflicts } from './shadow'
 import type { ShadowConflict } from './shadow'
-import { placedInYear } from './utils'
+import { placedInYear } from './selection'
 
 export interface BedStatsResult {
   /** Pflanzen des Beets im gewählten Jahr */

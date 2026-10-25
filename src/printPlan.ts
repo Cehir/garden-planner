@@ -1,5 +1,5 @@
 import type { AppState, Garden, Phase, Season } from './types'
-import { placedInYear } from './utils'
+import { placedInYear } from './selection'
 import { phaseMatchesSeason, SEASON_LABELS } from './seasons'
 import { expiryStatus, EXPIRY_BADGES, formatSeedDate } from './seeds'
 import { plantsById, placedCenter } from './selectors'
