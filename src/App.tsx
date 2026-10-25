@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { Phase, Plant, Season, Selected, Tool } from './types'
 import { StoreProvider } from './store'
 import { useStore } from './storeContext'
@@ -9,6 +9,7 @@ import BedDetails from './components/BedDetails'
 import PlantLibrary from './components/PlantLibrary'
 import { buildPrintDocument, printSvgSize } from './printPlan'
 import { isMac } from './utils/platform'
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import './App.css'
 
 function GardenApp() {
@@ -38,56 +39,26 @@ function GardenApp() {
 
   const fit = useCallback(() => setUserZoom(null), [])
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      const target = e.target as HTMLElement | null
-      const typing =
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      if (typing && (e.key === 'Delete' || e.key === 'Backspace')) return
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
-        if (!typing) {
-          e.preventDefault()
-          if (e.shiftKey) redo()
-          else undo()
-        }
-        return
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y') {
-        if (!typing) {
-          e.preventDefault()
-          redo()
-        }
-        return
-      }
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (selected?.kind === 'bed') {
-          dispatch({ type: 'removeBed', id: selected.id })
-          setSelected(null)
-        } else if (selected?.kind === 'placed') {
-          dispatch({ type: 'removePlacedPlant', id: selected.id })
-          setSelected(null)
-        }
-      } else if (e.key === 'Escape') {
+  useKeyboardShortcuts({
+    onUndo: undo,
+    onRedo: redo,
+    onDeleteSelected: () => {
+      if (selected?.kind === 'bed') {
+        dispatch({ type: 'removeBed', id: selected.id })
         setSelected(null)
-        setPlantToPlace(null)
-        setTool('select')
-      } else if (e.key === 'v' || e.key === 'V') {
-        setTool('select')
-      } else if (e.key === 'b' || e.key === 'B') {
-        setTool('bed')
-      } else if (e.key === 'p' || e.key === 'P') {
-        setTool('plant')
-      } else if (e.key === 'f' || e.key === 'F') {
-        fit()
+      } else if (selected?.kind === 'placed') {
+        dispatch({ type: 'removePlacedPlant', id: selected.id })
+        setSelected(null)
       }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [selected, dispatch, fit, undo, redo])
+    },
+    onEscape: () => {
+      setSelected(null)
+      setPlantToPlace(null)
+      setTool('select')
+    },
+    onSelectTool: setTool,
+    onFit: fit,
+  })
 
   function setToolSafe(t: Tool) {
     setTool(t)
