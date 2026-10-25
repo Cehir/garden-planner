@@ -15,12 +15,21 @@ test.describe('Smoke', () => {
     expect(errors).toEqual([])
   })
 
-  test('zeigt einen vorbelegten Zustand und behält ihn nach dem Neuladen', async ({ page, seed }) => {
-    await seed({ beds: [bed] })
+  test('zeigt einen vorbelegten Zustand', async ({ page, seedState }) => {
+    await seedState({ beds: [bed], garden: { width: 600 } })
     await page.goto('/')
     await expect(page.getByRole('group', { name: 'Beet: Hochbeet' })).toBeVisible()
+    await expect(page.getByRole('spinbutton', { name: /Breite/ })).toHaveValue('600')
+  })
 
+  test('Änderungen in der App überleben das Neuladen', async ({ page, seedState }) => {
+    await seedState({ beds: [bed] })
+    await page.goto('/')
+    await page.getByRole('textbox', { name: 'Name' }).fill('Testgarten')
+
+    // Ohne den Einmal-Merker in seedState würde der Reload den Namen zurücksetzen
     await page.reload()
+    await expect(page.getByRole('textbox', { name: 'Name' })).toHaveValue('Testgarten')
     await expect(page.getByRole('group', { name: 'Beet: Hochbeet' })).toBeVisible()
   })
 })

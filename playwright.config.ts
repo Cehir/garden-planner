@@ -27,7 +27,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // vite build ohne tsc: in wenigen hundert ms fertig, getestet wird also nie ein veraltetes dist/
+    // vite build ohne tsc: in wenigen hundert ms fertig. Läuft auf dem Port schon ein Server
+    // (reuseExistingServer, nur lokal), wird nicht gebaut – dann testet man dessen Stand.
     command: `npx vite build && npx vite preview --port ${PORT} --strictPort`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !process.env.CI,

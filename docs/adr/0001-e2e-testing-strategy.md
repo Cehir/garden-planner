@@ -21,11 +21,12 @@ mobile Seitenleiste ohne Inhalt (#28) kann sie grundsätzlich nicht finden.
 - Visuelles wird mit **Geometrie-Assertions** geprüft (Bounding-Boxen innerhalb des Gartens
   bzw. des Viewports, Sichtbarkeit), **nicht mit Screenshot-Vergleichen**.
 - Erzeugende Abläufe laufen über die UI; alle anderen Tests starten aus einem Zustand, der vor
-  dem Laden in `localStorage` gelegt wird (Fixture `seed`).
+  dem Laden in `localStorage` gelegt wird (Fixture `seedState`).
 - Beim Schreiben gefundene Bugs werden als Issue erfasst und mit `test.fail()` plus Issue-Verweis
   festgehalten, nicht nebenbei behoben.
 - Durchgesetzt wird die Suite von GitHub Actions (für öffentliche Repos kostenlos); Git-Hooks
-  in `.githooks/` (ohne zusätzliche Abhängigkeit) geben nur schnelleres Feedback.
+  in `.githooks/` (ohne zusätzliche Abhängigkeit) geben nur schnelleres Feedback. Beides folgt
+  in eigenen PRs nach der Einrichtung der Suite; bis dahin wird `npm run e2e` von Hand ausgeführt.
 
 ## Alternativen
 

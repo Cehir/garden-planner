@@ -1,22 +1,29 @@
 import { test as base, expect } from '@playwright/test'
-import type { AppState } from '../src/types'
-import { createDefaultState, STORAGE_KEY } from '../src/persistence'
+import type { AppState, Garden } from '../src/types'
+import { createDefaultState, normalizeState, STORAGE_KEY } from '../src/persistence'
 
-type Seed = (patch?: Partial<AppState>) => Promise<void>
+// Wie Partial<AppState>, aber auch der Garten darf nur teilweise angegeben werden
+type StatePatch = Omit<Partial<AppState>, 'garden'> & { garden?: Partial<Garden> }
+type SeedState = (patch?: StatePatch) => Promise<void>
 
-// `seed` legt vor dem ersten Laden einen Zustand in localStorage ab. Nur einmal pro Tab
-// (Merker in sessionStorage), damit ein Reload den inzwischen gespeicherten Stand nicht überschreibt.
-export const test = base.extend<{ seed: Seed }>({
-  seed: async ({ page }, use) => {
+// Merker in sessionStorage: überlebt einen Reload im selben Tab, nicht aber einen neuen Tab
+const SEEDED_FLAG = 'e2e-seeded'
+
+// `seedState` legt vor dem ersten Laden einen Zustand in localStorage ab – nur einmal pro Tab,
+// damit ein Reload den inzwischen von der App gespeicherten Stand nicht überschreibt.
+// Läuft wie ein Import durch normalizeState, Lücken werden also mit Standardwerten gefüllt.
+export const test = base.extend<{ seedState: SeedState }>({
+  seedState: async ({ page }, use) => {
     await use(async (patch = {}) => {
-      const state: AppState = { ...createDefaultState(), ...patch }
+      const defaults = createDefaultState()
+      const state = normalizeState({ ...defaults, ...patch, garden: { ...defaults.garden, ...patch.garden } })
       await page.addInitScript(
-        ([key, value]) => {
-          if (sessionStorage.getItem('e2e-seeded')) return
+        ([flag, key, value]) => {
+          if (sessionStorage.getItem(flag)) return
           localStorage.setItem(key, value)
-          sessionStorage.setItem('e2e-seeded', '1')
+          sessionStorage.setItem(flag, '1')
         },
-        [STORAGE_KEY, JSON.stringify(state)],
+        [SEEDED_FLAG, STORAGE_KEY, JSON.stringify(state)],
       )
     })
   },
