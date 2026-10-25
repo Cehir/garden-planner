@@ -54,3 +54,75 @@ describe('SeedBank im StoreProvider', () => {
     expect(screen.queryByText(/Ochsenherz/)).not.toBeInTheDocument()
   })
 })
+
+describe('SeedBank – Bearbeiten', () => {
+  function editFirst() {
+    fireEvent.click(screen.getByRole('button', { name: '✏️' }))
+  }
+
+  it('füllt das Formular mit dem Saatgut und sperrt die Pflanzenwahl', () => {
+    renderSeedBank()
+    addSeed('Ochsenherz')
+    editFirst()
+    expect(screen.getByRole('heading', { name: 'Saatgut bearbeiten' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /Sorte/ })).toHaveValue('Ochsenherz')
+    expect(screen.getByRole('textbox', { name: /Sorte/ })).toHaveAttribute('placeholder', 'z.B. Tomate')
+    expect(screen.getByRole('combobox', { name: /Pflanze/ })).toBeDisabled()
+  })
+
+  it('speichert Änderungen und schließt das Formular', () => {
+    renderSeedBank()
+    addSeed('Ochsenherz')
+    editFirst()
+    fireEvent.change(screen.getByRole('textbox', { name: /Sorte/ }), { target: { value: '  Berner Rose ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }))
+    expect(screen.queryByRole('heading', { name: 'Saatgut bearbeiten' })).not.toBeInTheDocument()
+    expect(screen.getByText('Berner Rose')).toBeInTheDocument()
+    expect(screen.queryByText(/Ochsenherz/)).not.toBeInTheDocument()
+  })
+
+  it('löscht das Saatgut', () => {
+    renderSeedBank()
+    addSeed('Ochsenherz')
+    editFirst()
+    fireEvent.click(screen.getByRole('button', { name: 'Löschen' }))
+    expect(screen.getByText('0 Saatgut')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Saatgut hinzufügen/ })).toBeInTheDocument()
+  })
+
+  it('verwirft Änderungen beim Abbrechen und startet danach leer', () => {
+    renderSeedBank()
+    addSeed('Ochsenherz')
+    editFirst()
+    fireEvent.change(screen.getByRole('textbox', { name: /Sorte/ }), { target: { value: 'Verworfen' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Abbrechen' }))
+    expect(screen.getByText('Ochsenherz')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Saatgut hinzufügen/ }))
+    expect(screen.getByRole('textbox', { name: /Sorte/ })).toHaveValue('')
+  })
+
+  it('zeigt beim Hinzufügen einen leeren Platzhalter und keinen Löschen-Button', () => {
+    renderSeedBank()
+    fireEvent.click(screen.getByRole('button', { name: /Saatgut hinzufügen/ }))
+    expect(screen.getByRole('heading', { name: 'Neues Saatgut' })).toBeInTheDocument()
+    expect(screen.getByRole('textbox', { name: /Sorte/ })).toHaveAttribute('placeholder', 'z.B. ')
+    expect(screen.queryByRole('button', { name: 'Löschen' })).not.toBeInTheDocument()
+  })
+
+  it('übernimmt den Pflanzenfilter als Vorauswahl beim Hinzufügen', () => {
+    renderSeedBank()
+    fireEvent.change(screen.getByDisplayValue('Alle Pflanzen'), { target: { value: 'tomate' } })
+    fireEvent.click(screen.getByRole('button', { name: /Saatgut hinzufügen/ }))
+    expect(screen.getByRole('combobox', { name: /Pflanze/ })).toHaveValue('tomate')
+    expect(screen.getByRole('button', { name: 'Hinzufügen' })).toBeEnabled()
+  })
+
+  it('zeigt für abgelaufenes Saatgut ein Abzeichen', () => {
+    renderSeedBank()
+    fireEvent.click(screen.getByRole('button', { name: /Saatgut hinzufügen/ }))
+    fireEvent.change(screen.getByRole('combobox', { name: /Pflanze/ }), { target: { value: 'tomate' } })
+    fireEvent.change(screen.getByLabelText('Haltbarkeitsdatum'), { target: { value: '2000-01-01' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hinzufügen' }))
+    expect(screen.getByText('⚠️ abgelaufen')).toHaveClass('badge', 'expired')
+  })
+})

@@ -2,57 +2,40 @@ import { useMemo } from 'react'
 import type { ChangeEvent } from 'react'
 import type { Phase, Season, Tool } from '../types'
 import { PHASE_LABELS, SEASON_LABELS } from '../seasons'
-import { useStoreState } from '../storeContext'
+import { useHistory, useStoreState } from '../storeContext'
 import { isMac } from '../utils/platform'
 
-interface ToolbarProps {
+/** Was der Plan gerade zeigt */
+interface ToolbarView {
   tool: Tool
-  onTool: (t: Tool) => void
   zoom: number
-  onZoom: (z: number) => void
-  onFit: () => void
-  onPrint: () => void
-  onExport: () => void
-  onImport: (file: File) => void
-  onReset: () => void
-  onUndo: () => void
-  onRedo: () => void
-  canUndo: boolean
-  canRedo: boolean
   season: Season
-  onSeason: (s: Season) => void
   phase: Phase
-  onPhase: (p: Phase) => void
   showRotation: boolean
-  onShowRotation: (v: boolean) => void
   year: number
-  onYear: (y: number) => void
 }
 
-export default function Toolbar({
-  tool,
-  onTool,
-  zoom,
-  onZoom,
-  onFit,
-  onPrint,
-  onExport,
-  onImport,
-  onReset,
-  onUndo,
-  onRedo,
-  canUndo,
-  canRedo,
-  season,
-  onSeason,
-  phase,
-  onPhase,
-  showRotation,
-  onShowRotation,
-  year,
-  onYear,
-}: ToolbarProps) {
+/** Ein Setter je Feld von ToolbarView */
+type ToolbarViewHandlers = { [K in keyof ToolbarView]: (value: ToolbarView[K]) => void }
+
+interface ToolbarActions {
+  fit: () => void
+  print: () => void
+  export: () => void
+  import: (file: File) => void
+  reset: () => void
+}
+
+interface ToolbarProps {
+  view: ToolbarView
+  onView: ToolbarViewHandlers
+  actions: ToolbarActions
+}
+
+export default function Toolbar({ view, onView, actions }: ToolbarProps) {
+  const { tool, zoom, season, phase, showRotation, year } = view
   const state = useStoreState()
+  const { undo, redo, canUndo, canRedo } = useHistory()
 
   const years = useMemo(() => {
     const set = new Set(state.placedPlants.map((p) => p.plantedYear))
@@ -63,7 +46,7 @@ export default function Toolbar({
   function handleImportFile(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (file) {
-      onImport(file)
+      actions.import(file)
       e.target.value = ''
     }
   }
@@ -77,7 +60,7 @@ export default function Toolbar({
         <button
           type="button"
           className={tool === 'select' ? 'tool active' : 'tool'}
-          onClick={() => onTool('select')}
+          onClick={() => onView.tool('select')}
           title="Auswählen / Verschieben (V)"
           aria-label="Auswählen / Verschieben"
         >
@@ -86,7 +69,7 @@ export default function Toolbar({
         <button
           type="button"
           className={tool === 'bed' ? 'tool active' : 'tool'}
-          onClick={() => onTool('bed')}
+          onClick={() => onView.tool('bed')}
           title="Beet zeichnen (B)"
           aria-label="Beet zeichnen"
         >
@@ -95,7 +78,7 @@ export default function Toolbar({
         <button
           type="button"
           className={tool === 'plant' ? 'tool active' : 'tool'}
-          onClick={() => onTool('plant')}
+          onClick={() => onView.tool('plant')}
           title="Pflanze platzieren (P)"
           aria-label="Pflanze platzieren"
         >
@@ -108,16 +91,16 @@ export default function Toolbar({
       </div>
 
       <div className="toolbar-group">
-        <button type="button" className="tool" onClick={() => onZoom(zoom / 1.25)} title="Verkleinern" aria-label="Verkleinern">
+        <button type="button" className="tool" onClick={() => onView.zoom(zoom / 1.25)} title="Verkleinern" aria-label="Verkleinern">
           −
         </button>
         <span className="zoom-level" title="Aktueller Zoom">
           {Math.round(zoom * 100)}%
         </span>
-        <button type="button" className="tool" onClick={onFit} title="Ansicht anpassen (F)">
+        <button type="button" className="tool" onClick={actions.fit} title="Ansicht anpassen (F)">
           Fit
         </button>
-        <button type="button" className="tool" onClick={() => onZoom(zoom * 1.25)} title="Vergrößern" aria-label="Vergrößern">
+        <button type="button" className="tool" onClick={() => onView.zoom(zoom * 1.25)} title="Vergrößern" aria-label="Vergrößern">
           +
         </button>
       </div>
@@ -126,7 +109,7 @@ export default function Toolbar({
         <select
           className="tool select"
           value={year}
-          onChange={(e) => onYear(Number(e.target.value))}
+          onChange={(e) => onView.year(Number(e.target.value))}
           title="Planungsjahr: Beete zeigen nur Pflanzen dieses Jahres"
         >
           {years.map((y) => (
@@ -138,7 +121,7 @@ export default function Toolbar({
         <select
           className="tool select"
           value={season}
-          onChange={(e) => onSeason(e.target.value as Season)}
+          onChange={(e) => onView.season(e.target.value as Season)}
           title="Saison-Filter für den Plan"
         >
           {(Object.keys(SEASON_LABELS) as Season[]).map((s) => (
@@ -150,7 +133,7 @@ export default function Toolbar({
         <select
           className="tool select"
           value={phase}
-          onChange={(e) => onPhase(e.target.value as Phase)}
+          onChange={(e) => onView.phase(e.target.value as Phase)}
           title="Phase: Aussaat, Pflanzung oder Ernte"
         >
           {(Object.keys(PHASE_LABELS) as Phase[]).map((ph) => (
@@ -162,7 +145,7 @@ export default function Toolbar({
         <button
           type="button"
           className={showRotation ? 'tool wide active' : 'tool wide'}
-          onClick={() => onShowRotation(!showRotation)}
+          onClick={() => onView.showRotation(!showRotation)}
           title="Pflanzjahre im Plan einblenden (Fruchtfolge)"
         >
           🔁 Fruchtfolge
@@ -173,7 +156,7 @@ export default function Toolbar({
         <button
           type="button"
           className="tool"
-          onClick={onUndo}
+          onClick={undo}
           disabled={!canUndo}
           title={`Rückgängig (${undoLabel})`}
           aria-label="Rückgängig"
@@ -183,7 +166,7 @@ export default function Toolbar({
         <button
           type="button"
           className="tool"
-          onClick={onRedo}
+          onClick={redo}
           disabled={!canRedo}
           title={`Wiederholen (${redoLabel})`}
           aria-label="Wiederholen"
@@ -193,10 +176,10 @@ export default function Toolbar({
       </div>
 
       <div className="toolbar-group">
-        <button type="button" className="tool wide" onClick={onPrint} title="Garten, Beete und Pflanzen drucken">
+        <button type="button" className="tool wide" onClick={actions.print} title="Garten, Beete und Pflanzen drucken">
           🖨 Drucken
         </button>
-        <button type="button" className="tool wide" onClick={onExport} title="Plan als JSON-Datei speichern">
+        <button type="button" className="tool wide" onClick={actions.export} title="Plan als JSON-Datei speichern">
           💾 Export
         </button>
         <label className="tool wide">
@@ -207,7 +190,7 @@ export default function Toolbar({
         <button
           type="button"
           className="tool wide danger"
-          onClick={onReset}
+          onClick={actions.reset}
           title="Alles zurücksetzen"
         >
           ⚠ Reset

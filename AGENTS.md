@@ -47,7 +47,9 @@ src/
   shadow.ts       shadow polygons + conflict detection (sun from south, SHADOW_LENGTH_FACTOR)
   seasons.ts      month/season helpers
   rotation.ts     crop-rotation cycle + repeat warnings
-  seeds.ts        seed expiry status
+  seeds.ts        seed expiry status + seedBadge
+  bedStats.ts     bedStats: per-bed count, utilization, conflicts, rotation (pure; own module
+                  because shadow.ts/rotation.ts import selectors.ts)
   printPlan.ts    print SVG / legend / seed-bank / full document builders + page scale (pure)
   printWindow.ts  openPrintWindow (DOM glue for the print dialog)
   utils.ts        uid, snap, placedInYear
@@ -59,8 +61,11 @@ src/
                   drag.ts (pointerDownIntent + dragMove, pure), useEditorPointer.ts
                   (pointer handlers + drag transaction), SVG parts (GridLayer, BedShape,
                   BedHandles, ShadowLayer, PlacedPlantShape, DraftRect, Compass)
-  components/     Editor (thin SVG orchestrator), Toolbar, PlantLibrary (+ PlantForm),
-                  SeedBank, BedDetails, Diary, StatusBar, MobileSidebar
+  components/     Editor (thin SVG orchestrator), Toolbar (view/onView/actions props),
+                  PlantLibrary (PlantsPanel), SeedBank (+ SeedForm), BedDetails (picks a
+                  panel), Diary, StatusBar, MobileSidebar
+    bed/          PlacedPlantPanel, GardenPanel, BedPanel, BedStats
+    plants/       PlantForm, RangeFields (RangeField, RangeListField), PlantMeta (icons, months)
 ```
 
 Tests sit next to the source as `*.test.ts(x)`.
@@ -104,13 +109,17 @@ Tests sit next to the source as `*.test.ts(x)`.
 
 The `refactoring-phase-*` branches execute the SOLID refactor plan in
 `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md` (`.hermes/` is gitignored, local only).
-Phases 0–3 are done (shared modules, store split, editor split, `App.tsx` split).
+Phases 0–4 are done (shared modules, store split, editor split, `App.tsx` split, sidebar split).
 Deviations from the plan: `store.tsx` does **not** re-export the moved symbols (that kept the
 lint warnings); importers point at the new modules directly. Phase 2 uses `editor/drag.ts`
 (pure functions) instead of a `dragReducer`. Phase 3 uses `printPageScale(garden)` +
-`printSvgSize(garden)` instead of `printPageScale(garden, opts)`. The plan's line numbers refer
-to the pre-refactor files — locate code by name. Next: Phase 4 — split the sidebar components
-(`BedDetails`, `PlantLibrary`, `SeedBank`, `Toolbar` props). The plan is a **pure refactor:
+`printSvgSize(garden)` instead of `printPageScale(garden, opts)`. Phase 4 puts `bedStats` in
+`bedStats.ts` (not `selectors.ts`, to avoid an import cycle); `SeedForm` takes one `SeedDraft` +
+`onChange(patch)` instead of five field props; `Toolbar` gets `onView` as one setter per field
+(not `onView(patch)`) and keeps reading garden/years via `useStoreState()` and undo/redo via
+`useHistory()` instead of `history`/`garden`/`years` props. The plan's line numbers refer
+to the pre-refactor files — locate code by name. Next: Phase 5 — type safety, DRY and OCP
+polish. The plan is a **pure refactor:
 no behavior changes** (file pre-existing bugs as issues instead), run all three verify gates
 after each task, commit per task. The user prefers tasks done in-session rather
 than delegated to subagents.

@@ -3,14 +3,18 @@ import type { Seed } from '../types'
 import { useStoreDispatch, useStoreState } from '../storeContext'
 import { uid } from '../utils'
 import {
-  daysUntil,
   expiryStatus,
   formatSeedDate,
+  seedBadge,
   type ExpiryStatus,
 } from '../seeds'
 import { plantsById } from '../selectors'
+import SeedForm from './SeedForm'
+import type { SeedDraft } from './SeedForm'
 
 const STATUS_RANK: Record<ExpiryStatus, number> = { expired: 0, soon: 1, ok: 2 }
+
+const EMPTY_DRAFT: SeedDraft = { plantId: '', name: '', producer: '', filled: '', expires: '' }
 
 export default function SeedBank() {
   const state = useStoreState()
@@ -19,11 +23,7 @@ export default function SeedBank() {
   const [plantFilter, setPlantFilter] = useState('')
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
-  const [plantId, setPlantId] = useState('')
-  const [name, setName] = useState('')
-  const [producer, setProducer] = useState('')
-  const [filled, setFilled] = useState('')
-  const [expires, setExpires] = useState('')
+  const [draft, setDraft] = useState<SeedDraft>(EMPTY_DRAFT)
 
   const plantById = useMemo(() => plantsById(state.plants), [state.plants])
 
@@ -48,57 +48,35 @@ export default function SeedBank() {
   }, [state.seeds, filter, plantFilter, plantById])
 
   const today = new Date()
-
-  function badgeFor(seed: Seed): string | null {
-    const status = expiryStatus(seed, today)
-    if (status === 'expired') return '⚠️ abgelaufen'
-    if (status === 'soon') {
-      const d = daysUntil(seed, today)
-      if (d === null) return '⏳ läuft bald ab'
-      if (d === 0) return '⏳ läuft heute ab'
-      return `⏳ läuft in ${d} Tag${d === 1 ? '' : 'en'} ab`
-    }
-    return null
-  }
-
-  function badgeClass(seed: Seed): string {
-    const status = expiryStatus(seed, today)
-    return status === 'expired' ? 'badge expired' : status === 'soon' ? 'badge soon' : 'badge ok'
-  }
+  const editingSeed = editing ? state.seeds.find((s) => s.id === editing) ?? null : null
+  // Verschwundenes Saatgut (z. B. per Rückgängig) schließt das Bearbeiten-Formular
+  const showForm = editing ? editingSeed !== null : adding
 
   function resetForm() {
-    setPlantId('')
-    setName('')
-    setProducer('')
-    setFilled('')
-    setExpires('')
+    setDraft(EMPTY_DRAFT)
   }
 
   function startAdd() {
-    resetForm()
-    setPlantId(plantFilter)
+    setDraft({ ...EMPTY_DRAFT, plantId: plantFilter })
     setEditing(null)
     setAdding(true)
   }
 
   function startEdit(seed: Seed) {
-    setPlantId(seed.plantId)
-    setName(seed.name)
-    setProducer(seed.producer)
-    setFilled(seed.filled)
-    setExpires(seed.expires)
+    const { plantId, name, producer, filled, expires } = seed
+    setDraft({ plantId, name, producer, filled, expires })
     setAdding(false)
     setEditing(seed.id)
   }
 
   function save() {
-    if (!plantId) return
+    if (!draft.plantId) return
     const patch = {
-      plantId,
-      name: name.trim(),
-      producer: producer.trim(),
-      filled: filled.trim(),
-      expires: expires.trim(),
+      plantId: draft.plantId,
+      name: draft.name.trim(),
+      producer: draft.producer.trim(),
+      filled: draft.filled.trim(),
+      expires: draft.expires.trim(),
     }
     if (editing) {
       dispatch({ type: 'updateSeed', id: editing, patch })
@@ -134,7 +112,7 @@ export default function SeedBank() {
       <div className="seed-list">
         {filtered.map((s) => {
           const plant = plantById.get(s.plantId)
-          const badge = badgeFor(s)
+          const badge = seedBadge(s, today)
           return (
             <div key={s.id} className={editing === s.id ? 'seed-item editing' : 'seed-item'}>
               <div className="seed-head">
@@ -162,87 +140,37 @@ export default function SeedBank() {
               <span className="sub dates">
                 Abgefüllt: {formatSeedDate(s.filled)} · Haltbar bis: {formatSeedDate(s.expires)}
               </span>
-              {badge && <span className={badgeClass(s)}>{badge}</span>}
+              {badge && <span className={badge.className}>{badge.text}</span>}
             </div>
           )
         })}
         {filtered.length === 0 && <p className="hint">Kein Saatgut gefunden.</p>}
       </div>
 
-      {(adding || editing) &&
-        (() => {
-          const target = editing ? state.seeds.find((s) => s.id === editing) : null
-          if (editing && !target) return null
-          return (
-            <div className="form">
-              <h3>{editing ? 'Saatgut bearbeiten' : 'Neues Saatgut'}</h3>
-              <label>
-                Pflanze
-                <select
-                  value={plantId}
-                  onChange={(e) => setPlantId(e.target.value)}
-                  disabled={!!target}
-                >
-                  <option value="">– Pflanze wählen –</option>
-                  {state.plants.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.emoji} {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Sorte / Name
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={`z.B. ${target ? plantById.get(target.plantId)?.name ?? '' : ''}`}
-                />
-              </label>
-              <label>
-                Hersteller
-                <input value={producer} onChange={(e) => setProducer(e.target.value)} placeholder="z.B. Dehner, Quedlinburg…" />
-              </label>
-              <label>
-                Abfülldatum
-                <input type="date" value={filled} onChange={(e) => setFilled(e.target.value)} />
-              </label>
-              <label>
-                Haltbarkeitsdatum
-                <input type="date" value={expires} onChange={(e) => setExpires(e.target.value)} />
-              </label>
-              <div className="row">
-                <button type="button" className="primary" onClick={save} disabled={!plantId}>
-                  {editing ? 'Speichern' : 'Hinzufügen'}
-                </button>
-                {editing && (
-                  <button
-                    type="button"
-                    className="danger"
-                    onClick={() => {
-                      dispatch({ type: 'removeSeed', id: editing })
-                      setEditing(null)
-                      resetForm()
-                    }}
-                  >
-                    Löschen
-                  </button>
-                )}
-                <button
-                  type="button"
-                  className="tool"
-                  onClick={() => {
-                    setAdding(false)
-                    setEditing(null)
-                    resetForm()
-                  }}
-                >
-                  Abbrechen
-                </button>
-              </div>
-            </div>
-          )
-        })()}
+      {showForm && (
+        <SeedForm
+          draft={draft}
+          onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
+          plants={state.plants}
+          editingSeed={editingSeed}
+          editingPlantName={editingSeed ? plantById.get(editingSeed.plantId)?.name ?? '' : ''}
+          onSave={save}
+          onCancel={() => {
+            setAdding(false)
+            setEditing(null)
+            resetForm()
+          }}
+          onDelete={
+            editingSeed
+              ? () => {
+                  dispatch({ type: 'removeSeed', id: editingSeed.id })
+                  setEditing(null)
+                  resetForm()
+                }
+              : undefined
+          }
+        />
+      )}
 
       {!adding && !editing && (
         <button type="button" className="tool wide" onClick={startAdd}>
