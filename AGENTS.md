@@ -104,30 +104,29 @@ Tests sit next to the source as `*.test.ts(x)`.
 - Keep pure logic in plain `.ts` modules (TDD them), keep components thin.
 - Commits: Conventional style — `feat:`, `fix:`, `refactor:`, `test:`; small, one task per commit.
   Issue refs like `GH #14` / `Fix #6` are used in messages.
-- Work on a branch, PRs go to `main` on GitHub (`Cehir/garden-planner`).
+- Work on a branch, PRs go to `main` on GitHub (`Cehir/garden-planner`) and are squash-merged.
+- Do tasks in-session rather than delegating them to subagents (user preference).
 
 ## Ongoing work
 
-The `refactoring-phase-*` branches execute the SOLID refactor plan in
-`.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md` (`.hermes/` is gitignored, local only).
-Phases 0–5 are done (shared modules, store split, editor split, `App.tsx` split, sidebar split,
-type-safety/DRY/OCP polish).
-Deviations from the plan: `store.tsx` does **not** re-export the moved symbols (that kept the
-lint warnings); importers point at the new modules directly. Phase 2 uses `editor/drag.ts`
-(pure functions) instead of a `dragReducer`. Phase 3 uses `printPageScale(garden)` +
-`printSvgSize(garden)` instead of `printPageScale(garden, opts)`. Phase 4 puts `bedStats` in
-`bedStats.ts` (not `selectors.ts`, to avoid an import cycle); `SeedForm` takes one `SeedDraft` +
-`onChange(patch)` instead of five field props; `Toolbar` gets `onView` as one setter per field
-(not `onView(patch)`) and keeps reading garden/years via `useStoreState()` and undo/redo via
-`useHistory()` instead of `history`/`garden`/`years` props. The plan's line numbers refer
-to the pre-refactor files — locate code by name. Phase 5 uses an `isRangeList` type guard
-instead of the plan's `as` casts in `toRanges`; `utils.ts` was deleted right away (no
-temporary barrel); `detectMac` checks `userAgentData.platform` case-insensitively **or** the
-user agent (not `??`), so behavior matches the old check. Only the plan's final manual
-verification pass remains. The plan is a **pure refactor:
-no behavior changes** (file pre-existing bugs as issues instead), run all three verify gates
-after each task, commit per task. The user prefers tasks done in-session rather
-than delegated to subagents.
+The SOLID refactor plan in `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md`
+(`.hermes/` is gitignored, local only) is merged into `main`: phases 0–5 (shared modules, store
+split, editor split, `App.tsx` split, sidebar split, type-safety/DRY/OCP polish), PRs #23–#32.
+Only the plan's final manual verification pass remains. The plan is a pure refactor, so bugs
+that pass turns up go into GitHub issues instead of being fixed inline. The plan's line numbers
+refer to the pre-refactor files — locate code by name.
+
+Intentional deviations from the plan (the code is right, not the plan): `store.tsx` does
+**not** re-export the moved symbols — importers point at the new modules directly. Phase 2 uses
+`editor/drag.ts` (pure functions) instead of a `dragReducer`. Phase 3 uses
+`printPageScale(garden)` + `printSvgSize(garden)` instead of `printPageScale(garden, opts)`.
+Phase 4 puts `bedStats` in `bedStats.ts` (not `selectors.ts`, to avoid an import cycle);
+`SeedForm` takes one `SeedDraft` + `onChange(patch)` instead of five field props; `Toolbar` gets
+`onView` as one setter per field (not `onView(patch)`) and reads garden/years via
+`useStoreState()` and undo/redo via `useHistory()` instead of props. Phase 5 uses an
+`isRangeList` type guard instead of `as` casts in `toRanges`; `utils.ts` was deleted without a
+temporary barrel; `detectMac` checks `userAgentData.platform` case-insensitively **or** the user
+agent (not `??`), so behavior matches the old check.
 
 ## Agent skills
 
