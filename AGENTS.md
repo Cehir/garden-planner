@@ -38,6 +38,10 @@ regression test. `test.only` fails the run (`forbidOnly`); focus with
 `npx playwright test <file> -g '<name>'` instead. Locally an already running server on port 4180
 is reused without rebuilding, so stop it (or restart it after `vite build`) to test fresh code.
 
+**CI** (`.github/workflows/ci.yml`) runs test → lint → build → e2e on every PR and on pushes to
+`main` (Node 24, Chromium only). On failure the Playwright report is uploaded as the
+`playwright-report` artifact (traces included). Don't merge a PR with red CI.
+
 Note: oxlint's `only-export-components` also flags non-component *re-exports* from `.tsx` files —
 put hooks/helpers in `.ts` modules and import them from there.
 

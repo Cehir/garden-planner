@@ -25,8 +25,8 @@ mobile Seitenleiste ohne Inhalt (#28) kann sie grundsätzlich nicht finden.
 - Beim Schreiben gefundene Bugs werden als Issue erfasst und mit `test.fail()` plus Issue-Verweis
   festgehalten, nicht nebenbei behoben.
 - Durchgesetzt wird die Suite von GitHub Actions (für öffentliche Repos kostenlos); Git-Hooks
-  in `.githooks/` (ohne zusätzliche Abhängigkeit) geben nur schnelleres Feedback. Beides folgt
-  in eigenen PRs nach der Einrichtung der Suite; bis dahin wird `npm run e2e` von Hand ausgeführt.
+  in `.githooks/` (ohne zusätzliche Abhängigkeit) geben nur schnelleres Feedback. Der
+  Workflow liegt in `.github/workflows/ci.yml`; die Hooks folgen in einem eigenen PR.
 
 ## Alternativen
 
