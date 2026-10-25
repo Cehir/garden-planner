@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import GridLayer from './GridLayer'
 
@@ -26,5 +26,15 @@ describe('GridLayer', () => {
     const corner = container.querySelector('text[x="0"][y="0"]')
     expect(corner?.textContent).toBe('0')
     expect(corner?.getAttribute('text-anchor')).toBe('start')
+  })
+
+  it('fasst die Lineal-Beschriftung in einer benannten Gruppe zusammen', () => {
+    render(
+      <svg>
+        <GridLayer width={250} height={150} />
+      </svg>,
+    )
+    const ruler = screen.getByRole('group', { name: 'Lineal' })
+    expect(within(ruler).getAllByText(/^\d+$/).map((t) => t.textContent)).toEqual(['0', '100', '200', '100'])
   })
 })

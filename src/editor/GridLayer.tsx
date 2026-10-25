@@ -29,21 +29,23 @@ export default function GridLayer({ width, height }: { width: number; height: nu
           strokeWidth={1}
         />
       ))}
-      {ruler.map((label) => (
-        <text
-          key={`${label.edge}${label.value}`}
-          x={label.x}
-          y={label.y}
-          fill={RULER_COLOR}
-          fontSize={RULER_FONT_SIZE}
-          textAnchor={label.anchor}
-          dx={label.dx}
-          dy={label.dy}
-          pointerEvents="none"
-        >
-          {label.value}
-        </text>
-      ))}
+      <g role="group" aria-label="Lineal">
+        {ruler.map((label) => (
+          <text
+            key={`${label.edge}${label.value}`}
+            x={label.x}
+            y={label.y}
+            fill={RULER_COLOR}
+            fontSize={RULER_FONT_SIZE}
+            textAnchor={label.anchor}
+            dx={label.dx}
+            dy={label.dy}
+            pointerEvents="none"
+          >
+            {label.value}
+          </text>
+        ))}
+      </g>
     </>
   )
 }
