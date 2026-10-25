@@ -3,7 +3,7 @@ export const GRID_STEP = 10
 /** Abstand der kräftigeren Hauptlinien in cm. */
 export const GRID_MAJOR_STEP = 50
 /** Abstand der Lineal-Beschriftung am Gartenrand in cm (Editor + Druck). */
-export const RULER_LABEL_STEP = 100
+const RULER_LABEL_STEP = 100
 
 export interface GridLine {
   x1: number
