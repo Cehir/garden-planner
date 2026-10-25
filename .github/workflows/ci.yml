@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # audit.yml startet CI für seinen PR so (GITHUB_TOKEN löst kein pull_request aus)
+  workflow_dispatch:
 
 permissions:
   contents: read
