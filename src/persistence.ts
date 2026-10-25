@@ -1,7 +1,7 @@
 import type { AppState, Garden, MonthRange } from './types'
 import { DEFAULT_PLANTS } from './plants'
 
-const STORAGE_KEY = 'gartenplaner-state-v1'
+export const STORAGE_KEY = 'gartenplaner-state-v1'
 
 const DEFAULT_GARDEN: Garden = { name: 'Mein Garten', width: 800, height: 600 }
 
