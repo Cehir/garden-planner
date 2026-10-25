@@ -6,7 +6,12 @@ import { ACCENT_COLOR, INK_COLOR } from '../palette'
 export default function BedShape({ bed, selected }: { bed: Bed; selected: boolean }) {
   const fontSize = Math.max(8, Math.min(16, Math.min(bed.w, bed.h) * 0.18))
   return (
-    <g className={selected ? 'bed selected' : 'bed'}>
+    <g
+      className={selected ? 'bed selected' : 'bed'}
+      role="group"
+      aria-label={`Beet: ${bed.name || 'ohne Namen'}`}
+      aria-current={selected || undefined}
+    >
       <rect
         x={bed.x}
         y={bed.y}
