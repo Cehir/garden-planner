@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ComponentProps, Dispatch } from 'react'
 import { StoreProvider } from '../store'
@@ -151,6 +151,26 @@ describe('Editor: zugängliche Namen', () => {
     renderEditor({ selected: { kind: 'placed', id: 'p1' } })
     expect(screen.getByRole('group', { name: 'Tomate in Beet 1' })).toHaveAttribute('aria-current', 'true')
     expect(screen.getByRole('img', { name: 'Pflanzengröße ändern' })).toBeInTheDocument()
+  })
+
+  it('benennt Schattenwurf und Schattenkonflikt', () => {
+    localStorage.clear()
+    // Tomate (70 cm hoch) wirft ihren Schatten nach Norden auf die sonnenhungrige Chili (40 cm)
+    saveState({
+      ...createDefaultState(),
+      beds: [{ ...bed, h: 200 }],
+      placedPlants: [
+        { ...placed, plantId: 'tomate', y: 0.8, size: 60 },
+        { ...placed, id: 'p2', plantId: 'chili', y: 0.4, size: 40 },
+      ],
+    })
+    renderEditor()
+    expect(screen.getByRole('img', { name: 'Schatten: Tomate' })).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'Schatten: Chili' })).toBeInTheDocument()
+    const chili = screen.getByRole('group', { name: 'Chili in Beet 1' })
+    expect(within(chili).getByRole('img', { name: 'Schattenkonflikt' })).toBeInTheDocument()
+    const tomate = screen.getByRole('group', { name: 'Tomate in Beet 1' })
+    expect(within(tomate).queryByRole('img', { name: 'Schattenkonflikt' })).toBeNull()
   })
 
   it('benennt die acht Beet-Anfasser nach Himmelsrichtung', () => {

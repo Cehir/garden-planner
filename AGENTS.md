@@ -103,6 +103,10 @@ from `e2e/fixtures.ts`.
   `await seedState({ beds: [...], garden: { width: 600 } })` before `page.goto('/')`. The patch
   goes through `normalizeState` (partial `garden` is fine) and lands in localStorage once per
   tab, so `page.reload()` keeps the app's own saves.
+- Editor helpers live in `e2e/editor.ts`: `bedGroup`/`plantGroup` locators, `toScreen(page, cm)`
+  and `dragBy(page, fromPx, dxCm, dyCm)` for pointer gestures in garden centimetres, and
+  `savedState(page)` to assert on what the app wrote to localStorage. Names match by substring
+  unless `exact: true` (`Beetgröße ändern: Nord` also hits `Nordwest`).
 - Visual checks are geometry assertions (bounding boxes inside garden/viewport), not screenshots.
 - A bug found while writing a test → GitHub issue + `test.fail()` with a `// GH #n` comment,
   don't fix it in the same PR.

@@ -85,6 +85,8 @@ export default function PlacedPlantShape({
           textAnchor="middle"
           fontSize={r * 0.7}
           pointerEvents="none"
+          role="img"
+          aria-label="Schattenkonflikt"
         >
           ⚠️
         </text>
