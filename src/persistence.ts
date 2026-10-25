@@ -16,10 +16,16 @@ export function createDefaultState(): AppState {
   }
 }
 
-function toRanges(value: MonthRange | MonthRange[] | undefined): MonthRange[] | undefined {
+// Ältere Exporte speicherten einen einzelnen Bereich ([3, 6]) statt einer Liste ([[3, 6]])
+type LegacyRanges = MonthRange | MonthRange[]
+
+function isRangeList(value: LegacyRanges): value is MonthRange[] {
+  return Array.isArray(value[0])
+}
+
+function toRanges(value: LegacyRanges | undefined): MonthRange[] | undefined {
   if (value == null) return undefined
-  if (Array.isArray(value[0])) return value as MonthRange[]
-  return [value as MonthRange]
+  return isRangeList(value) ? value : [value]
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -65,7 +71,7 @@ export function normalizeState(raw: Partial<AppState>): AppState {
     })),
     placedPlants: arrayOr(raw.placedPlants, []).map((p) => ({
       ...p,
-      plantedYear: Number.isFinite(p.plantedYear) ? (p.plantedYear as number) : new Date().getFullYear(),
+      plantedYear: Number.isFinite(p.plantedYear) ? p.plantedYear : new Date().getFullYear(),
     })),
     diary: arrayOr(raw.diary, []).map((e) => ({
       ...e,
