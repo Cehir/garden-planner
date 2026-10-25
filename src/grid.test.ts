@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { gridLines, snap } from './grid'
+import { gridLines, rulerLabels, snap } from './grid'
 
 describe('gridLines', () => {
   it('produces vertical + horizontal lines on the 10cm step', () => {
@@ -30,5 +30,15 @@ describe('snap', () => {
   it('accepts a custom grid step', () => {
     expect(snap(37, 25)).toBe(25)
     expect(snap(38, 25)).toBe(50)
+  })
+})
+
+describe('rulerLabels', () => {
+  it('labels the top and left edge every 100cm, starting at 0', () => {
+    expect(rulerLabels(350, 200)).toEqual({ top: [0, 100, 200, 300], left: [0, 100, 200] })
+  })
+
+  it('includes the far edge when it falls on a label step', () => {
+    expect(rulerLabels(200, 100)).toEqual({ top: [0, 100, 200], left: [0, 100] })
   })
 })

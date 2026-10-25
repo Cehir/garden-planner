@@ -25,4 +25,22 @@ export function gridLines(width: number, height: number, step = GRID_STEP): Grid
   return out
 }
 
+export interface RulerLabels {
+  /** x-Positionen am oberen Rand (cm). */
+  top: number[]
+  /** y-Positionen am linken Rand (cm). */
+  left: number[]
+}
+
+function labelSteps(length: number): number[] {
+  const out: number[] = []
+  for (let v = 0; v <= length; v += RULER_LABEL_STEP) out.push(v)
+  return out
+}
+
+/** Positionen der Lineal-Beschriftung am oberen und linken Gartenrand, beginnend bei 0 (Editor + Druck). */
+export function rulerLabels(width: number, height: number): RulerLabels {
+  return { top: labelSteps(width), left: labelSteps(height) }
+}
+
 export const snap = (v: number, grid = GRID_STEP): number => Math.round(v / grid) * grid

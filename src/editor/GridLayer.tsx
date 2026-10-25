@@ -1,18 +1,10 @@
-import { gridLines as buildGridLines, RULER_LABEL_STEP } from '../grid'
+import { gridLines as buildGridLines, rulerLabels } from '../grid'
 import { FRAME_COLOR } from '../palette'
 
-// Gartenfläche, Raster und Lineal-Beschriftung (alle RULER_LABEL_STEP cm)
+// Gartenfläche, Raster und Lineal-Beschriftung (ab 0 alle RULER_LABEL_STEP cm)
 export default function GridLayer({ width, height }: { width: number; height: number }) {
   const gridLines = buildGridLines(width, height)
-
-  const topLabels: { x: number; label: string }[] = []
-  for (let x = RULER_LABEL_STEP; x <= width; x += RULER_LABEL_STEP) {
-    topLabels.push({ x, label: `${x}` })
-  }
-  const leftLabels: { y: number; label: string }[] = []
-  for (let y = RULER_LABEL_STEP; y <= height; y += RULER_LABEL_STEP) {
-    leftLabels.push({ y, label: `${y}` })
-  }
+  const ruler = rulerLabels(width, height)
 
   return (
     <>
@@ -36,10 +28,10 @@ export default function GridLayer({ width, height }: { width: number; height: nu
           strokeWidth={1}
         />
       ))}
-      {topLabels.map((l, i) => (
+      {ruler.top.map((x) => (
         <text
-          key={`r${i}`}
-          x={l.x}
+          key={`r${x}`}
+          x={x}
           y={0}
           fill="#b3a892"
           fontSize={12}
@@ -47,21 +39,21 @@ export default function GridLayer({ width, height }: { width: number; height: nu
           dy={-4}
           pointerEvents="none"
         >
-          {l.label}
+          {x}
         </text>
       ))}
-      {leftLabels.map((l, i) => (
+      {ruler.left.map((y) => (
         <text
-          key={`rb${i}`}
+          key={`rb${y}`}
           x={0}
-          y={l.y}
+          y={y}
           fill="#b3a892"
           fontSize={12}
           dx={4}
           dy={4}
           pointerEvents="none"
         >
-          {l.label}
+          {y}
         </text>
       ))}
     </>
