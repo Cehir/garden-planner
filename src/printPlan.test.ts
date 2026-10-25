@@ -1,6 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import type { AppState } from './types'
-import { buildPrintLegend, buildPrintSeedBank, buildPrintSeedBankHtml, buildPrintSvg, escapeXml } from './printPlan'
+import {
+  buildPrintDocument,
+  buildPrintLegend,
+  buildPrintSeedBank,
+  buildPrintSeedBankHtml,
+  buildPrintSvg,
+  escapeXml,
+  PRINT_HEADER_LEGEND_RESERVE,
+  PRINT_MARGIN,
+  PRINT_PAGE_H,
+  PRINT_PAGE_W,
+  printPageScale,
+  printSvgSize,
+} from './printPlan'
 
 function makeState(): AppState {
   return {
@@ -182,5 +195,72 @@ describe('buildPrintSeedBankHtml', () => {
   it('zeigt Hinweis bei leerer Samenbank', () => {
     const html = buildPrintSeedBankHtml(makeState())
     expect(html).toContain('Keine Saatgut-Einträge in der Samenbank.')
+  })
+})
+
+describe('printPageScale', () => {
+  const usableW = PRINT_PAGE_W - 2 * PRINT_MARGIN
+  const usableH = PRINT_PAGE_H - 2 * PRINT_MARGIN - PRINT_HEADER_LEGEND_RESERVE
+
+  it('begrenzt einen breiten Garten auf die Seitenbreite', () => {
+    const scale = printPageScale({ name: 'G', width: 800, height: 600 })
+    expect(scale).toBeCloseTo(usableW / 800)
+    expect(800 * scale).toBeCloseTo(usableW)
+    expect(600 * scale).toBeLessThanOrEqual(usableH)
+  })
+
+  it('begrenzt einen hohen Garten auf die Seitenhöhe abzüglich Kopf/Legende', () => {
+    const scale = printPageScale({ name: 'G', width: 100, height: 1000 })
+    expect(scale).toBeCloseTo(usableH / 1000)
+    expect(100 * scale).toBeLessThanOrEqual(usableW)
+  })
+})
+
+describe('printSvgSize', () => {
+  it('liefert die skalierte Größe auf zwei Nachkommastellen gerundet', () => {
+    const size = printSvgSize({ name: 'G', width: 300, height: 700 })
+    const scale = printPageScale({ name: 'G', width: 300, height: 700 })
+    expect(size.width).toBe(Math.round(300 * scale * 100) / 100)
+    expect(size.height).toBe(Math.round(700 * scale * 100) / 100)
+  })
+})
+
+describe('buildPrintDocument', () => {
+  const size = { width: 698, height: 523.5 }
+
+  it('ist ein vollständiges HTML-Dokument mit maskiertem Gartennamen im Titel', () => {
+    const html = buildPrintDocument(makeState(), base, size)
+    expect(html.startsWith('<!DOCTYPE html>')).toBe(true)
+    expect(html).toContain('<title>Test &amp; Garten – Gartenplan 2026</title>')
+    expect(html).toContain('<h1>Test &amp; Garten</h1>')
+    expect(html).toContain('Maße: 800 × 600 cm · Jahr 2026</p>')
+  })
+
+  it('enthält den Plan in der übergebenen Größe', () => {
+    const html = buildPrintDocument(makeState(), base, size)
+    expect(html).toContain('<svg')
+    expect(html).toContain('width="698" height="523.5"')
+  })
+
+  it('enthält die Legende des Jahres', () => {
+    const html = buildPrintDocument(makeState(), base, size)
+    expect(html).toContain('<span class="lg-name">Karotte</span><span class="lg-spacing">25 cm</span>')
+    expect(html).toContain('<span class="lg-name">Salat</span>')
+    expect(html).not.toContain('<span class="lg-name">Tomate</span>')
+  })
+
+  it('zeigt einen Hinweis bei leerer Legende', () => {
+    const html = buildPrintDocument(makeState(), { ...base, year: 2030 }, size)
+    expect(html).toContain('<li class="muted">Keine Pflanzen im gewählten Jahr.</li>')
+  })
+
+  it('nennt die gewählte Saison in den Metadaten', () => {
+    const html = buildPrintDocument(makeState(), { ...base, season: 'summer' }, size)
+    expect(html).toContain('Jahr 2026 · Sommer</p>')
+  })
+
+  it('enthält die Samenbank', () => {
+    const html = buildPrintDocument(makeState(), base, size)
+    expect(html).toContain('<section class="seedbank">')
   })
 })
