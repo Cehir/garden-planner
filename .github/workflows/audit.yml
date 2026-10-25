@@ -1,0 +1,121 @@
+name: npm audit
+
+# Wöchentlich: normale Fixes (nur package-lock.json) als PR mit Auto-Merge,
+# Befunde, die nur ein Force-Fix (Major-Bump) behebt, als Issue.
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: chore/audit-fix-auto
+      ISSUE_TITLE: 'npm audit: Force-Fix nötig'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      # npm audit beendet sich mit 1, sobald es Befunde gibt
+      - name: Befunde vor dem Fix
+        run: npm audit --json > "$RUNNER_TEMP/before.json" || true
+
+      # Nur das Lockfile, ohne Install-Skripte aus fremden Paketen
+      - name: Normale Fixes anwenden
+        run: npm audit fix --package-lock-only --ignore-scripts || true
+
+      - name: Versionsbereiche unverändert?
+        run: |
+          if ! git diff --quiet package.json; then
+            echo "::error::npm audit fix hat package.json geändert – das ist ein Force-Fix und gehört in einen eigenen PR."
+            git diff package.json
+            exit 1
+          fi
+
+      - name: Befunde nach dem Fix
+        run: npm audit --json > "$RUNNER_TEMP/after.json" || true
+
+      - name: PR für normale Fixes
+        run: |
+          if git diff --quiet package-lock.json; then
+            echo "Keine normalen Fixes."
+            exit 0
+          fi
+
+          ghsa='[.vulnerabilities[].via[] | objects | .url | sub(".*/"; "")] | unique'
+          fixed=$(jq -rn --slurpfile b "$RUNNER_TEMP/before.json" --slurpfile a "$RUNNER_TEMP/after.json" \
+            "(\$b[0] | $ghsa) - (\$a[0] | $ghsa) | .[]")
+          {
+            echo 'chore: npm audit fix'
+            echo
+            echo 'Automatisch per npm audit fix; nur package-lock.json, alle Versionsbereiche unverändert.'
+            echo
+            for id in $fixed; do echo "- $id"; done
+          } > "$RUNNER_TEMP/message.txt"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -C "$BRANCH"
+          git commit -q -F "$RUNNER_TEMP/message.txt" package-lock.json
+          git push --force origin "$BRANCH"
+
+          tail -n +3 "$RUNNER_TEMP/message.txt" > "$RUNNER_TEMP/body.md"
+          pr=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [ -n "$pr" ]; then
+            gh pr edit "$pr" --body-file "$RUNNER_TEMP/body.md"
+          else
+            gh pr create --base main --head "$BRANCH" --title 'chore: npm audit fix' --body-file "$RUNNER_TEMP/body.md"
+          fi
+
+          # PRs/Pushes mit GITHUB_TOKEN lösen kein pull_request-Event aus;
+          # workflow_dispatch schon – der Check landet auf demselben Commit.
+          gh workflow run ci.yml --ref "$BRANCH"
+          gh pr merge "$BRANCH" --auto --squash
+
+      - name: Issue für Force-Fixes
+        run: |
+          issue=$(gh issue list --state open --search "in:title \"$ISSUE_TITLE\"" --json number,title \
+            --jq "[.[] | select(.title == \"$ISSUE_TITLE\")][0].number // empty")
+          total=$(jq '.metadata.vulnerabilities.total // 0' "$RUNNER_TEMP/after.json")
+
+          if [ "$total" -eq 0 ]; then
+            if [ -n "$issue" ]; then
+              gh issue close "$issue" --comment 'Keine offenen Befunde mehr.'
+            fi
+            exit 0
+          fi
+
+          # shellcheck disable=SC2016 # Backticks sind Markdown
+          {
+            echo 'Diese Befunde behebt `npm audit fix` nicht. Pro Paket ein eigener PR (siehe AGENTS.md, „Dependency audits“).'
+            echo
+            echo '| Paket | Schwere | Betroffen | Advisories | Fix |'
+            echo '| --- | --- | --- | --- | --- |'
+            jq -r '.vulnerabilities[] | "| \(.name) | \(.severity) | \(.range) | \([.via[] | objects | .url] | unique | join(" ")) | \(
+              if .fixAvailable == false then "keiner"
+              elif (.fixAvailable | type) == "object" then "\(.fixAvailable.name)@\(.fixAvailable.version)\(if .fixAvailable.isSemVerMajor then " (Major)" else "" end)"
+              else "ja" end) |"' "$RUNNER_TEMP/after.json"
+          } > "$RUNNER_TEMP/issue.md"
+
+          if [ -n "$issue" ]; then
+            gh issue edit "$issue" --body-file "$RUNNER_TEMP/issue.md"
+          else
+            gh issue create --title "$ISSUE_TITLE" --label ready-for-agent --body-file "$RUNNER_TEMP/issue.md"
+          fi
