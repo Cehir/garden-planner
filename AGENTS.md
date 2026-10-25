@@ -110,7 +110,8 @@ Tests sit next to the source as `*.test.ts(x)`.
 
 The `refactoring-phase-*` branches execute the SOLID refactor plan in
 `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md` (`.hermes/` is gitignored, local only).
-Phases 0–4 are done (shared modules, store split, editor split, `App.tsx` split, sidebar split).
+Phases 0–5 are done (shared modules, store split, editor split, `App.tsx` split, sidebar split,
+type-safety/DRY/OCP polish).
 Deviations from the plan: `store.tsx` does **not** re-export the moved symbols (that kept the
 lint warnings); importers point at the new modules directly. Phase 2 uses `editor/drag.ts`
 (pure functions) instead of a `dragReducer`. Phase 3 uses `printPageScale(garden)` +
@@ -119,8 +120,11 @@ lint warnings); importers point at the new modules directly. Phase 2 uses `edito
 `onChange(patch)` instead of five field props; `Toolbar` gets `onView` as one setter per field
 (not `onView(patch)`) and keeps reading garden/years via `useStoreState()` and undo/redo via
 `useHistory()` instead of `history`/`garden`/`years` props. The plan's line numbers refer
-to the pre-refactor files — locate code by name. Next: Phase 5 — type safety, DRY and OCP
-polish. The plan is a **pure refactor:
+to the pre-refactor files — locate code by name. Phase 5 uses an `isRangeList` type guard
+instead of the plan's `as` casts in `toRanges`; `utils.ts` was deleted right away (no
+temporary barrel); `detectMac` checks `userAgentData.platform` case-insensitively **or** the
+user agent (not `??`), so behavior matches the old check. Only the plan's final manual
+verification pass remains. The plan is a **pure refactor:
 no behavior changes** (file pre-existing bugs as issues instead), run all three verify gates
 after each task, commit per task. The user prefers tasks done in-session rather
 than delegated to subagents.
