@@ -48,16 +48,19 @@ src/
   seasons.ts      month/season helpers
   rotation.ts     crop-rotation cycle + repeat warnings
   seeds.ts        seed expiry status
-  printPlan.ts    print SVG / legend / seed-bank HTML builders (pure)
+  printPlan.ts    print SVG / legend / seed-bank / full document builders + page scale (pure)
+  printWindow.ts  openPrintWindow (DOM glue for the print dialog)
   utils.ts        uid, snap, placedInYear
   utils/platform.ts  isMac
-  App.tsx         layout, tool/selection state, keyboard shortcuts, import/export, print
+  App.tsx         layout + wiring of the hooks below (GardenApp)
+  hooks/          useEditorUi (tool/selection/filter/year state), useKeyboardShortcuts,
+                  useFitZoom, useImportExport (parseImport, exportFileName are pure)
   editor/         Editor internals: geometry.ts (hit-test, resize, handles, CTM),
                   drag.ts (pointerDownIntent + dragMove, pure), useEditorPointer.ts
                   (pointer handlers + drag transaction), SVG parts (GridLayer, BedShape,
                   BedHandles, ShadowLayer, PlacedPlantShape, DraftRect, Compass)
   components/     Editor (thin SVG orchestrator), Toolbar, PlantLibrary (+ PlantForm),
-                  SeedBank, BedDetails, Diary
+                  SeedBank, BedDetails, Diary, StatusBar, MobileSidebar
 ```
 
 Tests sit next to the source as `*.test.ts(x)`.
@@ -101,12 +104,15 @@ Tests sit next to the source as `*.test.ts(x)`.
 
 The `refactoring-phase-*` branches execute the SOLID refactor plan in
 `.hermes/plans/2026-09-12_215800-solid-code-quality-plan.md` (`.hermes/` is gitignored, local only).
-Phase 0 (selectors/grid/palette), Phase 1 (store split) and Phase 2 (editor split) are done.
+Phases 0–3 are done (shared modules, store split, editor split, `App.tsx` split).
 Deviations from the plan: `store.tsx` does **not** re-export the moved symbols (that kept the
 lint warnings); importers point at the new modules directly. Phase 2 uses `editor/drag.ts`
-(pure functions) instead of a `dragReducer`, plus a `useEditorPointer` hook to keep `Editor`
-under 150 lines. Next: Phase 3 — split `App.tsx`. The plan is a **pure refactor: no behavior changes**, run all three
-verify gates after each task, commit per task. The user prefers tasks done in-session rather
+(pure functions) instead of a `dragReducer`. Phase 3 uses `printPageScale(garden)` +
+`printSvgSize(garden)` instead of `printPageScale(garden, opts)`. The plan's line numbers refer
+to the pre-refactor files — locate code by name. Next: Phase 4 — split the sidebar components
+(`BedDetails`, `PlantLibrary`, `SeedBank`, `Toolbar` props). The plan is a **pure refactor:
+no behavior changes** (file pre-existing bugs as issues instead), run all three verify gates
+after each task, commit per task. The user prefers tasks done in-session rather
 than delegated to subagents.
 
 ## Agent skills

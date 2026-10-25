@@ -27,3 +27,22 @@ describe('Issue #1 – Pflanze auswählen aktiviert das Pflanz-Werkzeug', () => 
     ).toBeInTheDocument()
   })
 })
+
+describe('App – Verdrahtung', () => {
+  it('wechselt per Tastenkürzel das Werkzeug und zeigt den passenden Hinweis', () => {
+    render(<App />)
+    expect(screen.getByText(/Auswählen & Verschieben/)).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'b' })
+    expect(screen.getByText('Ziehe mit der Maus, um ein Beet aufzuzeichnen.')).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.getByText(/Auswählen & Verschieben/)).toBeInTheDocument()
+  })
+
+  it('öffnet und schließt die mobile Seitenleiste', () => {
+    const { container } = render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '🌿 Pflanzen' }))
+    expect(container.querySelector('.sidebar.mobile-open')).not.toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Seitenleiste schließen' }))
+    expect(container.querySelector('.sidebar.mobile-open')).toBeNull()
+  })
+})
