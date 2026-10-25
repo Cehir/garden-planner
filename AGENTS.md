@@ -97,8 +97,9 @@ from `e2e/fixtures.ts`.
 
 - Query by role/name (`getByRole('group', { name: 'Beet: Hochbeet' })`), never `data-testid`.
   The editor SVG exposes `Gartenplan`, `Beet: <Name>`, `<Pflanze> in <Beet>` (selection via
-  `aria-current`), `Beetgröße ändern: Nordwest…West`, `Pflanzengröße ändern`. New SVG elements
-  need accessible names too.
+  `aria-current`), `Beetgröße ändern: Nordwest…West`, `Pflanzengröße ändern`, `Schatten: <Pflanze>`,
+  `Schattenkonflikt` (inside the plant group) and the ruler group `Lineal`. New SVG elements need
+  accessible names too.
 - Flows that are *about* creating something go through the UI; all others start from
   `await seedState({ beds: [...], garden: { width: 600 } })` before `page.goto('/')`. The patch
   goes through `normalizeState` (partial `garden` is fine) and lands in localStorage once per
@@ -111,7 +112,9 @@ from `e2e/fixtures.ts`.
   `e2e/fixtures.ts`. Browser dialogs: answer `confirm`/`alert` with `page.once('dialog', …)`
   before the click; for the print popup stub `window.print` via `context().addInitScript` (real
   `print()` fires `afterprint` at once in headless Chromium and the app closes the window).
-- Visual checks are geometry assertions (bounding boxes inside garden/viewport), not screenshots.
+- Visual checks are geometry assertions (bounding boxes inside garden/viewport), not screenshots:
+  `isInside`/`overlaps` from `e2e/geometry.ts`, with a message naming both boxes (`fmt`). Before
+  trusting a new layout test, temporarily reintroduce the bug it guards against and watch it fail.
 - A bug found while writing a test → GitHub issue + `test.fail()` with a `// GH #n` comment,
   don't fix it in the same PR.
 
