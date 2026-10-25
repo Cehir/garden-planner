@@ -107,6 +107,10 @@ from `e2e/fixtures.ts`.
   and `dragBy(page, fromPx, dxCm, dyCm)` for pointer gestures in garden centimetres, and
   `savedState(page)` to assert on what the app wrote to localStorage. Names match by substring
   unless `exact: true` (`Beetgröße ändern: Nord` also hits `Nordwest`).
+- Shared sample data (`sampleBed` „Hochbeet“, `sampleTomato`, `currentYear`) comes from
+  `e2e/fixtures.ts`. Browser dialogs: answer `confirm`/`alert` with `page.once('dialog', …)`
+  before the click; for the print popup stub `window.print` via `context().addInitScript` (real
+  `print()` fires `afterprint` at once in headless Chromium and the app closes the window).
 - Visual checks are geometry assertions (bounding boxes inside garden/viewport), not screenshots.
 - A bug found while writing a test → GitHub issue + `test.fail()` with a `// GH #n` comment,
   don't fix it in the same PR.
