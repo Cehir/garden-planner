@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useState } from 'react'
 import type { Phase, Plant, Season, Selected, Tool } from './types'
 import { StoreProvider } from './store'
 import { useStore } from './storeContext'
-import { createDefaultState } from './persistence'
 import Toolbar from './components/Toolbar'
 import Editor from './components/Editor'
 import BedDetails from './components/BedDetails'
@@ -10,6 +9,8 @@ import PlantLibrary from './components/PlantLibrary'
 import { buildPrintDocument, printSvgSize } from './printPlan'
 import { isMac } from './utils/platform'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
+import { useFitZoom } from './hooks/useFitZoom'
+import { useImportExport } from './hooks/useImportExport'
 import './App.css'
 
 function GardenApp() {
@@ -17,27 +18,13 @@ function GardenApp() {
   const [tool, setTool] = useState<Tool>('select')
   const [selected, setSelected] = useState<Selected | null>(null)
   const [plantToPlace, setPlantToPlace] = useState<Plant | null>(null)
-  const [userZoom, setUserZoom] = useState<number | null>(null)
   const [season, setSeason] = useState<Season>('all')
   const [phase, setPhase] = useState<Phase>('plant')
   const [showRotation, setShowRotation] = useState(false)
   const [year, setYear] = useState(new Date().getFullYear())
   const [mobileSidebar, setMobileSidebar] = useState<'library' | 'details' | null>(null)
 
-  // "Fit to screen" is derived from the (external) window size + garden
-  // dimensions, so it is computed during render instead of stored in state.
-  const fitZoom = useMemo(() => {
-    const h = Math.max(
-      0.15,
-      Math.min(3, (window.innerHeight - 190) / state.garden.height),
-    )
-    const w = Math.max(0.15, Math.min(3, (window.innerWidth - 460) / state.garden.width))
-    return Math.min(h, w)
-  }, [state.garden.width, state.garden.height])
-
-  const zoom = userZoom ?? fitZoom
-
-  const fit = useCallback(() => setUserZoom(null), [])
+  const { zoom, setZoom, fit } = useFitZoom(state.garden)
 
   useKeyboardShortcuts({
     onUndo: undo,
@@ -99,45 +86,16 @@ function GardenApp() {
     w.onafterprint = () => w.close()
   }
 
-  function handleExport() {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${state.garden.name.replace(/\s+/g, '-').toLowerCase() || 'gartenplan'}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
-  function handleImport(file: File) {
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result)) as ReturnType<typeof createDefaultState>
-        if (!parsed || !parsed.garden || !Array.isArray(parsed.beds)) {
-          throw new Error('invalid')
-        }
-        dispatch({ type: 'load', state: { ...createDefaultState(), ...parsed } })
-        setSelected(null)
-        setPlantToPlace(null)
-        setUserZoom(null)
-        setTool('select')
-      } catch {
-        alert('Import fehlgeschlagen: Die Datei ist kein gültiger Gartenplan.')
-      }
-    }
-    reader.readAsText(file)
-  }
-
-  function handleReset() {
-    if (window.confirm('Wirklich alles zurücksetzen? Alle Beete und Pflanzen werden gelöscht.')) {
-      dispatch({ type: 'load', state: createDefaultState() })
+  const { handleExport, handleImport, handleReset } = useImportExport({
+    state,
+    dispatch,
+    onLoaded: () => {
       setSelected(null)
       setPlantToPlace(null)
-      setUserZoom(null)
+      fit()
       setTool('select')
-    }
-  }
+    },
+  })
 
   return (
     <div className="app">
@@ -145,7 +103,7 @@ function GardenApp() {
         tool={tool}
         onTool={setToolSafe}
         zoom={zoom}
-        onZoom={(z) => setUserZoom(Math.max(0.1, Math.min(5, z)))}
+        onZoom={setZoom}
         onFit={fit}
         onPrint={handlePrint}
         onExport={handleExport}
