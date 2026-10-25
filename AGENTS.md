@@ -9,6 +9,8 @@ User-facing docs live in `README.md` (German).
 - Vite 8 + React 19 + TypeScript ~6 (strict-ish: `noUnusedLocals`, `noUnusedParameters`,
   `verbatimModuleSyntax` → use `import type` for types, `erasableSyntaxOnly` → no enums/namespaces)
 - Vitest 4 + React Testing Library + happy-dom (`globals: true`, setup in `src/test/setup.ts`)
+- Playwright Test for E2E (`e2e/`, Chromium desktop + Pixel 7) against `vite preview` on port 4180 —
+  see `docs/adr/0001-e2e-testing-strategy.md`
 - oxlint (`.oxlintrc.json`), no Prettier/ESLint
 - No backend, no router, no state library. Only runtime deps are `react` / `react-dom` —
   do not add new runtime dependencies without asking.
@@ -20,14 +22,24 @@ npm test          # vitest run (~0.5 s)
 npm run lint      # oxlint
 npm run build     # tsc -b && vite build  (this is the type check)
 npm run dev       # dev server on 127.0.0.1 (bound to IPv4 on purpose)
+npm run e2e       # playwright test (builds + serves itself, ~2 s); first time per machine:
+                  #   npx playwright install chromium
 ```
 
 Run **test → lint → build** after every change. All three must be clean: every test passes,
 oxlint prints nothing (0 errors / 0 warnings), build succeeds. Note the test count before you
 start; it must not drop unless you removed tests deliberately (say so in the commit).
 Focused/skipped tests (`.only`, `.skip`) are lint errors in `*.test.ts(x)`.
-Don't introduce new warnings. Note: oxlint's `only-export-components` also flags non-component
-*re-exports* from `.tsx` files — put hooks/helpers in `.ts` modules and import them from there.
+Don't introduce new warnings.
+
+**E2E (`npm run e2e`)** is additionally required for changes to UI code (`src/components/`,
+`src/editor/`, `App.tsx`, CSS) and always before opening a PR. Every UI bug fix gets an E2E
+regression test. `test.only` fails the run (`forbidOnly`); focus with
+`npx playwright test <file> -g '<name>'` instead. Locally an already running server on port 4180
+is reused without rebuilding, so stop it (or restart it after `vite build`) to test fresh code.
+
+Note: oxlint's `only-export-components` also flags non-component *re-exports* from `.tsx` files —
+put hooks/helpers in `.ts` modules and import them from there.
 
 ## Layout
 
@@ -69,7 +81,23 @@ src/
     plants/       PlantForm, RangeFields (RangeField, RangeListField), PlantMeta (icons, months)
 ```
 
-Tests sit next to the source as `*.test.ts(x)`.
+Tests sit next to the source as `*.test.ts(x)`. E2E specs live in `e2e/`:
+`*.spec.ts` runs on desktop, `*.mobile.spec.ts` on the mobile viewport; import `test`/`expect`
+from `e2e/fixtures.ts`.
+
+## E2E conventions
+
+- Query by role/name (`getByRole('group', { name: 'Beet: Hochbeet' })`), never `data-testid`.
+  The editor SVG exposes `Gartenplan`, `Beet: <Name>`, `<Pflanze> in <Beet>` (selection via
+  `aria-current`), `Beetgröße ändern: Nordwest…West`, `Pflanzengröße ändern`. New SVG elements
+  need accessible names too.
+- Flows that are *about* creating something go through the UI; all others start from
+  `await seedState({ beds: [...], garden: { width: 600 } })` before `page.goto('/')`. The patch
+  goes through `normalizeState` (partial `garden` is fine) and lands in localStorage once per
+  tab, so `page.reload()` keeps the app's own saves.
+- Visual checks are geometry assertions (bounding boxes inside garden/viewport), not screenshots.
+- A bug found while writing a test → GitHub issue + `test.fail()` with a `// GH #n` comment,
+  don't fix it in the same PR.
 
 ## Key concepts / gotchas
 
