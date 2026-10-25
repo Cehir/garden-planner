@@ -17,7 +17,7 @@ export default function ShadowLayer({ placed, bedById, plantById }: ShadowLayerP
         if (!bed) return null
         const plant = plantById.get(p.plantId)
         const shape = plant ? shadowPolygon(plant, p, bed) : null
-        if (!shape) return null
+        if (!shape || !plant) return null
         return (
           <polygon
             key={`sh-${p.id}`}
@@ -25,6 +25,8 @@ export default function ShadowLayer({ placed, bedById, plantById }: ShadowLayerP
             fill={INK_COLOR}
             fillOpacity={0.12}
             pointerEvents="none"
+            role="img"
+            aria-label={`Schatten: ${plant.name}`}
           />
         )
       })}
