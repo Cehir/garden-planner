@@ -1,10 +1,11 @@
+import { useMemo } from 'react'
 import { gridLines as buildGridLines, rulerLabels } from '../grid'
 import { FRAME_COLOR } from '../palette'
 
-// Gartenfläche, Raster und Lineal-Beschriftung (ab 0 alle RULER_LABEL_STEP cm)
+// Gartenfläche, Raster und Lineal-Beschriftung (ab 0, alle 100 cm)
 export default function GridLayer({ width, height }: { width: number; height: number }) {
-  const gridLines = buildGridLines(width, height)
-  const ruler = rulerLabels(width, height)
+  const gridLines = useMemo(() => buildGridLines(width, height), [width, height])
+  const ruler = useMemo(() => rulerLabels(width, height), [width, height])
 
   return (
     <>
