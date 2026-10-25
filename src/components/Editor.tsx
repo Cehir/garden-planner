@@ -72,6 +72,8 @@ export default function Editor({ tool, selected, onSelect, plantToPlace, zoom, s
           ref={svgRef}
           viewBox={`0 0 ${garden.width} ${garden.height}`}
           className="editor-svg"
+          role="group"
+          aria-label="Gartenplan"
           {...handlers}
           style={{ cursor: tool === 'bed' ? 'crosshair' : tool === 'plant' ? 'pointer' : 'default' }}
         >

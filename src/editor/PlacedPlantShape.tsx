@@ -29,6 +29,9 @@ export default function PlacedPlantShape({
   return (
     <g
       className={selected ? 'plant selected' : 'plant'}
+      role="group"
+      aria-label={`${plant?.name ?? 'Unbekannte Pflanze'} in ${bed.name || 'Beet ohne Namen'}`}
+      aria-current={selected || undefined}
       style={{ opacity: inSeason === false ? 0.3 : 1 }}
     >
       {inSeason === true && (
@@ -71,6 +74,8 @@ export default function PlacedPlantShape({
           stroke={ACCENT_COLOR}
           strokeWidth={2}
           className="resize-handle"
+          role="img"
+          aria-label="Pflanzengröße ändern"
         />
       )}
       {conflicted && (

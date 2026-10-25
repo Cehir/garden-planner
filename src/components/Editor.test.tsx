@@ -1,4 +1,4 @@
-import { act, fireEvent, render } from '@testing-library/react'
+import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ComponentProps, Dispatch } from 'react'
 import { StoreProvider } from '../store'
@@ -118,6 +118,54 @@ describe('Editor', () => {
       size: plant.spacing,
       plantedYear: 2026,
     })
+  })
+})
+
+describe('Editor: zugängliche Namen', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    const tomato = createDefaultState().plants.find((p) => p.name === 'Tomate')!
+    saveState({
+      ...createDefaultState(),
+      beds: [bed, { ...bed, id: 'b2', name: '', x: 400 }],
+      placedPlants: [{ ...placed, plantId: tomato.id }, { ...placed, id: 'p2', plantId: 'gibt-es-nicht' }],
+    })
+  })
+
+  it('benennt den Plan, Beete und gesetzte Pflanzen', () => {
+    renderEditor()
+    expect(screen.getByRole('group', { name: 'Gartenplan' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Beet: Beet 1' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Beet: ohne Namen' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Tomate in Beet 1' })).toBeInTheDocument()
+    expect(screen.getByRole('group', { name: 'Unbekannte Pflanze in Beet 1' })).toBeInTheDocument()
+  })
+
+  it('markiert das ausgewählte Beet mit aria-current', () => {
+    renderEditor({ selected: { kind: 'bed', id: 'b1' } })
+    expect(screen.getByRole('group', { name: 'Beet: Beet 1' })).toHaveAttribute('aria-current', 'true')
+    expect(screen.getByRole('group', { name: 'Beet: ohne Namen' })).not.toHaveAttribute('aria-current')
+  })
+
+  it('markiert die ausgewählte Pflanze und benennt ihren Größen-Anfasser', () => {
+    renderEditor({ selected: { kind: 'placed', id: 'p1' } })
+    expect(screen.getByRole('group', { name: 'Tomate in Beet 1' })).toHaveAttribute('aria-current', 'true')
+    expect(screen.getByRole('img', { name: 'Pflanzengröße ändern' })).toBeInTheDocument()
+  })
+
+  it('benennt die acht Beet-Anfasser nach Himmelsrichtung', () => {
+    renderEditor({ selected: { kind: 'bed', id: 'b1' } })
+    const names = screen.getAllByRole('img', { name: /^Beetgröße ändern: / }).map((h) => h.getAttribute('aria-label'))
+    expect(names).toEqual([
+      'Beetgröße ändern: Nordwest',
+      'Beetgröße ändern: Nord',
+      'Beetgröße ändern: Nordost',
+      'Beetgröße ändern: Ost',
+      'Beetgröße ändern: Südost',
+      'Beetgröße ändern: Süd',
+      'Beetgröße ändern: Südwest',
+      'Beetgröße ändern: West',
+    ])
   })
 })
 
