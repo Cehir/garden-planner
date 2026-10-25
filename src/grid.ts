@@ -27,10 +27,15 @@ export function gridLines(width: number, height: number, step = GRID_STEP): Grid
 
 /** Schriftgröße der Lineal-Beschriftung (Editor + Druck). */
 export const RULER_FONT_SIZE = 12
-/** Abstand der Beschriftung vom linken Gartenrand. */
+/** Abstand der Beschriftung vom Gartenrand (links) bzw. vom Messpunkt (rechter/unterer Rand). */
 const RULER_INSET = 4
 /** Grundlinie der linken Beschriftung knapp unter dem Messpunkt (Text steht etwa mittig). */
 const RULER_LEFT_DY = 4
+/**
+ * Halbe Breite, die ein zentriertes oberes Label höchstens braucht (Ziffer ≈ 0,6 em, bis 4 Stellen).
+ * Liegt ein Label näher am rechten Rand, wird es rechtsbündig gesetzt, damit es nicht abgeschnitten wird.
+ */
+const RULER_TOP_HALF_WIDTH = RULER_FONT_SIZE * 1.2
 /** Grundlinie der oberen Beschriftung: Schrifthöhe + Abstand → Text steht innerhalb des Randes. */
 const RULER_TOP_DY = RULER_FONT_SIZE + 2
 
@@ -41,7 +46,7 @@ export interface RulerLabel {
   value: number
   x: number
   y: number
-  anchor: 'start' | 'middle'
+  anchor: 'start' | 'middle' | 'end'
   dx: number
   dy: number
 }
@@ -54,17 +59,23 @@ function labelSteps(length: number): number[] {
 
 /**
  * Lineal-Beschriftung am oberen und linken Gartenrand mit Position und Versatz (Editor + Druck):
- * die Ecke einmal mit 0, dann alle `RULER_LABEL_STEP` cm – alles innerhalb des Randes.
+ * die Ecke einmal mit 0, dann alle `RULER_LABEL_STEP` cm – alles innerhalb des Gartens, auch am
+ * rechten und unteren Rand.
  */
 export function rulerLabels(width: number, height: number): RulerLabel[] {
   return [
     { edge: 'corner', value: 0, x: 0, y: 0, anchor: 'start', dx: RULER_INSET, dy: RULER_TOP_DY },
     ...labelSteps(width).map((x): RulerLabel => (
-      { edge: 'top', value: x, x, y: 0, anchor: 'middle', dx: 0, dy: RULER_TOP_DY }
+      width - x < RULER_TOP_HALF_WIDTH
+        // am rechten Rand: rechtsbündig, endet knapp links vom Messpunkt
+        ? { edge: 'top', value: x, x, y: 0, anchor: 'end', dx: -RULER_INSET, dy: RULER_TOP_DY }
+        : { edge: 'top', value: x, x, y: 0, anchor: 'middle', dx: 0, dy: RULER_TOP_DY }
     )),
-    ...labelSteps(height).map((y): RulerLabel => (
-      { edge: 'left', value: y, x: 0, y, anchor: 'start', dx: RULER_INSET, dy: RULER_LEFT_DY }
-    )),
+    ...labelSteps(height).map((y): RulerLabel => ({
+      edge: 'left', value: y, x: 0, y, anchor: 'start', dx: RULER_INSET,
+      // am unteren Rand: Grundlinie über dem Messpunkt, sonst knapp darunter
+      dy: height - y < RULER_LEFT_DY ? -RULER_INSET : RULER_LEFT_DY,
+    })),
   ]
 }
 

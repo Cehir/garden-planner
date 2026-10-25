@@ -73,4 +73,35 @@ describe('rulerLabels', () => {
       expect(label.x).toBeGreaterThanOrEqual(100)
     }
   })
+
+  it('right-aligns the last top label on the right edge so it stays inside', () => {
+    const last = rulerLabels(300, 150).find((label) => label.edge === 'top' && label.value === 300)
+    expect(last).toMatchObject({ x: 300, anchor: 'end' })
+    expect(last!.dx).toBeLessThan(0)
+  })
+
+  it('right-aligns a top label that sits just short of the right edge', () => {
+    const last = rulerLabels(305, 150).find((label) => label.edge === 'top' && label.value === 300)
+    expect(last?.anchor).toBe('end')
+  })
+
+  it('keeps top labels well away from the right edge centred', () => {
+    const labels = rulerLabels(350, 150).filter((label) => label.edge === 'top')
+    expect(labels.map((label) => label.anchor)).toEqual(['middle', 'middle', 'middle'])
+  })
+
+  it('lifts the last left label on the bottom edge above it', () => {
+    const last = rulerLabels(150, 200).find((label) => label.edge === 'left' && label.value === 200)
+    expect(last).toMatchObject({ y: 200 })
+    // baseline above the bottom edge → the text sits fully inside
+    expect(last!.y + last!.dy).toBeLessThan(200)
+  })
+
+  it('keeps left labels clear of the bottom edge', () => {
+    for (const height of [200, 201, 203, 250]) {
+      for (const label of rulerLabels(150, height).filter((label) => label.edge === 'left')) {
+        expect(label.y + label.dy).toBeLessThanOrEqual(height)
+      }
+    }
+  })
 })
