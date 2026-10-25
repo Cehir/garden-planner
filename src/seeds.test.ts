@@ -66,6 +66,7 @@ describe('date helpers', () => {
     expect(formatSeedDate('2026-12-31')).toBe('31.12.2026')
   })
 })
+
 describe('seedBadge', () => {
   const today = new Date(2026, 2, 31)
 
