@@ -76,6 +76,16 @@ describe('buildPrintSvg', () => {
     expect(svg).toContain('<text x="0" y="100"')
   })
 
+  it('beschriftet die Ecke nur einmal mit 0 und setzt oben innerhalb des Randes', () => {
+    const svg = buildPrintSvg(makeState(), base)
+    expect(svg.match(/>0<\/text>/g)).toHaveLength(1)
+    const top = svg.match(/<text x="100" y="0"[^>]*text-anchor="middle" dx="[^"]*" dy="([^"]*)"/)
+    expect(Number(top?.[1])).toBeGreaterThan(0)
+    const corner = svg.match(/<text x="0" y="0"[^>]*text-anchor="start" dx="([^"]*)" dy="([^"]*)">0</)
+    expect(Number(corner?.[1])).toBeGreaterThan(0)
+    expect(Number(corner?.[2])).toBeGreaterThan(0)
+  })
+
   it('zeichnet Beete mit Name (maskiert)', () => {
     const svg = buildPrintSvg(makeState(), base)
     expect(svg).toContain('<rect x="100" y="100" width="200" height="150" fill="#7fb069"')

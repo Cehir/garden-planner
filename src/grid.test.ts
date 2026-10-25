@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { gridLines, rulerLabels, snap } from './grid'
+import { gridLines, RULER_FONT_SIZE, rulerLabels, snap } from './grid'
+import type { RulerLabel } from './grid'
 
 describe('gridLines', () => {
   it('produces vertical + horizontal lines on the 10cm step', () => {
@@ -34,11 +35,42 @@ describe('snap', () => {
 })
 
 describe('rulerLabels', () => {
-  it('labels the top and left edge every 100cm, starting at 0', () => {
-    expect(rulerLabels(350, 200)).toEqual({ top: [0, 100, 200, 300], left: [0, 100, 200] })
+  const values = (labels: RulerLabel[], edge: RulerLabel['edge']) =>
+    labels.filter((label) => label.edge === edge).map((label) => label.value)
+
+  it('labels the corner once with 0, then the top and left edge every 100cm', () => {
+    const labels = rulerLabels(350, 200)
+    expect(values(labels, 'corner')).toEqual([0])
+    expect(values(labels, 'top')).toEqual([100, 200, 300])
+    expect(values(labels, 'left')).toEqual([100, 200])
+    expect(labels.filter((label) => label.value === 0)).toHaveLength(1)
   })
 
   it('includes the far edge when it falls on a label step', () => {
-    expect(rulerLabels(200, 100)).toEqual({ top: [0, 100, 200], left: [0, 100] })
+    const labels = rulerLabels(200, 100)
+    expect(values(labels, 'top')).toEqual([100, 200])
+    expect(values(labels, 'left')).toEqual([100])
+  })
+
+  it('places top labels on the top edge and left labels on the left edge', () => {
+    const labels = rulerLabels(200, 200)
+    expect(labels.find((label) => label.edge === 'top' && label.value === 100)).toMatchObject({ x: 100, y: 0 })
+    expect(labels.find((label) => label.edge === 'left' && label.value === 100)).toMatchObject({ x: 0, y: 100 })
+    expect(labels.find((label) => label.edge === 'corner')).toMatchObject({ x: 0, y: 0 })
+  })
+
+  it('keeps labels clear of the top and left edge', () => {
+    for (const label of rulerLabels(300, 300)) {
+      // baseline at least one font size down → the text sits fully below y=0
+      expect(label.y + label.dy).toBeGreaterThanOrEqual(RULER_FONT_SIZE)
+    }
+    for (const label of rulerLabels(300, 300).filter((label) => label.anchor === 'start')) {
+      // left-aligned text (corner + left edge) starts right of x=0
+      expect(label.x + label.dx).toBeGreaterThan(0)
+    }
+    for (const label of rulerLabels(300, 300).filter((label) => label.anchor === 'middle')) {
+      // centred text (top edge) is a full label step away from the left edge
+      expect(label.x).toBeGreaterThanOrEqual(100)
+    }
   })
 })

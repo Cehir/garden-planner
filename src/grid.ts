@@ -25,22 +25,47 @@ export function gridLines(width: number, height: number, step = GRID_STEP): Grid
   return out
 }
 
-export interface RulerLabels {
-  /** x-Positionen am oberen Rand (cm). */
-  top: number[]
-  /** y-Positionen am linken Rand (cm). */
-  left: number[]
+/** Schriftgröße der Lineal-Beschriftung (Editor + Druck). */
+export const RULER_FONT_SIZE = 12
+/** Abstand der Beschriftung vom linken Gartenrand. */
+const RULER_INSET = 4
+/** Grundlinie der linken Beschriftung knapp unter dem Messpunkt (Text steht etwa mittig). */
+const RULER_LEFT_DY = 4
+/** Grundlinie der oberen Beschriftung: Schrifthöhe + Abstand → Text steht innerhalb des Randes. */
+const RULER_TOP_DY = RULER_FONT_SIZE + 2
+
+export interface RulerLabel {
+  /** Ecke oben links (einmal „0“), oberer Rand (x-Werte) oder linker Rand (y-Werte). */
+  edge: 'corner' | 'top' | 'left'
+  /** Beschriftung in cm. */
+  value: number
+  x: number
+  y: number
+  anchor: 'start' | 'middle'
+  dx: number
+  dy: number
 }
 
 function labelSteps(length: number): number[] {
   const out: number[] = []
-  for (let v = 0; v <= length; v += RULER_LABEL_STEP) out.push(v)
+  for (let v = RULER_LABEL_STEP; v <= length; v += RULER_LABEL_STEP) out.push(v)
   return out
 }
 
-/** Positionen der Lineal-Beschriftung am oberen und linken Gartenrand, beginnend bei 0 (Editor + Druck). */
-export function rulerLabels(width: number, height: number): RulerLabels {
-  return { top: labelSteps(width), left: labelSteps(height) }
+/**
+ * Lineal-Beschriftung am oberen und linken Gartenrand mit Position und Versatz (Editor + Druck):
+ * die Ecke einmal mit 0, dann alle `RULER_LABEL_STEP` cm – alles innerhalb des Randes.
+ */
+export function rulerLabels(width: number, height: number): RulerLabel[] {
+  return [
+    { edge: 'corner', value: 0, x: 0, y: 0, anchor: 'start', dx: RULER_INSET, dy: RULER_TOP_DY },
+    ...labelSteps(width).map((x): RulerLabel => (
+      { edge: 'top', value: x, x, y: 0, anchor: 'middle', dx: 0, dy: RULER_TOP_DY }
+    )),
+    ...labelSteps(height).map((y): RulerLabel => (
+      { edge: 'left', value: y, x: 0, y, anchor: 'start', dx: RULER_INSET, dy: RULER_LEFT_DY }
+    )),
+  ]
 }
 
 export const snap = (v: number, grid = GRID_STEP): number => Math.round(v / grid) * grid

@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
-import { gridLines as buildGridLines, rulerLabels } from '../grid'
-import { FRAME_COLOR } from '../palette'
+import { gridLines as buildGridLines, RULER_FONT_SIZE, rulerLabels } from '../grid'
+import { FRAME_COLOR, RULER_COLOR } from '../palette'
 
-// Gartenfläche, Raster und Lineal-Beschriftung (ab 0, alle 100 cm)
+// Gartenfläche, Raster und Lineal-Beschriftung (Ecke 0, dann alle 100 cm)
 export default function GridLayer({ width, height }: { width: number; height: number }) {
   const gridLines = useMemo(() => buildGridLines(width, height), [width, height])
   const ruler = useMemo(() => rulerLabels(width, height), [width, height])
@@ -29,32 +29,19 @@ export default function GridLayer({ width, height }: { width: number; height: nu
           strokeWidth={1}
         />
       ))}
-      {ruler.top.map((x) => (
+      {ruler.map((label) => (
         <text
-          key={`r${x}`}
-          x={x}
-          y={0}
-          fill="#b3a892"
-          fontSize={12}
-          textAnchor="middle"
-          dy={-4}
+          key={`${label.edge}${label.value}`}
+          x={label.x}
+          y={label.y}
+          fill={RULER_COLOR}
+          fontSize={RULER_FONT_SIZE}
+          textAnchor={label.anchor}
+          dx={label.dx}
+          dy={label.dy}
           pointerEvents="none"
         >
-          {x}
-        </text>
-      ))}
-      {ruler.left.map((y) => (
-        <text
-          key={`rb${y}`}
-          x={0}
-          y={y}
-          fill="#b3a892"
-          fontSize={12}
-          dx={4}
-          dy={4}
-          pointerEvents="none"
-        >
-          {y}
+          {label.value}
         </text>
       ))}
     </>
