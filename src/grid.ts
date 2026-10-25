@@ -13,7 +13,7 @@ export interface GridLine {
   major: boolean
 }
 
-/** Grid lines for a garden of `width`×`height` on a `step` cm step (major every `GRID_MAJOR_STEP` cm). */
+/** Rasterlinien für einen Garten von `width`×`height` im Abstand `step` cm (Hauptlinie alle `GRID_MAJOR_STEP` cm). */
 export function gridLines(width: number, height: number, step = GRID_STEP): GridLine[] {
   const out: GridLine[] = []
   for (let x = 0; x <= width; x += step) {
