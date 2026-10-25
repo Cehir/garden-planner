@@ -52,7 +52,7 @@ function GardenApp() {
 
   const closeSidebar = () => setMobileSidebar(null)
   const toggleSidebar = (s: 'library' | 'details') => setMobileSidebar(mobileSidebar === s ? null : s)
-  const library = <PlantLibrary plantToPlace={plantToPlace} onPick={ui.handlePick} tool={tool} />
+  const library = <PlantLibrary plantToPlace={plantToPlace} onPick={ui.handlePick} />
   const details = <BedDetails selected={selected} onClearSelection={() => setSelected(null)} year={year} />
 
   return (

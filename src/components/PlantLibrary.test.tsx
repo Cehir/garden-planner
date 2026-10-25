@@ -24,7 +24,7 @@ beforeEach(() => {
 function renderLibrary() {
   return render(
     <StoreProvider>
-      <PlantLibrary plantToPlace={null} onPick={vi.fn()} tool="select" />
+      <PlantLibrary plantToPlace={null} onPick={vi.fn()} />
     </StoreProvider>,
   )
 }
@@ -84,7 +84,7 @@ describe('PlantLibrary – "Jetzt pflanzbar"-Filter', () => {
     const onPick = vi.fn()
     render(
       <StoreProvider>
-        <PlantLibrary plantToPlace={null} onPick={onPick} tool="select" />
+        <PlantLibrary plantToPlace={null} onPick={onPick} />
       </StoreProvider>,
     )
     const first = DEFAULT_PLANTS[0]
@@ -92,5 +92,34 @@ describe('PlantLibrary – "Jetzt pflanzbar"-Filter', () => {
     fireEvent.click(editBtn)
     expect(onPick).not.toHaveBeenCalled()
     expect(screen.getByText('Pflanze bearbeiten')).toBeInTheDocument()
+  })
+})
+
+describe('PlantLibrary – Pflanzen-Formular', () => {
+  it('fügt ohne Namen keine Pflanze hinzu und lässt das Formular offen', () => {
+    renderLibrary()
+    const before = screen.getAllByRole('button', { name: /— Platzieren$/ }).length
+    fireEvent.click(screen.getByRole('button', { name: /Pflanze hinzufügen/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Hinzufügen' }))
+    expect(screen.getByText('Neue Pflanze')).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: /— Platzieren$/ })).toHaveLength(before)
+  })
+
+  it('fügt mit Namen eine Pflanze hinzu und schließt das Formular', () => {
+    renderLibrary()
+    fireEvent.click(screen.getByRole('button', { name: /Pflanze hinzufügen/ }))
+    fireEvent.change(screen.getByPlaceholderText('z.B. Mangold'), { target: { value: 'Mangold' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Hinzufügen' }))
+    expect(screen.queryByText('Neue Pflanze')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mangold — Platzieren' })).toBeInTheDocument()
+  })
+
+  it('übernimmt beim Bearbeiten den alten Namen, wenn das Feld leer ist', () => {
+    renderLibrary()
+    const first = DEFAULT_PLANTS[0]
+    fireEvent.click(screen.getByRole('button', { name: `${first.name} bearbeiten` }))
+    fireEvent.change(screen.getByDisplayValue(first.name), { target: { value: '  ' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Speichern' }))
+    expect(screen.getByRole('button', { name: `${first.name} — Platzieren` })).toBeInTheDocument()
   })
 })
