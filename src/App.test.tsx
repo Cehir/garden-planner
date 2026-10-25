@@ -42,7 +42,7 @@ describe('App – Verdrahtung', () => {
     const { container } = render(<App />)
     fireEvent.click(screen.getByRole('button', { name: '🌿 Pflanzen' }))
     expect(container.querySelector('.sidebar.mobile-open')).not.toBeNull()
-    fireEvent.click(screen.getByRole('button', { name: '✕' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Seitenleiste schließen' }))
     expect(container.querySelector('.sidebar.mobile-open')).toBeNull()
   })
 })

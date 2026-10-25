@@ -10,9 +10,9 @@ export default function MobileSidebar({ onClose, children }: Props) {
   return (
     <div
       className="sidebar mobile-open"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <button className="close-btn" onClick={onClose}>✕</button>
+      <button className="close-btn" aria-label="Seitenleiste schließen" onClick={onClose}>✕</button>
       {children}
     </div>
   )
