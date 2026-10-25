@@ -14,24 +14,34 @@ interface SeedFormProps {
   onChange: (patch: Partial<SeedDraft>) => void
   plants: Plant[]
   /** Das bearbeitete Saatgut; null beim Hinzufügen */
-  editing: Seed | null
+  editingSeed: Seed | null
+  /** Pflanzenname des bearbeiteten Saatguts (Platzhalter für die Sorte) */
+  editingPlantName: string
   onSave: () => void
   onCancel: () => void
-  onDelete: () => void
+  /** Nur beim Bearbeiten gesetzt */
+  onDelete?: () => void
 }
 
-export default function SeedForm({ draft, onChange, plants, editing, onSave, onCancel, onDelete }: SeedFormProps) {
-  const editingPlantName = editing ? plants.find((p) => p.id === editing.plantId)?.name ?? '' : ''
-
+export default function SeedForm({
+  draft,
+  onChange,
+  plants,
+  editingSeed,
+  editingPlantName,
+  onSave,
+  onCancel,
+  onDelete,
+}: SeedFormProps) {
   return (
     <div className="form">
-      <h3>{editing ? 'Saatgut bearbeiten' : 'Neues Saatgut'}</h3>
+      <h3>{editingSeed ? 'Saatgut bearbeiten' : 'Neues Saatgut'}</h3>
       <label>
         Pflanze
         <select
           value={draft.plantId}
           onChange={(e) => onChange({ plantId: e.target.value })}
-          disabled={!!editing}
+          disabled={!!editingSeed}
         >
           <option value="">– Pflanze wählen –</option>
           {plants.map((p) => (
@@ -63,9 +73,9 @@ export default function SeedForm({ draft, onChange, plants, editing, onSave, onC
       </label>
       <div className="row">
         <button type="button" className="primary" onClick={onSave} disabled={!draft.plantId}>
-          {editing ? 'Speichern' : 'Hinzufügen'}
+          {editingSeed ? 'Speichern' : 'Hinzufügen'}
         </button>
-        {editing && (
+        {onDelete && (
           <button type="button" className="danger" onClick={onDelete}>
             Löschen
           </button>

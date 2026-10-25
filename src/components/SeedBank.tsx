@@ -152,19 +152,23 @@ export default function SeedBank() {
           draft={draft}
           onChange={(patch) => setDraft((prev) => ({ ...prev, ...patch }))}
           plants={state.plants}
-          editing={editingSeed}
+          editingSeed={editingSeed}
+          editingPlantName={editingSeed ? plantById.get(editingSeed.plantId)?.name ?? '' : ''}
           onSave={save}
           onCancel={() => {
             setAdding(false)
             setEditing(null)
             resetForm()
           }}
-          onDelete={() => {
-            if (!editingSeed) return
-            dispatch({ type: 'removeSeed', id: editingSeed.id })
-            setEditing(null)
-            resetForm()
-          }}
+          onDelete={
+            editingSeed
+              ? () => {
+                  dispatch({ type: 'removeSeed', id: editingSeed.id })
+                  setEditing(null)
+                  resetForm()
+                }
+              : undefined
+          }
         />
       )}
 
