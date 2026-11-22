@@ -46,6 +46,20 @@ is reused without rebuilding, so stop it (or restart it after `vite build`) to t
 `core.hooksPath`): pre-commit runs test + lint, pre-push runs build + e2e. They check the working
 tree, not just staged changes. `--no-verify` skips them; CI still runs everything.
 
+**Dependency audits.** A normal fix keeps every `package.json` range unchanged (lockfile only);
+a force fix changes a range (typically a major bump), whether via `--force` or by hand.
+All severities count, devDependencies included.
+
+- `.github/workflows/audit.yml` runs Mondays 05:00 UTC (and via `workflow_dispatch`): it applies
+  normal fixes on `chore/audit-fix-auto` and opens/updates a PR with auto-merge once CI is green,
+  and keeps one open issue „npm audit: Force-Fix nötig“ (`ready-for-agent`) for the rest.
+- Agents run `npm audit` at session start on an up-to-date `main`. Normal fixes: apply without
+  asking, run all checks, open a PR before branching off for the actual task — the user merges.
+  Found mid-task: mention it in the final report and fix it in a separate PR afterwards, never
+  inside a feature PR.
+- Force fixes need no prior approval but get their own PR **per package** (branch
+  `chore/<package>-<major>`, commit `chore: happy-dom 20 → 21 (GHSA-…)`), never auto-merged.
+
 Note: oxlint's `only-export-components` also flags non-component *re-exports* from `.tsx` files —
 put hooks/helpers in `.ts` modules and import them from there.
 
